@@ -41,7 +41,7 @@ export default function AdminClient({ posts }: { posts: Row[] | null }) {
         <tbody>
           {posts.map((p) => (
             <tr key={p.slug}>
-              <td><a className="text-link" href={`/posts/${encodeURIComponent(p.slug)}`}>{p.title}</a></td>
+              <td><a className="text-link" href={`/ko/posts/${p.slug}`}>{p.title}</a></td>
               <td>{p.category}</td>
               <td>{p.created_at.slice(0, 10)}</td>
               <td><input type="checkbox" checked={p.published} aria-label="발행" onChange={(e) => patch(p.slug, { published: e.target.checked })} /></td>

@@ -1,6 +1,6 @@
 import { isAdmin } from '@/lib/auth';
 import { listAll, upsertPost } from '@/lib/db';
-import { htmlToText } from '@/lib/text';
+import { parsePostInput } from '@/lib/postInput';
 
 const unauthorized = () => Response.json({ error: 'unauthorized' }, { status: 401 });
 
@@ -9,13 +9,11 @@ export async function GET(req: Request) {
   return Response.json(await listAll());
 }
 
-// 생성/수정 (slug 기준 upsert)
+// 생성/수정 (slug 기준 upsert). ko/en 둘 다 필수 — 형식은 README.
 export async function POST(req: Request) {
   if (!isAdmin(req)) return unauthorized();
-  const b = await req.json().catch(() => null);
-  const missing = ['slug', 'title', 'category', 'html'].filter((k) => typeof b?.[k] !== 'string' || !b[k]);
-  if (missing.length) return Response.json({ error: `missing: ${missing.join(', ')}` }, { status: 400 });
-  if (!/^[a-z0-9가-힣-]+$/.test(b.slug)) return Response.json({ error: 'slug: a-z 0-9 한글 - 만 허용' }, { status: 400 });
-  const row = await upsertPost({ ...b, plain_text: htmlToText(b.html) });
-  return Response.json({ slug: row.slug, url: `/posts/${encodeURIComponent(row.slug)}` });
+  const parsed = parsePostInput(await req.json().catch(() => null));
+  if (!parsed.ok) return Response.json({ errors: parsed.errors }, { status: 400 });
+  const row = await upsertPost(parsed.value);
+  return Response.json({ slug: row.slug, urls: [`/ko/posts/${row.slug}`, `/en/posts/${row.slug}`] });
 }

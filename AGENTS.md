@@ -7,7 +7,7 @@ Next.js 16 (App Router) + PostgreSQL + Tailwind v4, Podman으로 자체 호스�
 기조: **AI 에이전트로 일하는 개발자, 같이 일하고 싶은 사람.** 이건 화면에 쓸 문구가 아니라 판단 기준이다.
 스스로 설명하는 문장 대신 글·프로젝트·이 저장소 자체로 드러나게 한다.
 
-## 정보 구조 (2026-10-01 확정, 구현 전)
+## 정보 구조 (2026-10-01 확정·구현)
 목업(`블로그 목업.png`)의 레이아웃·디자인은 유지하되, 메뉴와 섹션 구성은 아래가 우선한다.
 
 - **언어:** 모든 페이지가 `/ko/...`, `/en/...`로 분리. `/`는 `/ko`로 보낸다.
@@ -20,6 +20,13 @@ Next.js 16 (App Router) + PostgreSQL + Tailwind v4, Podman으로 자체 호스�
 - **프로젝트:** AlgoSu, FINCH, Janus, PinLog. 프로젝트별 페이지에 소개와 관련 글 목록. 글은 프로젝트에 연결될 수 있다.
 - **연락:** 소개 페이지와 모든 페이지 푸터. 메뉴 항목으로는 두지 않는다.
 - **챗봇(나에 대한 질의응답):** 예정. 위치는 만들 때 정한다. 미리 메뉴 자리를 만들지 않는다.
+
+### 어디에 무엇이 있나
+- 페이지: `app/[locale]/…` (홈, posts, posts/[slug], projects, projects/[slug], about, search). 관리자 `app/admin`은 언어 밖, 별도 root layout.
+- 화면 문구: `lib/i18n.ts`의 `DICT` — **컴포넌트에 한글/영어 문구를 직접 쓰지 말고 ko/en 둘 다 여기에 추가한다.** 카테고리 키·라벨도 여기.
+- 프로젝트: `lib/projects.ts` (코드로 관리, DB 아님). 소개·연락처: `lib/site.ts`. 둘 다 아직 자리표시(TODO).
+- DB: `posts`(공통) + `post_translations`(ko/en 행). 등록 검증은 `lib/postInput.ts`.
+- 새 페이지는 `lib/page.ts`의 `localeOf(params)`로 언어를 받고(ko/en 외 404), `generateMetadata`에서 `alternates(locale, path)`로 canonical·hreflang을 넣는다.
 
 ## 디자인 시스템 (반드시 지킬 것)
 
@@ -45,7 +52,8 @@ Next.js 16 (App Router) + PostgreSQL + Tailwind v4, Podman으로 자체 호스�
 있는 것부터 쓴다. 새로 만들기 전에 `components/ui`, `components`를 확인.
 - `ui/Button`, `ui/ButtonLink` — `variant: primary|outline`, `size: lg(44px)|sm(36px)`
 - `ui/Container` `ui/Eyebrow` `ui/SectionHeader` `ui/Thumb`
-- `Header` `FeaturedHero` `PostCard(size: md|sm)` `PostGrid(cols: 3|4)` `Quote` `PostBody`
+- `Header` `Footer` `LocaleSwitch` `FeaturedHero` `PostCard(size: md|sm)` `PostGrid(cols: 3|4)` `ProjectCard` `ProjectGrid` `PostBody`
+- 도메인 컴포넌트는 `locale` prop을 받아 링크(`/${locale}/…`)와 문구를 만든다.
 
 variant/size는 객체 맵(`const VARIANT = {...}`)으로 정의한다 (Button, PostCard 참고). 클래스 조합 라이브러리 추가 금지.
 
@@ -58,5 +66,5 @@ variant/size는 객체 맵(`const VARIANT = {...}`)으로 정의한다 (Button, 
 ## 검증
 - `npm run check:design` — 위 금지 규칙 검사. UI를 고친 뒤 반드시 통과시킬 것.
   git pre-commit 훅(`.githooks/`, `npm install` 시 자동 등록)이 커밋마다 실행한다. `--no-verify`로 우회하지 말 것.
-- `npm run check` — auth/텍스트 추출 self-check
+- `npm run check` — auth, 텍스트 추출, 본문 변환, 글 등록 검증 self-check
 - `npm run build`

@@ -5,6 +5,7 @@ services:
     environment:
       DATABASE_URL: postgres://blog:${POSTGRES_PASSWORD}@db:5432/blog
       ADMIN_TOKEN: ${ADMIN_TOKEN:?ADMIN_TOKEN 필요}
+      SITE_URL: ${SITE_URL:-http://localhost:3000}
     volumes: [uploads:/app/uploads]
     depends_on:
       db: { condition: service_healthy }

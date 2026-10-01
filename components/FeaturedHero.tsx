@@ -1,16 +1,17 @@
 import type { PostCard as P } from '@/lib/db';
+import { DICT, type Locale } from '@/lib/i18n';
 import { ButtonLink } from './ui/Button';
 import Eyebrow from './ui/Eyebrow';
 import Thumb from './ui/Thumb';
 
-export default function FeaturedHero({ post }: { post: P }) {
+export default function FeaturedHero({ post, locale }: { post: P; locale: Locale }) {
   return (
     <section className="grid items-center gap-12 pb-10 pt-8 lg:grid-cols-[5fr_7fr]">
       <div>
-        <Eyebrow>Featured</Eyebrow>
+        <Eyebrow>{DICT[locale].home.featured}</Eyebrow>
         <h1 className="mb-6 mt-4 t-headline font-bold sm:t-display">{post.title}</h1>
         {post.summary && <p className="mb-9 t-body-lg text-secondary">{post.summary}</p>}
-        <ButtonLink href={`/posts/${encodeURIComponent(post.slug)}`}>최신 소식 보기 →</ButtonLink>
+        <ButtonLink href={`/${locale}/posts/${post.slug}`}>{DICT[locale].home.read} →</ButtonLink>
       </div>
       {/* lg 이상: 오른쪽 화면 끝까지 붙임 */}
       <Thumb src={post.thumbnail}

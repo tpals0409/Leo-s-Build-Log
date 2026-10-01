@@ -31,6 +31,9 @@ export const DICT = {
   },
 } satisfies Record<Locale, unknown>;
 
+// 날짜는 작성자 기준(서울)으로 찍는다 — 서버 시간대(컨테이너는 UTC)를 따르면 자정 KST 글이 전날로 보인다
+export const BLOG_TZ = 'Asia/Seoul';
 export const fmtDate = (d: Date, locale: Locale) =>
-  new Intl.DateTimeFormat(locale === 'ko' ? 'ko-KR' : 'en-US', { dateStyle: 'long' }).format(d);
+  new Intl.DateTimeFormat(locale === 'ko' ? 'ko-KR' : 'en-US', { dateStyle: 'long', timeZone: BLOG_TZ }).format(d);
+export const ymd = (d: Date) => new Intl.DateTimeFormat('sv-SE', { timeZone: BLOG_TZ }).format(d); // 2023-07-15
 

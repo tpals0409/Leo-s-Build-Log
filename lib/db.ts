@@ -76,11 +76,14 @@ export async function upsertPost(p: PostInput) {
   await ready();
   return sql.begin(async (tx) => {
     const [row] = await tx<{ id: number; slug: string }[]>`
-      insert into posts (slug, category, project, tags, thumbnail, featured, published)
-      values (${p.slug}, ${p.category}, ${p.project}, ${p.tags}, ${p.thumbnail}, ${p.featured}, ${p.published})
+      insert into posts (slug, category, project, tags, thumbnail, featured, published, created_at)
+      values (${p.slug}, ${p.category}, ${p.project}, ${p.tags}, ${p.thumbnail}, ${p.featured}, ${p.published},
+              coalesce(${p.publishedAt}::timestamptz, now()))
       on conflict (slug) do update set
         category = excluded.category, project = excluded.project, tags = excluded.tags,
         thumbnail = excluded.thumbnail, featured = excluded.featured, published = excluded.published,
+        -- publishedAt을 주면 날짜 정정, 생략하면 기존 발행일 유지
+        created_at = coalesce(${p.publishedAt}::timestamptz, posts.created_at),
         updated_at = now()
       returning id, slug`;
     for (const locale of ['ko', 'en'] as const) {

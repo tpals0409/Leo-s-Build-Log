@@ -13,7 +13,8 @@ import {
   validUploadContentLength,
 } from './uploads.ts';
 import { toShadowHtml } from './postHtml.ts';
-import { parsePostInput } from './postInput.ts';
+import { parsePostInput, parsePublishedAt } from './postInput.ts';
+import { fmtDate, ymd } from './i18n.ts';
 import { validateLeo } from './leo/index.ts';
 import { CODE_DOC, SPECS } from './leo/specs.ts';
 import { postComponentsMarkdown } from './leo/docs.ts';
@@ -159,4 +160,26 @@ assert.match(v('<leo-sparkle></leo-sparkle>'), /없는 컴포넌트/);
 const bad = parsePostInput({ ...good, en: { title: 'T', html: '<leo-callout type="danger">x</leo-callout>' } });
 assert.ok(!bad.ok && bad.errors.some((e) => e.startsWith('en.html <leo-callout>')), 'post upload rejects bad component');
 assert.equal(readFileSync(new URL('../docs/post-components.md', import.meta.url), 'utf8'), postComponentsMarkdown(), 'docs/post-components.md가 등록부와 다름 — npm run docs:post');
+
+// ── 발행일 (publishedAt) ──
+const NOW = new Date('2026-10-01T03:00:00Z');
+const pa = (v: unknown) => parsePublishedAt(v, NOW);
+assert.equal(pa(undefined).date, null, '생략 → null (새 글은 now, 기존 글은 유지)');
+assert.equal(pa('2023-07-15T00:00:00+09:00').date?.toISOString(), '2023-07-14T15:00:00.000Z', '시간대 반영');
+assert.equal(pa('2023-07-15').date?.toISOString(), '2023-07-14T15:00:00.000Z', '날짜만 → 서울 자정');
+assert.equal(pa('2022-11-03T09:00:00Z').date?.toISOString(), '2022-11-03T09:00:00.000Z');
+assert.match(pa('2023-02-30').error ?? '', /없는 날짜/, '2월 30일 거절');
+assert.match(pa('2024-02-29T10:00:00+09:00').error ?? 'ok', /ok/, '윤년 2/29는 허용');
+assert.match(pa('2023-07-15T09:00:00').error ?? '', /시간대/, '시각에 시간대 없으면 거절');
+assert.match(pa('2023/07/15').error ?? '', /ISO 8601/);
+assert.match(pa('2023-07-15T25:00:00+09:00').error ?? '', /범위/);
+assert.match(pa('2026-12-25').error ?? '', /미래/, '미래 날짜 거절');
+assert.match(pa(20230715).error ?? '', /ISO 8601/, '숫자 거절');
+assert.ok(!parsePostInput({ ...good, publishedAt: 'yesterday' }).ok, 'post upload rejects bad publishedAt');
+const withDate = parsePostInput({ ...good, publishedAt: '2023-07-15' });
+assert.ok(withDate.ok && withDate.value.publishedAt instanceof Date);
+// 표시는 서울 기준 — 서버가 UTC여도 자정 KST 글이 전날로 보이지 않는다
+assert.equal(fmtDate(new Date('2023-07-14T15:00:00Z'), 'ko'), '2023년 7월 15일');
+assert.equal(fmtDate(new Date('2023-07-14T15:00:00Z'), 'en'), 'July 15, 2023');
+assert.equal(ymd(new Date('2023-07-14T15:00:00Z')), '2023-07-15');
 console.log('ok');

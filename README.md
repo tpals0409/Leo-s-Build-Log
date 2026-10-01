@@ -18,6 +18,10 @@ podman compose up -d --build
 - `POST /api/posts` — JSON, slug 기준 생성/수정. **한/영 둘 다 필수**
   - 공통: `slug`(영문 소문자·숫자·하이픈, 한/영 공유), `category`(`ai-agent` | `engineering` | `retrospective`)
   - 선택: `project`(`algosu` | `finch` | `janus` | `pinlog`), `tags`(문자열 배열), `thumbnail`(업로드 URL), `featured`, `published`(기본 true)
+  - 선택: `publishedAt` — 발행일(화면 표시·정렬 기준). 다른 곳에서 쓴 예전 글을 옮길 때 원래 날짜로
+    - ISO 8601: `2023-07-15`(서울 자정) 또는 `2023-07-15T09:00:00+09:00`(시각을 쓰면 시간대 필수)
+    - 생략하면 새 글은 지금 시각, 기존 글은 원래 날짜 유지. 기존 글에 주면 날짜 정정
+    - 없는 날짜(2월 30일)·미래 날짜는 400 (예약 발행 없음). 날짜는 서울 시간으로 표시된다
   - 언어별: `ko`, `en` 각각 `{ title, html, summary? }` — `html`은 스타일 포함 완성 HTML 문서
   - 다이어그램·차트 등은 `<leo-*>` 태그로 — **[docs/post-components.md](docs/post-components.md)**, 견본 `/ko/design`. 잘못 쓰면 400과 이유
 - `PATCH /api/posts/:slug` — `{ "featured"?, "published"? }`

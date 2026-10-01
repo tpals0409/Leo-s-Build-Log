@@ -8,7 +8,7 @@ create table if not exists posts (
   thumbnail text,                            -- /uploads/xxx.jpg 또는 외부 URL
   featured boolean not null default false,
   published boolean not null default true,
-  created_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),  -- 발행일: 화면 표시·정렬 기준. API publishedAt으로 지정·정정 (이름은 호환 때문에 유지)
   updated_at timestamptz not null default now()
 );
 

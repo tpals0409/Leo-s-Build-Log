@@ -1,0 +1,28 @@
+@import 'tailwindcss';
+
+@font-face { font-family: 'Gmarket Sans'; font-weight: 300; font-display: swap; src: url('/fonts/GmarketSansTTFLight.ttf') format('truetype'); }
+@font-face { font-family: 'Gmarket Sans'; font-weight: 500; font-display: swap; src: url('/fonts/GmarketSansTTFMedium.ttf') format('truetype'); }
+@font-face { font-family: 'Gmarket Sans'; font-weight: 700; font-display: swap; src: url('/fonts/GmarketSansTTFBold.ttf') format('truetype'); }
+
+/* 토큰: DESIGN.md (Apple 웹 레퍼런스) → bg-primary, text-muted, font-sans, max-w-wrap ... */
+@theme {
+  --color-primary: #0071e3;
+  --color-on-primary: #ffffff;
+  --color-link: #0066cc;
+  --color-fg: #1d1d1f;
+  --color-muted: #6e6e73;
+  --color-secondary: #515154;
+  --color-fog: #f5f5f7;
+  --color-surface: #ffffff;
+  --color-line: #e5e5ea;
+  --font-sans: 'Gmarket Sans', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;
+  --container-wrap: 1120px;
+  --radius-pill: 980px;
+}
+
+@layer base {
+  body {
+    @apply bg-surface text-fg font-sans font-light text-[17px]/[25px] tracking-[-0.374px] antialiased break-keep overflow-x-clip;
+  }
+  :focus-visible { @apply outline-2 outline-offset-2 outline-primary; }
+}

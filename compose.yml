@@ -1,0 +1,28 @@
+services:
+  app:
+    build: { context: ., dockerfile: Containerfile }
+    ports: ["${APP_PORT:-3000}:3000"]
+    environment:
+      DATABASE_URL: postgres://blog:${POSTGRES_PASSWORD}@db:5432/blog
+      ADMIN_TOKEN: ${ADMIN_TOKEN:?ADMIN_TOKEN 필요}
+    volumes: [uploads:/app/uploads]
+    depends_on:
+      db: { condition: service_healthy }
+    restart: unless-stopped
+  db:
+    # 챗봇(RAG) 붙일 때 `create extension vector`만 하면 되도록 pgvector 이미지
+    image: docker.io/pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: blog
+      POSTGRES_DB: blog
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD 필요}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    ports: ["127.0.0.1:5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blog"]
+      interval: 3s
+      retries: 20
+    restart: unless-stopped
+volumes:
+  pgdata:
+  uploads:

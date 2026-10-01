@@ -1,0 +1,74 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><style>
+body{font:var(--fw-body) var(--fs-body)/var(--lh-body) var(--font-sans);letter-spacing:var(--ls-body);color:var(--color-fg);max-width:var(--container-wrap);box-sizing:border-box;margin:0 auto;padding:0 24px 80px}
+h2{font:var(--fw-tile) var(--fs-tile)/var(--lh-tile) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-tile);margin:2.4em 0 .8em}
+h3{font:var(--fw-section) var(--fs-body)/var(--lh-body) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-body);margin:2em 0 .5em}
+p,ul,ol{margin:0 0 1em}
+strong{font-weight:var(--fw-section)}
+a{color:var(--color-link)}
+code{font-family:var(--font-mono);font-size:.9em;background:var(--color-fog);padding:0 4px}
+blockquote{margin:1.5em 0;padding-left:var(--space-cluster);border-left:2px solid var(--color-line);color:var(--color-secondary)}
+blockquote p{margin:0}
+</style></head><body><p>It started with an LLM Wiki. After encountering Andrej Karpathy’s LLM Wiki concept, I wanted to organize my project experiences and decisions into knowledge that an AI could use by following the evidence.</p>
+<p>Explaining a project takes more than a list of technologies. It also takes the reasons for choosing them, the work I was responsible for, and the problems I encountered. I thought that recording this context would make it reusable in later work.</p>
+<p>The tool I used in this process was <strong>Hermes Agent</strong>. It connects a language model to tools such as file access and command execution, allowing it to carry out work rather than only hold a conversation. I configured a personal agent around Hermes and named it <strong>Luna</strong>. I did not train a separate model. I built an environment in which an existing model could consult my materials and working rules.</p>
+<p>Today, I talk to Luna through Telegram to find information, prepare job applications, and write blog posts. But I did not design its present form all at once. This is a look back at how an experiment that began with an LLM Wiki grew into operating a personal agent.</p>
+<h2>Turning explanations into reusable records</h2>
+<p>I wanted to organize more than a list of projects. Even within the same project, different questions call for different information. Describing an architecture, discussing collaboration, and looking back at incident response require different records.</p>
+<p>A summary saying “I built this service” was not enough. I needed to be able to trace the reasons for decisions, my role, and the original material supporting an explanation.</p>
+<p>I separated original experience records from wiki summaries. The originals preserved the sources, while the wiki presented them in a form I could read and review. If a summary was wrong, I could return to the original.</p>
+<p>Hermes handled reading those materials and working with them. Connecting a knowledge store to an agent turned the records from archived material into context for actual tasks.</p>
+<h2>A name was not a set of working rules</h2>
+<p>Naming the agent Luna did not make it understand me. What mattered more was deciding what it should consult and which rules should guide its work.</p>
+<p>Working on job applications makes this distinction clear. Knowing which projects I participated in does not mean the agent can attribute every task in those projects to me. It needs to distinguish the team’s results from the work I personally did. Fluent writing alone cannot solve that problem.</p>
+<p>Feedback about writing style is a different kind of information. Asking for explanations of technical choices rather than technology lists, or correcting repetitive phrasing, provides guidance for future writing.</p>
+<p>Through use, I came to distinguish the kinds of information Luna should consult.</p>
+<table>
+<thead>
+<tr>
+<th>Information</th>
+<th>How it should be handled</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Preferences and recurring corrections</td>
+<td>Guidance for conversation and writing</td>
+</tr>
+<tr>
+<td>Experience, responsibilities, and results</td>
+<td>Facts to verify against source material</td>
+</tr>
+<tr>
+<td>Repeated procedures</td>
+<td>Methods captured in skills and workflows</td>
+</tr>
+<tr>
+<td>Current server or deployment state</td>
+<td>Information to inspect in the actual system</td>
+</tr>
+</tbody>
+</table>
+<p>This was different from putting everything into one long introduction about myself. It meant separating standing guidance, facts to retrieve when needed, and state that requires a fresh check.</p>
+<h2>From an LLM Wiki to a personal ontology</h2>
+<p>Reusing the material also required relationships between documents. A project, my role, a decision made during the work, and the evidence explaining that decision needed to be connected.</p>
+<p>For example, being responsible for infrastructure in PinLog does not mean I wrote all of its application code. Combining different contributors’ work just because the documents belong to the same project produces a false account.</p>
+<p>Alongside the wiki, I maintained a graph that distinguished entities, relationships, claims, and evidence. Human-readable documents used Obsidian Markdown; structured relationships used JSONL; retrieval used a SQLite embedding index and Python tools. This is a lightweight Graph-backed RAG structure that retrieves related relationships and evidence along with the documents it finds.</p>
+<p><leo-pipeline><leo-stage title="Experiences and sources">Evidence behind explanations</leo-stage><leo-stage title="Wiki and graph">Relationships, claims, evidence</leo-stage><leo-stage title="Context retrieval">Material relevant to the question</leo-stage><leo-stage title="Luna’s work">Hermes and tools</leo-stage><leo-stage title="My review">Verification and corrections</leo-stage></leo-pipeline></p>
+<p>By <strong>“my personal ontology,”</strong> I do not mean a perfect digital replica of myself. I mean a structure that defines how to divide experiences into entities, connect them, and support explanations with evidence.</p>
+<p>That structure lets retrieval go beyond finding a project name to checking which parts of the experience I can claim as my own. But a connection in a graph does not make every interpretation correct. The source and the scope of my responsibility still need review.</p>
+<h2>More memory was not enough</h2>
+<p>While operating AlgoSu, I experienced how continually adding information to an AI agent could cloud its judgment. I needed to account for the same problem in my personal knowledge store.</p>
+<p>Material worth preserving does not need to appear in every answer. There is no reason to provide application-writing experience and server-check settings together for every task.</p>
+<p>I separated information to surface first, information to retrieve on demand, material kept primarily for archival purposes, and information excluded from use. Before storing something new, I also wanted to check whether it could be merged with existing material, summarized, or used to replace an older entry.</p>
+<p><strong>Preserving an original and exposing it to the current task are different problems.</strong> What mattered was not how much material Luna possessed, but whether it retrieved the right context for the request.</p>
+<h2>Remembering me and using that memory</h2>
+<p>In practice, these are not the same thing.</p>
+<p>While preparing this article, Luna asked me again why I had started with an LLM Wiki. But that motivation and the design principles were already in my experience records. Rather than explain them again, I asked it to write by looking back at Luna’s history so far.</p>
+<p>The problem was not a lack of storage. It was deciding whether to consult the existing records before answering or ask the user again.</p>
+<p>The opposite problem also exists. Finding a historical record does not mean the current state has been verified. A record that a server was healthy in the past cannot establish that it is healthy now. Stored knowledge can indicate what to inspect, but cannot replace the current system.</p>
+<p>Luna therefore needed both behaviors: consult existing context first to avoid unnecessary repetition, and check the actual source when memory alone cannot answer the question.</p>
+<h2>From a knowledge store to a working tool</h2>
+<p>The experiment started with an LLM Wiki, but its scope expanded beyond organizing records. Today, I send requests through Telegram, Luna produces results using materials and tools, and I review them. That is how we work through a range of tasks.</p>
+<p>This does not mean handing over every decision. I still decide what to claim about my experience, which materials to publish, and whether a result matches my intent. A natural-sounding explanation is not a reason to skip verification.</p>
+<p>Looking back, using Hermes has involved more than crafting a good prompt. It has meant organizing my materials, separating facts from preferences, recording repeatable procedures, and correcting wrong results. Luna is the name I gave to the agent shaped through that process.</p>
+<p>The standard going forward remains the same: not an agent that can say a great deal about me, but one that finds relevant evidence, uses it in actual work, and checks what it does not know. The experiment that began with an LLM Wiki has become an ongoing effort to build that tool.</p></body></html>

@@ -1,0 +1,20 @@
+{
+  "category": "ai-agent",
+  "tags": [
+    "Hermes",
+    "LLM Wiki",
+    "Graph RAG",
+    "Personal Agent"
+  ],
+  "publishedAt": "2026-10-01",
+  "published": true,
+  "featured": false,
+  "ko": {
+    "title": "LLM Wiki에서 시작한 나만의 AI 에이전트 만들기",
+    "summary": "경험을 정리하는 LLM Wiki에서 출발해, 내 기록과 작업 기준을 참고하는 Hermes 기반 개인 에이전트 ‘루나’를 만들어 온 과정입니다."
+  },
+  "en": {
+    "title": "Building a Personal AI Agent, Starting with an LLM Wiki",
+    "summary": "How an LLM Wiki for my experiences grew into Luna, a personal agent built around Hermes that works with my records, evidence, and working rules."
+  }
+}

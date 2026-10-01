@@ -1,0 +1,16 @@
+flowchart TB
+    subgraph IN["in-context (auto-loaded every session)"]
+        SW["sprint-window.md<br/>size-2 window"]
+        MEM["MEMORY.md<br/>index + 1-line summaries"]
+        CL["CLAUDE.md<br/>immutable conventions"]
+        AG[".claude/commands/agents/<br/>12-persona SSoT"]
+    end
+
+    subgraph OUT["on-demand (only when needed)"]
+        ADR["docs/adr/sprints/sprint-NNN.md<br/>permanent decision records"]
+        RB["docs/runbook/*.md<br/>operational manuals"]
+        OTHER["other domain docs"]
+    end
+
+    SW -->|slides on /stop| ADR
+    MEM -->|grep then Read| ADR

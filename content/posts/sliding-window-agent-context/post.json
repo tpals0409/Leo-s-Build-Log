@@ -1,0 +1,21 @@
+{
+  "category": "ai-agent",
+  "project": "algosu",
+  "tags": [
+    "agent",
+    "documentation",
+    "sliding-window",
+    "context-optimization",
+    "claude-code"
+  ],
+  "publishedAt": "2026-05-13",
+  "thumbnail": "thumbnail.webp",
+  "ko": {
+    "title": "기억은 휘발되고 문서는 무한히 쌓인다 — 슬라이딩 윈도우로 agent 컨텍스트를 최적화하다",
+    "summary": "152번의 스프린트가 쌓이는 동안 ADR도 MEMORY도 CLAUDE.md도 함께 부풀었습니다. 그런데 이 모든 문서를 매 세션 agent에게 들이미는 건 꽉 찬 물통에 물을 더 붓는 일이었어요. 슬라이딩 윈도우 알고리즘에서 빌려 온 단순한 규칙 하나로 컨텍스트를 다이어트한 기록입니다."
+  },
+  "en": {
+    "title": "Memory Fades, Documents Pile Up — A Sliding Window for Agent Context",
+    "summary": "Across 152 sprints, the ADRs, MEMORY, and CLAUDE.md all swelled together. Yet handing the entire pile to an agent every session was like pouring more water into a full bucket. A record of trimming agent context with a single rule borrowed from the sliding window algorithm."
+  }
+}

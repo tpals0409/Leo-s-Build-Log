@@ -1,0 +1,4 @@
+flowchart LR
+  I["idle<br/>칸 1 · 직전 완료<br/>칸 2 · 비어 있음"] -->|"/start · 칸 2에 새 스프린트"| A["active<br/>칸 1 · 직전 완료<br/>칸 2 · 진행 중"]
+  A -->|"/stop · 칸 2 → 칸 1"| I
+  A -.->|"/stop · 밀려난 옛 칸 1"| ADR[("docs/adr/sprints/<br/>영구 보관")]

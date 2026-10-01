@@ -1,0 +1,4 @@
+flowchart LR
+  I["idle<br/>slot 1 · last done<br/>slot 2 · empty"] -->|"/start · new sprint in slot 2"| A["active<br/>slot 1 · last done<br/>slot 2 · in progress"]
+  A -->|"/stop · slot 2 → slot 1"| I
+  A -.->|"/stop · old slot 1 pushed out"| ADR[("docs/adr/sprints/<br/>permanent archive")]

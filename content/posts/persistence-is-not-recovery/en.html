@@ -2,22 +2,32 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Keeping a PVC Was Not the Same as Recovering Data</title>
 <style>
 body{font:var(--fw-body) var(--fs-body)/var(--lh-body) var(--font-sans);letter-spacing:var(--ls-body);color:var(--color-fg);max-width:var(--container-wrap);box-sizing:border-box;margin:0 auto;padding:0 24px 80px}
 h2{font:var(--fw-tile) var(--fs-tile)/var(--lh-tile) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-tile);margin:2.4em 0 .8em}
-p,ul,ol{margin:0 0 1em}strong{font-weight:var(--fw-section)}code{font-family:var(--font-mono);overflow-wrap:anywhere}svg{display:block;width:100%;height:auto}
+h3{font:var(--fw-section) var(--fs-body)/var(--lh-body) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-body);margin:2em 0 .5em}
+p,ul,ol{margin:0 0 1em}
+strong{font-weight:var(--fw-section)}
+a{color:var(--color-link)}
+code{font-family:var(--font-mono);font-size:.9em;background:var(--color-fog);padding:0 4px}
+blockquote{margin:1.5em 0;padding-left:var(--space-cluster);border-left:2px solid var(--color-line);color:var(--color-secondary)}
+blockquote p{margin:0}
 </style>
 </head>
 <body>
+<leo-callout type="note" title="About PinLog"><p>PinLog is a place-journaling service: you save places along with why they mattered, and find them again in natural language. It was a team project, and I handled infrastructure and DevOps.</p></leo-callout>
 <p>When working with Kubernetes storage, it is easy to stop at “we attached a PVC, so the data persists.” But persists after what? A container restarting, a PVC being deleted, and a server losing its disk are different events. That distinction was what mattered when I examined PinLog’s storage configuration.</p>
-<p>PinLog ran its k3s control plane and workloads together on a single AWS node.</p>
+<p>PinLog ran its k3s control plane and workloads together on a single AWS node. k3s is a lightweight Kubernetes distribution.</p>
+<leo-adr>
+  <leo-problem><p>“We attached a PVC, so the data persists” did not distinguish a Pod restart, PVC deletion, and node loss. On its single node, PinLog kept the PostgreSQL data and backup PVCs on the same local storage.</p></leo-problem>
+  <leo-decision><p>I read the storage setup against those three events separately. I looked at each PV&#x27;s actual reclaim policy rather than the StorageClass name, and treated deletion policy and recovery procedure as separate questions.</p></leo-decision>
+  <leo-result><p>Retain only stops automatic cleanup after PVC deletion, and a backup PVC on the same node does not cover node loss. Off-host copies and a restore procedure remained the next step, to be designed and verified on their own.</p></leo-result>
+</leo-adr>
 <h2>Start with what actually survives</h2>
 <p>A Pod is a unit of execution. A PVC is a request for storage, and a PV represents the storage resource bound to that request. Writing application data to the volume mounted through a PVC separates its lifetime from the container’s lifetime. It does not preserve every file written anywhere inside a container.</p>
 <p>After a Pod restarts or is replaced, using the existing data still requires an intact PVC and a surviving, accessible disk behind it. With local storage, access to the node holding the data matters too. <strong>Restarting execution and regaining access to storage are separate problems.</strong></p>
 <h2>Where the two StorageClasses differ</h2>
-<p>The default StorageClass, <code>local-path</code>, had a <code>Delete</code> reclaim policy. <code>local-path-retain</code> used <code>Retain</code>. Both used node-local storage; the difference was how a volume would be handled after its PVC was deleted.</p>
+<p>A StorageClass defines how volumes are provisioned, and its reclaim policy decides what happens to a volume after its PVC is deleted. The default StorageClass, <code>local-path</code>, had a <code>Delete</code> reclaim policy. <code>local-path-retain</code> used <code>Retain</code>. Both used node-local storage; the difference was how a volume would be handled after its PVC was deleted.</p>
 <leo-compare>
 <leo-side label="local-path · Delete"><p>When PVC deletion releases the volume, the policy calls for deleting the PV and its backing storage. The provisioner carries out the storage cleanup.</p></leo-side>
 <leo-side label="local-path-retain · Retain"><p>After PVC deletion, the PV and backing data are retained rather than automatically cleaned up. An operator must handle subsequent reuse or cleanup.</p></leo-side>
@@ -33,7 +43,7 @@ p,ul,ol{margin:0 0 1em}strong{font-weight:var(--fw-section)}code{font-family:var
 </leo-pipeline>
 <p>This is a setting for placement and binding time. Waiting to bind does not create a replica or move data to another server. In a single-node configuration, scheduling-aware binding does not take storage outside that node.</p>
 <h2>Data and backup were inside the same boundary</h2>
-<p>The PostgreSQL data PVC, PostgreSQL backup PVC, and Cowork PVC all used <code>local-path-retain</code>. Cowork’s configuration kept its SQLite database, dedicated Hermes home, and cache under <code>/data</code> on a 1Gi PVC. The working tool’s state, not just PostgreSQL’s data, had a lifetime separate from its Pod.</p>
+<p>The PostgreSQL data PVC, PostgreSQL backup PVC, and the PVC for Cowork, a working tool, all used <code>local-path-retain</code>. Cowork’s configuration kept its SQLite database, a dedicated home directory for Hermes, an AI agent, and cache under <code>/data</code> on a 1Gi PVC. The working tool’s state, not just PostgreSQL’s data, had a lifetime separate from its Pod.</p>
 <leo-diagram title="The single-node storage boundary" caption="Separate PVCs still depend on one node. Copies outside the host require a separate check.">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 440" style="max-width:320px;margin:0 auto" role="img" aria-label="Separate PVCs still depend on one node. Copies outside the host require a separate check." font-family="sans-serif" font-size="16" fill="currentColor">
 <rect x="12" y="12" width="296" height="282" fill="none" stroke="currentColor"></rect>

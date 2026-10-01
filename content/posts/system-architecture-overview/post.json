@@ -10,11 +10,11 @@
   "publishedAt": "2026-04-09T10:00:00+09:00",
   "thumbnail": "thumbnail.webp",
   "ko": {
-    "title": "MSA 설계, 사람이 결정하고 AI가 실행한다",
+    "title": "AI 에이전트에게 일을 나누기 위해 서비스를 나눴습니다",
     "summary": "사람이 아키텍처를 결정하고 AI가 실행하는 MSA 설계 실전 기록"
   },
   "en": {
-    "title": "MSA Design: Humans Decide, AI Executes",
+    "title": "I Split the Services So I Could Split the Work Among AI Agents",
     "summary": "A hands-on record of MSA design where humans make architectural decisions and AI carries them out"
   }
 }

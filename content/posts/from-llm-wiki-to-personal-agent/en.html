@@ -1,4 +1,8 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><style>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
 body{font:var(--fw-body) var(--fs-body)/var(--lh-body) var(--font-sans);letter-spacing:var(--ls-body);color:var(--color-fg);max-width:var(--container-wrap);box-sizing:border-box;margin:0 auto;padding:0 24px 80px}
 h2{font:var(--fw-tile) var(--fs-tile)/var(--lh-tile) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-tile);margin:2.4em 0 .8em}
 h3{font:var(--fw-section) var(--fs-body)/var(--lh-body) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-body);margin:2em 0 .5em}
@@ -8,35 +12,46 @@ a{color:var(--color-link)}
 code{font-family:var(--font-mono);font-size:.9em;background:var(--color-fog);padding:0 4px}
 blockquote{margin:1.5em 0;padding-left:var(--space-cluster);border-left:2px solid var(--color-line);color:var(--color-secondary)}
 blockquote p{margin:0}
-</style></head><body><p>It started with an LLM Wiki. After encountering Andrej Karpathy’s LLM Wiki concept, I wanted to organize my project experiences and decisions into knowledge an AI could use by following the evidence.</p>
-<p>Project names and technology lists could not fully explain an experience. I needed the reasoning behind decisions, the scope of my responsibilities, and the records supporting those explanations. I began building a personal knowledge store that connected this material so it could be retrieved for later questions.</p>
-<p>The tool I introduced to operate that store was <strong>Hermes Agent</strong>, an AI agent tool that lets a language model read files and carry out work through tools. The personal agent I call <strong>Luna</strong> is configured around Hermes. I did not train a separate model; I built an environment in which an existing model could consult my materials and working rules.</p>
+</style>
+</head>
+<body>
+<leo-callout type="note" title="About this post"><p>This post covers how I first introduced Hermes Agent to a personal knowledge store that holds my project experience and decisions. It only covers what I did and verified at the time of adoption.</p></leo-callout>
+<p>It started with an LLM Wiki. The LLM Wiki concept, introduced by Andrej Karpathy, is about organizing material into knowledge an AI can read and use by following the evidence. After seeing it, I wanted to organize my own project experience and decisions the same way.</p>
+<p>Project names and technology lists could not fully explain an experience. I also needed the reasoning behind decisions, the scope of my role, and the records that back those explanations up. So I began building a personal knowledge store that connects this material and lets me retrieve it again for later questions.</p>
+<p>The tool I introduced to run that store was <strong>Hermes Agent</strong>, an AI agent tool that lets a language model read files and get work done by running tools. The personal agent I call <strong>Luna</strong> is also built on Hermes. I did not train a separate model. I built an environment in which an existing model consults my materials and working rules.</p>
+<leo-adr>
+  <leo-problem><p>The personal knowledge store, with its original experience records, wiki pages, and relationship graph, was operated through several CLI calls: Claude Code commands, a tmux setup, and a Codex review path.</p></leo-problem>
+  <leo-decision><p>I kept the knowledge, its conventions, and the role-specific permissions as they were, and moved only the execution path to Hermes. Roles were separated by responsibility and permission, and subagent delegation was reserved for work that can be split off.</p></leo-decision>
+  <leo-result><p>After the switch, graph validation found no integrity errors, but a warning about a low-confidence relationship remained. When delegation failed on a quota limit, the work fell back to the direct execution path.</p></leo-result>
+</leo-adr>
 <h2>Changing the execution layer, not rebuilding the knowledge</h2>
-<p>The store already contained original experience records, wiki pages, and a graph of relationships and evidence before I introduced Hermes. Its workflows used Claude Code commands and a tmux-based execution setup, with Codex connected for review.</p>
-<p>Moving to Hermes did not mean recreating these materials or rules. I changed the execution path used to operate the knowledge. Work that depended on calls to multiple CLIs moved into Hermes directly, and review was reorganized as a separate perspective within Hermes.</p>
+<p>Before Hermes, the store already held original experience records, wiki pages, and a graph of relationships and evidence. Work ran through commands in Claude Code, an AI coding tool, and a tmux setup (a tool for keeping several terminals running side by side), with Codex connected for review.</p>
+<p>Moving to Hermes did not mean recreating this material or these rules. What changed was the execution path used to operate the knowledge. Work that depended on calls to several CLIs moved into Hermes itself, and review became a separate perspective inside Hermes.</p>
 <leo-compare><leo-side label="Previous execution"><p>Role definitions and procedures were connected to Claude Code commands, a tmux setup, and a Codex review path.</p></leo-side><leo-side label="Introducing Hermes"><p>Hermes reads role documents and workflows and performs the work directly. It delegates only when independent review or exploration is useful.</p></leo-side></leo-compare>
-<p>I kept the store’s knowledge conventions and role-specific permissions. Changing the meaning of the material while switching tools would also make the migration harder to verify.</p>
+<p>I kept the store’s knowledge conventions and role-specific permissions. If switching tools also changed what the material meant, it would be much harder to verify that the migration worked.</p>
 <h2>One executor does not mean one undifferentiated role</h2>
-<p>Consolidating execution did not mean granting every task the same authority. Preserving sources, extracting claims, and verifying those claims needed to remain distinct responsibilities.</p>
+<p>Consolidating execution did not mean giving every task the same authority. Preserving sources, extracting claims from them, and verifying those claims had to stay separate.</p>
 <leo-pipeline><leo-stage title="Preserve sources">Keep material and provenance</leo-stage><leo-stage title="Extract candidates">Entities, relations, claims</leo-stage><leo-stage title="Review evidence">Check sources and meaning</leo-stage><leo-stage title="Organize and index">Make knowledge retrievable</leo-stage></leo-pipeline>
-<p>The preservation role does not arbitrarily reinterpret and rewrite originals. The extraction role leaves weakly supported material as candidates rather than final facts. The review role checks quotations and relationships, while the retrieval role searches and answers with read-only access.</p>
-<p>These roles do not all run simultaneously as separate processes. The default is for Hermes to read the relevant role documents and procedures and work through them in sequence. Roles define responsibility and permission more than process counts.</p>
-<p>I kept human decisions in the process of merging similar knowledge or resolving conflicting claims. Being able to edit a file should not authorize the agent to decide what my experiences mean.</p>
+<p>The preservation role does not reinterpret or rewrite originals. The extraction role leaves weakly supported material as candidates instead of settling it as fact. The review role checks quotations and relationships. The retrieval role searches and answers with read-only access.</p>
+<p>These roles do not all run at once as separate processes. By default, Hermes reads the relevant role documents and procedures and works through them in order. A role was less about how many processes run and more about drawing lines of responsibility and permission.</p>
+<p>Merging similar knowledge and resolving conflicting claims stayed my call. Being able to edit a file should not let the agent decide what my experiences mean.</p>
 <h2>Connecting natural-language requests to procedures</h2>
-<p>As part of the migration, I created a skill for the store and a mapping from natural-language requests to workflows. The skill provides instructions about which documents to read and which tools to use.</p>
-<p>A request to check the knowledge store’s health maps to an inspection procedure and validation tools. A request to explain an experience with evidence maps to retrieval. Instead of repeating all operating rules for each question, the agent reads the procedure relevant to the request.</p>
-<p>Retrieval also goes beyond finding one relevant document. The search result serves as a starting point for checking connected relationships, claims, and evidence. Participating in a project and personally implementing a particular feature are different claims.</p>
-<p>This relational structure is what I mean by a personal ontology: not a replica of me, but a definition of how experiences, responsibilities, decisions, and evidence are separated and connected. Hermes was responsible for reading and using that structure through the defined procedures.</p>
+<p>As part of adopting Hermes, I wrote a skill for the store and a table mapping natural-language requests to procedures. A skill is a set of working instructions that tells the agent which documents to read and which tools to use in this store.</p>
+<p>For example, “check the state of the knowledge store” maps to an inspection procedure and validation tools. “Explain this experience with evidence” maps to retrieval. Instead of restating every operating rule for each question, the agent reads the procedure that fits the request.</p>
+<p>Retrieval also goes beyond finding one relevant document. The search result is a starting point for checking the connected relationships, claims, and evidence. Having taken part in a project and having personally done a specific piece of work in it are different claims.</p>
+<p>This relational structure is what I mean by <strong>a personal ontology</strong>. An ontology is a structure that defines which kinds of things exist and how they connect. Mine is not a replica of me; it defines how experiences, roles, decisions, and evidence are separated and linked. Hermes’s job was to read that structure and use it through the defined procedures.</p>
 <h2>A direct path before parallel execution</h2>
-<p>I configured subagent delegation for independent research and review, but did not make parallel execution the default for every request. Small searches and updates run directly and sequentially in Hermes. Delegation is reserved for work that can be separated.</p>
-<p>Multiple agents were prohibited from writing to the same graph file concurrently. A subagent’s completion report was not enough to finish a task: the main agent needed to read and verify its output.</p>
-<p>The initial setup also paired a GPT-family main model with Gemini Flash-family delegated models. Parallel smoke tests completed, but a subsequent graph-cleanup task hit a free-tier quota limit and fell back to direct execution. Delegation working once did not establish that it would remain available. The value of retaining the direct path became concrete during actual work.</p>
+<p>I configured independent research and review to be delegated to subagents, separate agents to which the main agent hands off part of the work. But I did not make parallel execution the default for every request. Small searches and updates run directly and in order in Hermes, and delegation is used only for work that can be split off.</p>
+<p>Multiple agents were not allowed to write to the same graph file at the same time. A subagent reporting that it was done was not enough to close a task either: the main agent had to read and check its output.</p>
+<p>The initial setup also paired a GPT-family main model with Gemini Flash-family delegated models. The parallel smoke tests completed. In a later graph-cleanup task, though, delegation failed on a free-tier quota limit and the work fell back to direct execution. Delegation working once did not mean it would stay available. The reason for keeping the direct path as the default showed up in real work.</p>
 <h2>Showing what is needed, not everything available</h2>
-<p>While operating AlgoSu, an algorithm study platform, I had experienced how continually adding information to an AI agent could cloud its judgment. I did not want the personal knowledge store to focus solely on remembering more.</p>
-<p>For cover-letter writing, one of the early applications, I avoided using the full graph for every task. I separated information to consult first, retrieve on demand, keep mainly for archival purposes, or exclude from use into <code>front / on_demand / archive / off</code>.</p>
-<p>This did not mean deleting every experience. Preserving originals and deciding what information to expose for the current writing task were separate concerns. Summarizing, merging, and showing less were part of operating the knowledge store, not just accumulating it.</p>
+<p>While running AlgoSu, an algorithm study platform, I had seen how continually piling information onto an AI agent could cloud its judgment. So I did not want the personal knowledge store to aim only at remembering more.</p>
+<p>For cover-letter writing, one of the early uses, I avoided feeding in the full graph every time. I split information into what to consult first, what to retrieve on demand, what to keep mainly as an archive, and what not to use, marked as <code>front / on_demand / archive / off</code>.</p>
+<p>This was not a way of deleting experiences. It separated preserving the originals from deciding what to expose for the piece being written. Summarizing, merging, and showing less were part of operating the store, not just accumulating knowledge.</p>
 <h2>What I verified during adoption</h2>
-<p>I did not stop after changing the execution documents. I checked role definitions and workflows for assumptions about the previous tools, and ran graph validation and retrieval smoke tests.</p>
-<p>The final inspection at the time found no graph integrity errors, but a warning about a low-confidence relationship remained. Passing structural validation did not establish that every piece of knowledge was true. Checking files and references and judging the meaning of an experience required separate forms of review.</p>
-<p>Introducing Hermes was less about completing a personal assistant than establishing an environment that could work with my records. I preserved existing knowledge, moved its execution path, connected roles and verification procedures, and kept the decisions that needed to remain mine.</p>
-<p>The interest that began with an LLM Wiki thus grew from how to organize material into how an agent should handle that material. That was also Luna’s starting point.</p></body></html>
+<p>I did not stop after changing the execution documents. I checked role documents and procedures for descriptions that still assumed the previous tools, and ran graph validation and retrieval smoke tests.</p>
+<p>The final inspection at the time found no graph integrity errors. A warning about a low-confidence relationship remained, though. Passing structural validation does not make every piece of knowledge a confirmed fact. Checking that files and references are sound and judging what an experience means needed separate reviews.</p>
+<p>Introducing Hermes was less about finishing a personal assistant than about setting up an environment that could work with my records. I preserved the existing knowledge, moved its execution path, connected roles and verification procedures, and kept the decisions that were mine to make.</p>
+<p>The interest that began with an LLM Wiki thus moved from how to organize material to how an agent should handle my material. That was also where Luna started.</p>
+</body>
+</html>

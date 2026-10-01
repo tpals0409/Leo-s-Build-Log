@@ -4,11 +4,11 @@
   "featured": false,
   "published": true,
   "ko": {
-    "title": "AI 교육이 끝난 뒤에도 남아야 할 것",
+    "title": "교육이 끝나도 업무에서 AI를 쓰려면 — AI 교육 보조강사 회고",
     "summary": "기업 AX 교육을 지원하며, 교육 이후에도 각자의 업무에서 AI를 다시 꺼내 쓰려면 무엇이 필요한지 돌아봤습니다."
   },
   "en": {
-    "title": "What Should Remain After AI Training Ends",
+    "title": "Using AI at Work After the Training Ends — Notes from an AI Training Assistant",
     "summary": "Supporting corporate AX training led me to reflect on what helps people return to AI in their own work after the class ends."
   }
 }

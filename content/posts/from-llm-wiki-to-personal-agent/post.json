@@ -10,11 +10,11 @@
   "published": true,
   "featured": false,
   "ko": {
-    "title": "LLM Wiki에서 시작한 나만의 AI 에이전트 만들기",
+    "title": "내 경험과 결정 기록을 찾아 쓰는 AI 에이전트 만들기",
     "summary": "LLM Wiki에서 출발한 개인 지식 저장소를 Hermes Agent로 옮기며, 기존 지식과 역할 경계를 보존하고 검색·검증·위임 절차를 연결한 도입기입니다."
   },
   "en": {
-    "title": "Building a Personal AI Agent, Starting with an LLM Wiki",
+    "title": "Building an AI Agent That Finds and Uses My Experience and Decision Records",
     "summary": "Introducing Hermes Agent to a personal knowledge store inspired by LLM Wiki: preserving existing knowledge and role boundaries while connecting retrieval, validation, and delegation."
   }
 }

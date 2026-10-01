@@ -2,25 +2,33 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>When the Server Dies, Its Monitoring Dies Too</title>
 <style>
 body{font:var(--fw-body) var(--fs-body)/var(--lh-body) var(--font-sans);letter-spacing:var(--ls-body);color:var(--color-fg);max-width:var(--container-wrap);box-sizing:border-box;margin:0 auto;padding:0 24px 80px}
 h2{font:var(--fw-tile) var(--fs-tile)/var(--lh-tile) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-tile);margin:2.4em 0 .8em}
 h3{font:var(--fw-section) var(--fs-body)/var(--lh-body) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-body);margin:2em 0 .5em}
 p,ul,ol{margin:0 0 1em}
 strong{font-weight:var(--fw-section)}
+a{color:var(--color-link)}
+code{font-family:var(--font-mono);font-size:.9em;background:var(--color-fog);padding:0 4px}
+blockquote{margin:1.5em 0;padding-left:var(--space-cluster);border-left:2px solid var(--color-line);color:var(--color-secondary)}
+blockquote p{margin:0}
 </style>
 </head>
 <body>
-
+<leo-callout type="note" title="About PinLog"><p>PinLog is a place-journaling service: you save places along with why they mattered, and find them again in natural language. It was a team project, and I handled infrastructure and DevOps.</p></leo-callout>
 <p>Once monitoring is installed on a server and alerts are connected, it can feel as though the system is ready to watch for failures. But change one question and a gap appears: <strong>if the server itself stops, rather than just the application, who sends the alert?</strong></p>
-<p>PinLog ran its k3s control plane and application workloads together on a single AWS node. Prometheus and Alertmanager ran on that node too. Both the system collecting service state and the system reporting it depended on the survival of the very server they watched.</p>
+<p>PinLog ran its k3s control plane and application workloads together on a single AWS node. k3s is a lightweight Kubernetes distribution, and the control plane is the set of components that manages the cluster.</p>
+<p>Prometheus, which collects metrics, and Alertmanager, which handles alerts, ran on that node too. Both the system collecting service state and the system reporting it depended on the survival of the very server they watched.</p>
+<leo-adr>
+  <leo-problem><p>Prometheus, Alertmanager, and Sentinel, the alert receiver on the host, all ran on the same single AWS node they were watching. If the whole node stopped, the alert path could stop with it.</p></leo-problem>
+  <leo-decision><p>The internal alert path stayed as it was. A separate external path was added: HTTPS/TLS checks run in a GitHub-hosted environment and send results directly to Mattermost.</p></leo-decision>
+  <leo-result><p>There is now a path that checks reachability from outside the node. It does not recover the service or make it highly available, and both paths still end at Mattermost.</p></leo-result>
+</leo-adr>
 <h2>Separate processes can still fail together</h2>
 <p>The useful concept here is a failure domain: the scope of components that one failure can affect together. The application and its monitoring can live in different Pods and separate namespaces, yet neither can execute when their shared node stops. Logical separation is not the same as independence from failure.</p>
 <p>This does not make internal monitoring useless. While the node is running, it can observe resources and workload state and collect clues about problems. But if the last line of notification for a complete node failure also depends on that internal path, the alerting system can disappear at exactly the moment it is needed.</p>
 <h2>Keep the internal path, add an outside vantage point</h2>
-<p>PinLog's internal alert path begins with metric collection and rule evaluation in Prometheus, passes through Alertmanager, and reaches a Sentinel Receiver on the host before being delivered to Mattermost. The alert travels through these stages:</p>
+<p>PinLog's internal alert path begins with metric collection and rule evaluation in Prometheus and passes through Alertmanager. A receiver called Sentinel Receiver, running on the host (the node&#x27;s operating system, outside the cluster), then picks it up and delivers it to Mattermost, the team chat. The alert travels through these stages:</p>
 <leo-pipeline>
   <leo-stage title="Prometheus">Collect internal metrics and evaluate rules</leo-stage>
   <leo-stage title="Alertmanager">Handle generated alerts</leo-stage>
@@ -28,7 +36,7 @@ strong{font-weight:var(--fw-section)}
   <leo-stage title="Mattermost">Present alerts to the operator</leo-stage>
 </leo-pipeline>
 <p>The important detail is that placing Sentinel on the host rather than inside the cluster does not make it independent of node failure. It runs at a different layer but relies on the same node. Moving to a host process crosses a boundary, but not the boundary that matters here: <strong>the failure domain of the whole node.</strong></p>
-<p>The external HTTPS/TLS monitor therefore runs in a GitHub-hosted environment and sends its results directly to Mattermost. It does not go through the service node's Prometheus or Sentinel. Rather than removing internal alerts or moving the entire observability stack, the design adds a separate path that checks reachability from outside the node.</p>
+<p>The external HTTPS/TLS monitor therefore runs in a GitHub-hosted environment (an execution environment operated by GitHub) and sends its results directly to Mattermost. It does not go through the service node's Prometheus or Sentinel. Rather than removing internal alerts or moving the entire observability stack, the design adds a separate path that checks reachability from outside the node.</p>
 <leo-pipeline>
   <leo-stage title="GitHub-hosted execution">Start the check outside the service node</leo-stage>
   <leo-stage title="HTTPS / TLS">Check service access from outside</leo-stage>

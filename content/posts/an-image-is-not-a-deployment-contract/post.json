@@ -5,6 +5,6 @@
   "publishedAt": "2026-07-29",
   "published": true,
   "featured": false,
-  "ko": {"title": "이미지를 받는 것만으로는 배포할 수 없었습니다", "summary": "실행 계약, 인프라의 책임 경계, 그리고 검사 통과와 운영 반영의 차이. 2026년 7월 피코에 남긴 기록으로 돌아보는 핀로그의 배포 준비."},
-  "en": {"title": "An Image Was Not Enough to Deploy", "summary": "Runtime contracts, infrastructure ownership, and the gap between passing checks and deploying: a look back at PinLog’s July 2026 records."}
+  "ko": {"title": "컨테이너 이미지만으로는 부족했던 배포 준비", "summary": "실행 계약, 인프라의 책임 경계, 그리고 검사 통과와 운영 반영의 차이. 2026년 7월 AI 에이전트 피코에 남긴 기록으로 돌아보는 PinLog의 배포 준비."},
+  "en": {"title": "Deployment Prep Where a Container Image Was Not Enough", "summary": "Runtime contracts, infrastructure ownership, and the gap between passing checks and deploying: a look back at PinLog’s July 2026 records."}
 }

@@ -9,11 +9,11 @@
   "publishedAt": "2026-04-09T13:00:00+09:00",
   "thumbnail": "thumbnail.webp",
   "ko": {
-    "title": "67번의 스프린트를 돌아보며",
+    "title": "AI와 함께한 67번의 개발 스프린트 — 일찍 한 결정과 미룬 결정",
     "summary": "멀티에이전트에 대한 호기심으로 시작한 프로젝트가 67번의 스프린트를 거치며 하나의 플랫폼이 됐습니다. 잘한 결정, 미룬 결정, 그리고 코더에서 빌더로 변해간 과정의 솔직한 회고."
   },
   "en": {
-    "title": "Looking Back on 67 Sprints",
+    "title": "67 Development Sprints with AI — Decisions Made Early and Decisions Put Off",
     "summary": "A project that started from curiosity about multi-agent systems became a full platform over 67 sprints. An honest retrospective of good decisions, deferred ones, and the journey from coder to builder."
   }
 }

@@ -9,11 +9,11 @@
   "publishedAt": "2026-04-09T11:00:00+09:00",
   "thumbnail": "thumbnail.webp",
   "ko": {
-    "title": "12명의 AI를 통제하는 법",
+    "title": "12개 AI 에이전트의 협업 규칙 — 요청 창구와 우선순위를 정하기",
     "summary": "AI 에이전트가 늘어날수록 통제가 문제였다. 총괄 에이전트 하나로 모은 소통 창구, 우선순위 3단계, 공통 규칙 파일 하나 — 혼자서 만든 거버넌스 구조 실전기."
   },
   "en": {
-    "title": "How to Control 12 AI Agents",
+    "title": "Collaboration Rules for 12 AI Agents — Setting Request Channels and Priorities",
     "summary": "As AI agents multiplied, control became the problem. One lead agent as the only channel, three priority tiers, one shared rules file — a firsthand account of building a governance structure solo."
   }
 }

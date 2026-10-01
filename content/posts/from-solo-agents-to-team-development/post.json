@@ -10,11 +10,11 @@
   "featured": false,
   "published": true,
   "ko": {
-    "title": "혼자 쓰던 AI Agent를 팀으로 가져가며",
+    "title": "AI 에이전트를 팀에 도입하기 전에, 서로의 개발 방식을 맞췄습니다",
     "summary": "알고수에서 익힌 AI Agent 활용법을 핀로그 팀에 적용했습니다. 그 전에 필요했던 건 서로의 생각을 꺼내고, 구조와 규약, 책임을 함께 정하는 일이었습니다."
   },
   "en": {
-    "title": "Bringing Solo AI Agent Practices into a Team",
+    "title": "Before Bringing AI Agents into the Team, We Aligned How We Develop",
     "summary": "Applying AlgoSu’s AI agent practices to PinLog started with aligning people: making assumptions explicit and agreeing on structure, conventions, and ownership."
   }
 }

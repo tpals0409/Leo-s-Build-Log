@@ -2,56 +2,64 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI Processes the Incident Alert. Code Still Decides Its Final Format.</title>
 <style>
 body{font:var(--fw-body) var(--fs-body)/var(--lh-body) var(--font-sans);letter-spacing:var(--ls-body);color:var(--color-fg);max-width:var(--container-wrap);box-sizing:border-box;margin:0 auto;padding:0 24px 80px}
 h2{font:var(--fw-tile) var(--fs-tile)/var(--lh-tile) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-tile);margin:2.4em 0 .8em}
+h3{font:var(--fw-section) var(--fs-body)/var(--lh-body) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-body);margin:2em 0 .5em}
 p,ul,ol{margin:0 0 1em}
 strong{font-weight:var(--fw-section)}
-code{font-family:var(--font-mono);overflow-wrap:anywhere}
+a{color:var(--color-link)}
+code{font-family:var(--font-mono);font-size:.9em;background:var(--color-fog);padding:0 4px}
+blockquote{margin:1.5em 0;padding-left:var(--space-cluster);border-left:2px solid var(--color-line);color:var(--color-secondary)}
+blockquote p{margin:0}
 </style>
 </head>
 <body>
-<p>When adding AI to incident notifications, I had a question to settle before worrying about good prose: <strong>which decisions should AI be allowed to make?</strong> Processing an alert into readable text is not the same as notifying an entire channel. Changing a sentence and changing a mention policy carry different consequences.</p>
-<p>In PinLog, Sentinel uses Hermes to process alert payloads. But its generated output is not automatically the final message. Trusted code revalidates mentions, URLs, and formatting.</p>
+<leo-callout type="note" title="About PinLog"><p>PinLog is a place-journaling service: you save places along with why they mattered, and find them again in natural language. It was a team project, and I handled infrastructure and DevOps. This post is about adding AI to Sentinel, the component that receives PinLog's incident alerts and passes them on.</p></leo-callout>
+<p>When adding AI to incident notifications, I had a question to settle before worrying about good prose: <strong>which decisions should AI be allowed to make?</strong> Turning an alert into readable text is not the same as notifying an entire channel. Changing a sentence and changing a mention policy carry different weight.</p>
+<p>In PinLog, Sentinel, which receives and forwards alerts, uses the AI agent Hermes to process alert payloads (the raw data an alert carries). But the AI's output is not automatically the final message. Trusted code revalidates mentions, URLs, and formatting.</p>
+<leo-adr>
+  <leo-problem><p>Adding AI to incident alerts risked handing generated output not only the explanation, but also who gets notified and which links and format go out. Operational policy would then depend on generated output.</p></leo-problem>
+  <leo-decision><p>Hermes processes the alert payload, and trusted code revalidates mentions, URLs, and formatting. Notification and repeat policies by severity and state, and the place of the closing one-line summary, are fixed as policy.</p></leo-decision>
+  <leo-result><p>The broad question “do we trust AI?” became the concrete question “which parts of its output must code check?” Correct format still does not guarantee correct content.</p></leo-result>
+</leo-adr>
 <h2>An alert explains a situation—and calls for attention</h2>
-<p>The person receiving an operational alert needs to know what happened, whether it is still happening, and what to do now. That is the reason to turn a payload into something a person can read. A message contains more than an explanation, though. A mention requests someone else's attention, and a URL points them toward the next place to investigate.</p>
-<p>I did not want to treat all of those elements as unrestricted text generation. If freedom to rephrase also means freedom to change who gets notified or which message rules apply, operational policy becomes dependent on generated output. Before producing a plausible message for each alert, I wanted <strong>the same policy to apply to the same state</strong>.</p>
+<p>The person receiving an operational alert needs to know what happened, whether it is still happening, and what to do now. That is why a payload is turned into something a person can read. A message contains more than an explanation, though. A mention requests someone's attention, and a URL points to the next place to look.</p>
+<p>I did not want to treat all of these as free-form text generation. If freedom to rephrase also meant freedom to change who gets notified or which message rules apply, operational policy would depend on generated output. Before getting a plausible message for each alert, I wanted <strong>the same policy to apply to the same state</strong>.</p>
 <h2>Hermes processes the payload; code owns the final boundary</h2>
-<p>Alerts originating inside the cluster travel from Prometheus through Alertmanager to the host's Sentinel Receiver, then on to Mattermost. Sentinel uses a dedicated Hermes profile for alerts. The important detail is not the profile's name, but the separate code validation after processing.</p>
+<p>Alerts raised inside the cluster flow like this. The monitoring tool Prometheus raises the alert, and Alertmanager hands it to the Sentinel Receiver on the host. Sentinel then delivers it to Mattermost, the team messenger. Sentinel uses a dedicated Hermes profile for alerts. What matters is not the profile's name, but the separate code validation after processing.</p>
 <leo-pipeline>
   <leo-stage title="Prometheus">Alert originates</leo-stage>
   <leo-stage title="Alertmanager">Alert is forwarded</leo-stage>
   <leo-stage title="Sentinel Receiver">Hermes processing · code revalidation</leo-stage>
   <leo-stage title="Mattermost">Operational message delivery</leo-stage>
 </leo-pipeline>
-<p>Within that flow, Sentinel's responsibilities split as follows. Rather than hiding the AI stage, the design makes explicit where its output meets the operational rules.</p>
+<p>Within that flow, Sentinel's responsibilities split as follows. Rather than hiding the AI stage, the design makes clear where its output meets the operational rules.</p>
 <leo-compare>
-  <leo-side label="Hermes's responsibility"><p>Process the alert payload, participating in the preparation of a message for people to read.</p></leo-side>
-  <leo-side label="Trusted code's responsibility"><p>Revalidate mentions, URLs, and formatting in the processed output. Generated text is not the authority for the final format.</p></leo-side>
+  <leo-side label="Hermes's responsibility"><p>Process the alert payload, taking part in preparing a message for people to read.</p></leo-side>
+  <leo-side label="Trusted code's responsibility"><p>Revalidate mentions, URLs, and formatting in the processed output. Generated text is not the authority on the final format.</p></leo-side>
 </leo-compare>
-<p>Compared with using only fixed text, this introduces a stage that must check the processed output. Compared with sending generated output as-is, it gives AI less discretion. I chose to accept that restriction: leave room to process the explanation, without handing over the rules governing an operational message.</p>
-<p>Trusted code is not a device that makes every AI explanation true. It establishes a boundary around mentions, links, and the format that goes out. Natural-sounding prose is not, by itself, a reason to consider that boundary satisfied.</p>
+<p>Compared with sending only fixed text, this adds a stage that rechecks the processed output. Compared with sending generated output as-is, it gives AI less discretion. I chose to accept that restriction: leave room to process the explanation, without handing over the rules of an operational message.</p>
+<p>Trusted code is not a device that makes every AI explanation true. It is a boundary around who gets notified and which links and format go out. Natural-sounding prose alone is not a reason to treat that boundary as passed.</p>
 <h2>Severity and state have explicit policies</h2>
-<p>The notification policy distinguishes Critical from Warning, and FIRING from RESOLVED. FIRING means the alert is active; RESOLVED means it has cleared. The repeat interval and mention behavior need to be read as separate conditions, not collapsed into a single idea of urgency.</p>
+<p>The notification policy distinguishes Critical from Warning, and FIRING from RESOLVED. FIRING means the alert is active; RESOLVED means it has cleared. Repeat interval and mention behavior should be read as separate conditions, not lumped together.</p>
 <leo-steps>
   <leo-step title="Critical FIRING"><p>One <code>@channel</code> mention, with a one-hour repeat interval for notifications.</p></leo-step>
   <leo-step title="Warning FIRING"><p>No mention, with a six-hour repeat interval.</p></leo-step>
   <leo-step title="RESOLVED"><p>The policy is to always send the resolution notification.</p></leo-step>
 </leo-steps>
-<p>The record specifies one <code>@channel</code> mention and hourly repeats for Critical, and six-hour repeats without mentions for Warning. This summary alone does not establish mention behavior on repeated messages or incident-wide deduplication. What it does establish is that severity determines distinct notification and repeat policies.</p>
-<p>A resolution notification matters because an initial alert alone does not tell the reader the incident's current state. The policy avoids leaving someone who saw the warning to guess whether it cleared. Here, “always send” means that resolution is included in the send policy. It is not a guarantee of arrival regardless of the network or the receiving system.</p>
+<p>The record specifies one <code>@channel</code> mention and hourly repeats for Critical, and six-hour repeats without mentions for Warning. This summary alone does not establish how mentions behave on repeated messages, or how duplicates are removed across an incident. What it does establish is that severity determines separate notification and repeat policies.</p>
+<p>A resolution notice matters because an initial alert alone does not tell the reader the incident's current state. The policy keeps someone who saw the warning from having to guess whether it cleared. Here, “always send” means resolution is included in what gets sent. It is not a guarantee of arrival regardless of the network or the receiving system.</p>
 <h2>The final line carries three pieces of information</h2>
-<p>The final line of an operational alert is a one-line summary containing <strong>what happened, the current state, and the required action</strong>. It is not decoration added to make the message end neatly. It gives the reader a consistent place to find the information they need at the end.</p>
+<p>The final line of an operational alert is a one-line summary of <strong>what happened, the current state, and the required action</strong>. It is not decoration to end the message neatly. It gives the reader a fixed place to find what they need at the end.</p>
 <leo-compare>
-  <leo-side label="Occurrence · current state"><p>Read what happened alongside the state now. An event's occurrence alone should not imply that it is still ongoing.</p></leo-side>
-  <leo-side label="Required action"><p>Identify what to do after reading the explanation. This distinguishes an actionable summary from one that only describes the situation.</p></leo-side>
+  <leo-side label="Occurrence · current state"><p>Read what happened together with the state now. The fact that something occurred should not imply it is still ongoing.</p></leo-side>
+  <leo-side label="Required action"><p>Identify what to do after reading the explanation. This separates an actionable summary from one that only describes the situation.</p></leo-side>
 </leo-compare>
-<p>Writing only “what happened” leaves out the current state. Writing only “is it healthy now?” loses the event that led to the message. Including the required action connects the explanation to the reason for reading the alert. AI processing does not change the purpose of that final line.</p>
+<p>Writing only “what happened” leaves out the current state. Writing only “is it healthy now?” loses the event behind the message. Including the required action connects the explanation to the reason for reading the alert. AI processing does not change the purpose of that final line.</p>
 <h2>Controlling format does not establish factual correctness</h2>
-<p>Looking back, the important part was not simply putting AI in the alert path. It was deciding which responsibilities would stay outside it. Separating payload processing from operational rules turned the broad question “do we trust AI?” into the more concrete question “which parts of its output must code check?”</p>
-<p>Still, <strong>format correctness and factual correctness are different</strong>. Mentions, URLs, and message structure can comply with the rules while the explanation or required action fails to match the real situation. This boundary should not be mistaken for a guarantee of accurate root-cause diagnosis.</p>
-<p>The principle I am taking forward is straightforward: let AI process information, but keep responsibility for invoking people's attention and enforcing the final message rules in code. Adding AI to notifications was not just an exercise in delegating more decisions. It also meant <strong>deciding which decisions not to delegate</strong>.</p>
+<p>Looking back, what mattered was not simply putting AI in the alert path. It was the responsibilities that stayed outside it. Separating payload processing from operational rules turned the broad question “do we trust AI?” into the more concrete question “which parts of its output must code check?”</p>
+<p>Still, <strong>format correctness and factual correctness are different</strong>. Mentions, URLs, and message structure can follow the rules while the explanation or required action does not match the real situation. This boundary should not be mistaken for a guarantee of accurate root-cause diagnosis.</p>
+<p>The principle I am taking forward is simple: let AI process information, but keep responsibility for calling people's attention and enforcing the final message rules in code. Adding AI to notifications was not only about delegating more decisions. It also meant <strong>deciding first which decisions not to delegate</strong>.</p>
 </body>
 </html>

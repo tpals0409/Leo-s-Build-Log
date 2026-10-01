@@ -6,11 +6,11 @@
   "published": true,
   "featured": false,
   "ko": {
-    "title": "장애 알림에 AI를 붙여도, 최종 형식은 코드가 결정하게 했습니다",
+    "title": "장애 알림에 AI를 붙이고, 출력은 코드로 검증했습니다",
     "summary": "PinLog의 Sentinel은 Hermes로 알림 payload를 가공하지만, mention·URL·최종 형식은 코드가 다시 검증합니다. Critical·Warning·RESOLVED 정책과 마지막 한 줄 요약을 통해 나눈 AI와 코드의 책임을 정리했습니다."
   },
   "en": {
-    "title": "AI Processes the Incident Alert. Code Still Decides Its Final Format.",
+    "title": "I Added AI to Incident Alerts and Verified Its Output with Code",
     "summary": "PinLog's Sentinel uses Hermes to process alert payloads, while trusted code revalidates mentions, URLs, and the final format. Critical, Warning, and RESOLVED policies—and a closing one-line summary—make that division of responsibility concrete."
   }
 }

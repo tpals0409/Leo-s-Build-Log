@@ -19,6 +19,7 @@ import { validateLeo } from './leo/index.ts';
 import { CODE_DOC, SPECS } from './leo/specs.ts';
 import { postComponentsMarkdown } from './leo/docs.ts';
 import { readFileSync } from 'node:fs';
+import { loadContent } from './content.ts';
 
 assert.equal(htmlToText('<html><head><style>p{color:red}</style></head><body><h1>제목</h1><p>본문 &amp; 끝</p><script>alert(1)</script></body></html>'), '제목 본문 & 끝');
 assert.equal(tokenOk('abc', 'abc'), true);
@@ -196,4 +197,30 @@ assert.ok(withDate.ok && withDate.value.publishedAt instanceof Date);
 assert.equal(fmtDate(new Date('2023-07-14T15:00:00Z'), 'ko'), '2023년 7월 15일');
 assert.equal(fmtDate(new Date('2023-07-14T15:00:00Z'), 'en'), 'July 15, 2023');
 assert.equal(ymd(new Date('2023-07-14T15:00:00Z')), '2023-07-15');
+// git 글 원본: 폴더 → 등록 본문, 빠진 publishedAt·언어 파일은 오류
+{
+  const root = await mkdtemp(path.join(os.tmpdir(), 'blog-content-check-'));
+  const { mkdir, writeFile } = await import('node:fs/promises');
+  const meta = { category: 'engineering', publishedAt: '2026-10-01', ko: { title: '제목' }, en: { title: 'Title' } };
+  await mkdir(path.join(root, 'good'));
+  await writeFile(path.join(root, 'good/post.json'), JSON.stringify(meta));
+  await writeFile(path.join(root, 'good/ko.html'), '<p>본문</p>');
+  await writeFile(path.join(root, 'good/en.html'), '<p>body</p>');
+  await mkdir(path.join(root, 'no-date'));
+  await writeFile(path.join(root, 'no-date/post.json'), JSON.stringify({ ...meta, publishedAt: undefined }));
+  await writeFile(path.join(root, 'no-date/ko.html'), '<p>본문</p>');
+  await writeFile(path.join(root, 'no-date/en.html'), '<p>body</p>');
+  await mkdir(path.join(root, 'no-en'));
+  await writeFile(path.join(root, 'no-en/post.json'), JSON.stringify(meta));
+  await writeFile(path.join(root, 'no-en/ko.html'), '<p>본문</p>');
+  const c = loadContent(root);
+  await rm(root, { recursive: true });
+  assert.deepEqual(c.posts.map((p) => [p.slug, p.ko.html, p.en.title]), [['good', '<p>본문</p>', 'Title']]);
+  assert.equal(c.errors.length, 2);
+  assert.ok(c.errors.some((e) => e.includes('no-date') && e.includes('publishedAt')));
+  assert.ok(c.errors.some((e) => e.includes('no-en') && e.includes('en:')));
+}
+// 저장소의 실제 글이 전부 등록 규칙을 통과하는지 (PR에서 깨진 글을 막는다)
+assert.deepEqual(loadContent().errors, []);
+
 console.log('ok');

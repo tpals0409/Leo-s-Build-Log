@@ -6,6 +6,7 @@ name: CI
 on:
   push:
     branches: [main]
+    paths-ignore: ['content/**'] # 글만 바뀐 푸시는 이미지가 필요 없다 → content.yml
   pull_request:
 
 permissions:

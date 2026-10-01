@@ -1,0 +1,41 @@
+# 글(content/posts)이 main에 들어오면 운영 블로그에 반영한다. 이미지 빌드·배포 없이 API로 몇 초.
+# 필요한 저장소 시크릿: ADMIN_TOKEN (운영 서버의 ADMIN_TOKEN과 같은 값)
+name: Content
+
+on:
+  push:
+    branches: [main]
+    paths: ['content/**']
+  workflow_dispatch: # 수동 전체 동기화 (DB를 새로 만든 뒤 등)
+
+permissions:
+  contents: read
+
+concurrency:
+  group: content
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # 이번 푸시에서 지워진 글을 찾으려면 이전 커밋 필요
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: 검증 (글 형식·컴포넌트)
+        run: npm run check
+      - name: 반영
+        env:
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          deleted=""
+          if [ -n "$BEFORE" ] && git cat-file -e "$BEFORE" 2>/dev/null; then
+            deleted=$(git diff --no-renames --diff-filter=D --name-only "$BEFORE" HEAD -- 'content/posts/*/post.json' | cut -d/ -f3)
+          fi
+          node --experimental-strip-types scripts/sync-posts.ts --delete $deleted

@@ -98,16 +98,6 @@ export async function upsertPost(p: PostInput) {
   });
 }
 
-export async function patchPost(slug: string, f: { featured?: boolean; published?: boolean }) {
-  await ready();
-  const [row] = await sql<{ slug: string }[]>`
-    update posts set
-      featured = coalesce(${f.featured ?? null}::boolean, featured),
-      published = coalesce(${f.published ?? null}::boolean, published),
-      updated_at = now()
-    where slug = ${slug} returning slug`;
-  return row;
-}
 
 export async function deletePost(slug: string) {
   await ready();

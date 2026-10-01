@@ -9,11 +9,16 @@ podman machine start   # macOS에서 처음 한 번
 podman compose up -d --build
 ```
 로컬 개발: `podman compose up -d db` 후 `.env.local`에 `DATABASE_URL`, `ADMIN_TOKEN`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ADMIN_EMAIL` 넣고 `npm run dev`.
-관리자: `/admin` (Google 로그인, `ADMIN_EMAIL` 계정만 → 발행/Featured 토글, 삭제). 세션은 30일, `ADMIN_TOKEN`을 바꾸면 모든 세션이 끊긴다.
+관리자: `/admin` (Google 로그인, `ADMIN_EMAIL` 계정만 → 글 목록 보기 전용). 세션은 30일, `ADMIN_TOKEN`을 바꾸면 모든 세션이 끊긴다.
 
 Google OAuth 설정: Google Cloud Console → API 및 서비스 → 사용자 인증 정보 → OAuth 클라이언트 ID(웹 애플리케이션). 승인된 리디렉션 URI에 `<SITE_URL>/api/auth/google/callback`을 환경마다 등록 (예: `https://www.leosbuildlog.com/api/auth/google/callback`, `http://localhost:3000/api/auth/google/callback`).
 
-## 글 올리기 API (AI용)
+## 글 올리기
+글 원본은 git의 **`content/posts/<slug>/`** (형식: [content/README.md](content/README.md)). PR에서 `npm run check`가 검사하고,
+main에 머지되면 `.github/workflows/content.yml`이 아래 API로 운영 블로그에 반영한다(이미지 빌드 없음). 발행·Featured도 `post.json`에서 바꾼다.
+필요한 저장소 시크릿: `ADMIN_TOKEN`(운영 값).
+
+### API
 모든 쓰기 요청은 `Authorization: Bearer $ADMIN_TOKEN`.
 
 - `POST /api/uploads` — multipart `file`(jpg/png/webp/gif/avif, ≤10MB) → `{ "url": "/uploads/<uuid>.jpg" }`
@@ -26,8 +31,7 @@ Google OAuth 설정: Google Cloud Console → API 및 서비스 → 사용자 �
     - 없는 날짜(2월 30일)·미래 날짜는 400 (예약 발행 없음). 날짜는 서울 시간으로 표시된다
   - 언어별: `ko`, `en` 각각 `{ title, html, summary? }` — `html`은 스타일 포함 완성 HTML 문서
   - 다이어그램·차트 등은 `<leo-*>` 태그로 — **[docs/post-components.md](docs/post-components.md)**, 견본 `/ko/design`. 잘못 쓰면 400과 이유
-- `PATCH /api/posts/:slug` — `{ "featured"?, "published"? }`
-- `DELETE /api/posts/:slug`
+- `DELETE /api/posts/:slug` — content.yml이 폴더가 지워진 글에 쓴다
 - `GET /api/posts` — 전체 목록(미발행 포함)
 
 ```bash

@@ -25,7 +25,9 @@ Next.js 16 (App Router) + PostgreSQL + Tailwind v4, Podman으로 자체 호스�
 - 페이지: `app/[locale]/…` (홈, posts, posts/[slug], projects, projects/[slug], about, search). 관리자 `app/admin`은 언어 밖, 별도 root layout.
 - 화면 문구: `lib/i18n.ts`의 `DICT` — **컴포넌트에 한글/영어 문구를 직접 쓰지 말고 ko/en 둘 다 여기에 추가한다.** 카테고리 키·라벨도 여기.
 - 프로젝트: `lib/projects.ts` (코드로 관리, DB 아님). 블로그 이름·연락처: `lib/site.ts`. 프로젝트 소개와 이메일은 아직 자리표시(TODO).
-- DB: `posts`(공통) + `post_translations`(ko/en 행). 등록 검증은 `lib/postInput.ts`.
+- **글 원본은 git `content/posts/<slug>/`**(`post.json` + `ko.html` + `en.html`, 형식은 `content/README.md`). main 머지 → `content.yml`이 API로 DB에 반영.
+  DB는 화면용 사본 — 글·발행·Featured를 API나 DB로 직접 바꾸지 말고 이 폴더를 고친다. 지우면 블로그에서도 지워진다.
+- DB: `posts`(공통) + `post_translations`(ko/en 행). 등록 검증은 `lib/postInput.ts`(git 글은 `lib/content.ts`가 같은 검증 + `publishedAt` 필수).
 - 새 페이지는 `lib/page.ts`의 `localeOf(params)`로 언어를 받고(ko/en 외 404), `generateMetadata`는 `pageMeta(locale, path, { title, description })`를 돌려준다
   (canonical·hreflang·링크 미리보기 텍스트가 한 번에 들어감).
 - **`SITE_URL`은 실행 환경 값이다.** 컨테이너 빌드 때는 없으므로, metadata(canonical·OG)를 내는 페이지와 sitemap·robots는
@@ -108,7 +110,7 @@ variant/size는 객체 맵(`const VARIANT = {...}`)으로 정의한다 (Button, 
 ## 검증
 - `npm run check:design` — 위 금지 규칙 검사. UI를 고친 뒤 반드시 통과시킬 것.
   git pre-commit 훅(`.githooks/`, `npm install` 시 자동 등록)이 커밋마다 실행한다. `--no-verify`로 우회하지 말 것.
-- `npm run check` — auth, 텍스트 추출, 본문 변환, 글 등록 검증, 글 컴포넌트 예시·문서 self-check
+- `npm run check` — auth, 텍스트 추출, 본문 변환, 글 등록 검증, 글 컴포넌트 예시·문서 self-check, `content/posts`의 모든 글 검증
 - `npm run build`
 - GitHub Actions(`.github/workflows/ci.yml`)가 main 푸시·PR마다 위 세 가지를 Node 24로 다시 돌린다. 실패한 채로 두지 말 것.
   main 푸시는 검사 통과 후 k3s(arm64)용 이미지를 GHCR에 `main-<sha>`로 올린다. 배포 요건(포트·probe·PVC·env)은 README "k3s 배포".

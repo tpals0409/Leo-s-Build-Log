@@ -1,0 +1,6 @@
+flowchart LR
+  P[(problem table<br/>sourcePlatform column)] --> GW[Gateway<br/>external metadata API]
+  GW --> BOJ[Baekjoon · Solved.ac<br/>existing problems kept]
+  GW --> PRG[Programmers<br/>373 pre-curated JSON problems]
+  P --> GHW[GitHub Worker<br/>formatPlatform: boj_ · prg_]
+  P --> AI[AI feedback<br/>sourcePlatform in the prompt]

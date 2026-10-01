@@ -1,0 +1,18 @@
+{
+  "category": "retrospective",
+  "project": "algosu",
+  "tags": [
+    "external-api",
+    "platform-migration"
+  ],
+  "publishedAt": "2026-04-20",
+  "thumbnail": "thumbnail.webp",
+  "ko": {
+    "title": "백준이 사라졌다?",
+    "summary": "백준 서비스 종료 공지를 마주한 날, AlgoSu의 문제 제공처를 프로그래머스로 이식하며 배운 것은 기술이 아니라 태도였습니다. 외부 플랫폼에 의존한 서비스는 무엇을 잊지 말아야 하는지에 대한 기록."
+  },
+  "en": {
+    "title": "Baekjoon Is Gone?",
+    "summary": "On the day I saw Baekjoon's shutdown notice, migrating AlgoSu's problem source to Programmers taught me something I didn't expect — not a new technology, but an attitude about building services that lean on external platforms."
+  }
+}

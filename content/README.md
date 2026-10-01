@@ -25,6 +25,7 @@ content/posts/<slug>/
 - 필수: `category`(`ai-agent` | `engineering` | `retrospective`), `publishedAt`, `ko.title`, `en.title`
 - 선택: `project`(`algosu` | `finch` | `janus` | `pinlog`), `tags`, `thumbnail`(글 폴더의 이미지 파일 이름, 예: `"thumbnail.png"` — 반영 때 업로드됨), `featured`(홈 대표 글, 최신 1편), `published`(기본 true), `summary`
 - `publishedAt`: `2023-07-15`(서울 자정) 또는 `2023-07-15T09:00:00+09:00`. 미래 날짜 불가. 같은 날 글이 여러 편이면 시각을 달리 줘서 순서를 고정한다(같으면 목록 순서가 매번 달라질 수 있음)
+- 글꼴: 본문은 `var(--font-sans)`(글 안에서는 Pretendard), 소제목(h2·h3)은 `var(--font-heading, var(--font-sans))`(Gmarket Sans. 대체값은 토큰이 없는 예전 서버용)
 - 본문 폭·여백은 블로그와 같게: 글 CSS `body{max-width:var(--container-wrap);box-sizing:border-box;margin:0 auto;padding:0 24px 80px}` (임의 폭 금지)
 - 본문 작성 규칙: [docs/post-components.md](../docs/post-components.md) — 시각화는 `<leo-*>` 태그
 

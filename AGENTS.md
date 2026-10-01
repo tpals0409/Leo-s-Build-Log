@@ -41,7 +41,7 @@ Next.js 16 (App Router) + PostgreSQL + Tailwind v4, Podman으로 자체 호스�
 ## 디자인 시스템 (반드시 지킬 것)
 
 **`DESIGN.md`를 엄격히 따른다.** 확인된 값만 쓰고, 빈칸을 그럴듯한 기본값으로 채우지 않는다(DESIGN.md "Unknowns").
-DESIGN.md보다 우선하는 사용자 지정은 넷뿐: **레오 팔레트**(색), **Gmarket Sans**, **목업 레이아웃**(이미지 모서리 등), **호버·등장 움직임**(아래).
+DESIGN.md보다 우선하는 사용자 지정은 넷뿐: **레오 팔레트**(색), **Gmarket Sans**(블로그 화면) · **Pretendard**(글 본문), **목업 레이아웃**(이미지 모서리 등), **호버·등장 움직임**(아래).
 구조: 토큰(`app/globals.css`) → UI 컴포넌트(`components/ui`) → 도메인 컴포넌트(`components`) → 페이지(`app`).
 
 ### 원칙 (DESIGN.md)
@@ -70,6 +70,7 @@ DESIGN.md보다 우선하는 사용자 지정은 넷뿐: **레오 팔레트**(�
   | `t-caption` | Caption | 12/16 · 500 · -0.12px | 날짜·카테고리·보조 |
 
   Gmarket Sans는 300·500·700뿐 → DESIGN.md의 400은 500(Gmarket 본문 굵기), 600은 700으로 대응.
+  **글 본문(Shadow DOM) 안은 Pretendard**(`--font-post`): `lib/postHtml.ts`가 본문 안의 `--font-sans`를 Pretendard로, 굵기 토큰을 DESIGN.md 원래 값(400·600)으로 바꾼다. 글 CSS는 본문에 `var(--font-sans)`, 소제목(h2·h3)에 `var(--font-heading, var(--font-sans))`(Gmarket Sans)을 쓴다.
 - 버튼(`ui/Button`): DESIGN.md 그대로 — lg 44px · 11px 21px · 17px, sm 36px · 8px 15px · 14px, 980px pill.
 - 색(역할): `surface`(paper 흰 배경) `fg` `secondary` `muted` `label` `link` `primary` `primary-hover` `on-primary` `fog` `line` `highlight`
   - 팔레트 원색: `brand` `brand-deep` `lion` `cocoa` `butter` `sand` `cream` `sage` `steel` `charcoal` `paper` — 새 역할을 정할 때만.

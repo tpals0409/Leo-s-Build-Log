@@ -57,7 +57,7 @@ export const LEO_CSS = `
 .leo-metric__value{${role('section')}}
 .leo-metric__unit{${role('body')};margin-left:4px;color:var(--color-secondary)}
 .leo-metric__label{margin-top:8px!important;${role('body-sm')};color:var(--color-secondary)}
-.leo-metric__delta{margin-top:8px!important;${role('caption')};color:var(--color-muted)}
+.leo-metric__delta,.leo-metric__note{margin-top:8px!important;${role('caption')};color:var(--color-muted)}
 
 /* 비교 — 나란한 칸, 위쪽 굵은 선 */
 .leo-compare{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:${gap}}

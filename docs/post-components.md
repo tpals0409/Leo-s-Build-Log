@@ -64,7 +64,7 @@
 <leo-metrics>
   <leo-metric value="15" unit="jobs" label="CI 단계"></leo-metric>
   <leo-metric value="62" unit="s" label="빌드 시간" delta="-66%"></leo-metric>
-  <leo-metric value="12" label="에이전트"></leo-metric>
+  <leo-metric value="12" label="에이전트" note="Oracle + 11"></leo-metric>
 </leo-metrics>
 ```
 
@@ -80,6 +80,7 @@
 | `label` | ✓ |  | 설명 |
 | `unit` |  |  | 단위 |
 | `delta` |  |  | 변화량 (예: -66%, +3) |
+| `note` |  |  | 보충 설명 한 줄 (예: Oracle + 11) |
 
 ### `<leo-compare>`
 

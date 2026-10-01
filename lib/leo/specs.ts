@@ -89,7 +89,7 @@ export const SPECS: Spec[] = [
     example: `<leo-metrics>
   <leo-metric value="15" unit="jobs" label="CI 단계"></leo-metric>
   <leo-metric value="62" unit="s" label="빌드 시간" delta="-66%"></leo-metric>
-  <leo-metric value="12" label="에이전트"></leo-metric>
+  <leo-metric value="12" label="에이전트" note="Oracle + 11"></leo-metric>
 </leo-metrics>`,
     render: (_, inner) => `<div class="leo-metrics">${inner}</div>`,
   },
@@ -103,11 +103,12 @@ export const SPECS: Spec[] = [
       label: { required: true, desc: '설명' },
       unit: { desc: '단위' },
       delta: { desc: '변화량 (예: -66%, +3)' },
+      note: { desc: '보충 설명 한 줄 (예: Oracle + 11)' },
     },
     children: 'none',
     example: '',
     render: (a) =>
-      `<div class="leo-metric"><p class="leo-metric__value">${esc(a('value')!)}${opt(a('unit'), (u) => `<span class="leo-metric__unit">${u}</span>`)}</p><p class="leo-metric__label">${esc(a('label')!)}</p>${opt(a('delta'), (d) => `<p class="leo-metric__delta">${d}</p>`)}</div>`,
+      `<div class="leo-metric"><p class="leo-metric__value">${esc(a('value')!)}${opt(a('unit'), (u) => `<span class="leo-metric__unit">${u}</span>`)}</p><p class="leo-metric__label">${esc(a('label')!)}</p>${opt(a('delta'), (d) => `<p class="leo-metric__delta">${d}</p>`)}${opt(a('note'), (n) => `<p class="leo-metric__note">${n}</p>`)}</div>`,
   },
   {
     tag: 'leo-compare',

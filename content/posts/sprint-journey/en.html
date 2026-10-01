@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+body{font:var(--fw-body) var(--fs-body)/var(--lh-body) var(--font-sans);letter-spacing:var(--ls-body);color:var(--color-fg);max-width:var(--container-wrap);box-sizing:border-box;margin:0 auto;padding:0 24px 80px}
+h2{font:var(--fw-tile) var(--fs-tile)/var(--lh-tile) var(--font-sans);letter-spacing:var(--ls-tile);margin:2.4em 0 .8em}
+h3{font:var(--fw-section) var(--fs-body)/var(--lh-body) var(--font-sans);letter-spacing:var(--ls-body);margin:2em 0 .5em}
+p,ul,ol{margin:0 0 1em}
+strong{font-weight:var(--fw-section)}
+a{color:var(--color-link)}
+code{font-family:var(--font-mono);font-size:.9em;background:var(--color-fog);padding:0 4px}
+blockquote{margin:1.5em 0;padding-left:var(--space-cluster);border-left:2px solid var(--color-line);color:var(--color-secondary)}
+blockquote p{margin:0}
+</style>
+</head>
+<body>
+<h2>After the 67th Sprint</h2>
+<p>It started with curiosity about multi-agent systems. "Could I build a whole service solo if multiple AI agents collaborated?" That single question launched a project that, 67 sprints later, became a platform.</p>
+<ul><li><strong>67</strong> sprints</li><li><strong>2,432</strong> test cases, branches coverage <strong>99.51%</strong></li><li><strong>6</strong> microservices + <strong>1</strong> frontend</li><li><strong>34</strong> Identity API endpoints</li><li><strong>12</strong> AI agents</li></ul>
+<p>The numbers look clean on paper, but behind them lies a cycle of decisions, mistakes, and corrections.</p>
+<h2>What You Only See After Doing It</h2>
+<h3>Decisions Made Early</h3>
+<p><strong>DB separation — decided at Sprint 12, paid off at Sprint 51.</strong> With only three services, I split the databases into three (identity_db, problem_db, submission_db). Honestly, it felt excessive. But when Sprint 51 required a massive refactoring to fully separate the Identity DB that Gateway had been accessing directly, having the databases already split made the migration far smoother. An "overengineered" decision from 40 sprints prior ended up saving me.</p>
+<leo-timeline>
+  <leo-milestone date="Sprint 12" title="Split into 3 databases"></leo-milestone>
+  <leo-milestone date="Sprint 51" title="Full Gateway DB separation"><p>40 sprints later, overengineering saved the day</p></leo-milestone>
+</leo-timeline>
+<p><strong>httpOnly Cookie — decided at Sprint 8, paid off at Sprint 65.</strong> While integrating OAuth, I chose to store JWTs in httpOnly cookies instead of localStorage — a move to reduce the XSS attack surface. It proved its worth in Sprint 65 when I removed 11 localStorage-related functions (+42 lines / -440 lines). A little extra effort upfront meant no debt to clean up later.</p>
+<leo-timeline>
+  <leo-milestone date="Sprint 8" title="Adopted httpOnly Cookies"></leo-milestone>
+  <leo-milestone date="Sprint 65" title="Removed 11 localStorage functions"><p>57 sprints later, zero tech debt</p></leo-milestone>
+</leo-timeline>
+<p><strong>Test obsession — 2,432 tests, 99.51%.</strong> The reason I could create 34 new APIs and replace 19 files wholesale in ADR-001 (Sprint 51) was that the test suite served as a safety net. I could refactor boldly without the anxiety of "will this break something over there?"</p>
+<h3>Decisions Deferred</h3>
+<p><strong>Not building type synchronization automation.</strong> In an MSA, adding a single enum meant manually updating at least 5 files: Identity entity → Gateway types → Frontend api.ts → components. In Sprint 64, I added the <code>FEEDBACK_RESOLVED</code> enum only to Identity and forgot to propagate the rest, dragging the issue all the way to Sprint 66. A code generator or shared package introduced earlier would have prevented the whole ordeal.</p>
+<p><strong>Connecting monitoring alerts late.</strong> Prometheus and alertmanager were set up long ago, but the Discord channel that actually notifies a human wasn't connected until Sprint 63. Having the tool and having the tool actually work are different problems.</p>
+<h2>Lessons from the Details</h2>
+<p><strong>Sprint 62 — why an obvious bug went unnoticed.</strong> The admin page's feedback filter was running on the client side. Combined with server-side pagination (20 per page), what happens? Only the current page's 20 items get filtered; data on other pages stays invisible. An obvious bug I didn't catch while building it. I had to switch to server-side filtering and include total counts in the response. Eight commits, 17 files changed.</p>
+<p><strong>Sprint 63–64 — the Discord notification trap.</strong> Code was complete, Secrets were created, source repo manifests were written. But notifications never arrived. The cause: the aether-gitops repo's env block hadn't been updated. ArgoCD syncs the GitOps repo's manifests, but I'd only modified the source repo and forgotten about GitOps. While fixing this, an enum propagation miss compounded the issue, forcing a full 3-tier resync (Identity → Gateway → Frontend) in Sprint 66.</p>
+<p>Both episodes share the same lesson: each part looks correct in isolation, but something is missing when you see the whole picture.</p>
+<h2>AlgoSu by the Numbers</h2>
+<leo-metrics>
+  <leo-metric value="67" note="Sprint 3 – 67" label="Total Sprints"></leo-metric>
+  <leo-metric value="2,432" note="Identity branches 99.51%" label="Total Tests"></leo-metric>
+  <leo-metric value="15" label="CI Jobs"></leo-metric>
+  <leo-metric value="6" note="Gateway · Identity · Submission · Problem · GitHub-Worker · AI-Analysis" label="Microservices"></leo-metric>
+  <leo-metric value="12" note="Oracle + 11" label="AI Agents"></leo-metric>
+  <leo-metric value="34" note="0 → 34 in Sprint 51" label="Identity API"></leo-metric>
+</leo-metrics>
+<h2>From Coder to Builder</h2>
+<p>Looking back, every sprint was a first encounter with something new. The overwhelm of facing the Saga pattern for the first time, the late nights digging through logs when RabbitMQ messages weren't being consumed, the relief when ArgoCD sync succeeded for the first time. These moments repeated 67 times, and somewhere along the way, I changed without realizing it.</p>
+<p>In the beginning, "how do I implement this feature?" was everything. I was a coder — someone who writes code. As sprints accumulated, the questions shifted. "Will this decision still hold up 20 sprints from now?", "If something fails in this architecture, where do I catch it?", "How do I prove this automation actually works?" I wasn't just writing code anymore — I was becoming a builder, someone who creates systems.</p>
+<leo-callout type="tip" title="Things you only gain by doing"><p>The instinct for operating AI agents like teammates, the habit of weaving safety nets with 15 CI jobs, the experiential conviction that "the design that felt excessive turned out to be right" — these can't be learned from documentation. They only come from doing.</p></leo-callout>
+<p>There are things you gain only by pouring in tokens and time.</p>
+<p>Sprint 68 is still blank. But the sprints will continue. A project born from curiosity became a platform, and a coder became a builder. I'll feel overwhelmed facing new technology in the next sprint too, but 67 sprints of experience tell me — just do it and you'll figure it out.</p>
+</body>
+</html>

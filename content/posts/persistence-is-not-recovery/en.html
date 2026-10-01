@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keeping a PVC Was Not the Same as Recovering Data</title>
+<style>
+body{font:var(--fw-body) var(--fs-body)/var(--lh-body) var(--font-sans);letter-spacing:var(--ls-body);color:var(--color-fg);max-width:var(--container-wrap);box-sizing:border-box;margin:0 auto;padding:0 24px 80px}
+h2{font:var(--fw-tile) var(--fs-tile)/var(--lh-tile) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-tile);margin:2.4em 0 .8em}
+p,ul,ol{margin:0 0 1em}strong{font-weight:var(--fw-section)}code{font-family:var(--font-mono);overflow-wrap:anywhere}svg{display:block;width:100%;height:auto}
+</style>
+</head>
+<body>
+<p>When working with Kubernetes storage, it is easy to stop at “we attached a PVC, so the data persists.” But persists after what? A container restarting, a PVC being deleted, and a server losing its disk are different events. That distinction was what mattered when I examined PinLog’s storage configuration.</p>
+<p>This article describes the configuration verified on July 23, 2026, and what it means. At that point, PinLog ran its k3s control plane and workloads together on a single AWS node.</p>
+<h2>Start with what actually survives</h2>
+<p>A Pod is a unit of execution. A PVC is a request for storage, and a PV represents the storage resource bound to that request. Writing application data to the volume mounted through a PVC separates its lifetime from the container’s lifetime. It does not preserve every file written anywhere inside a container.</p>
+<p>After a Pod restarts or is replaced, using the existing data still requires an intact PVC and a surviving, accessible disk behind it. With local storage, access to the node holding the data matters too. <strong>Restarting execution and regaining access to storage are separate problems.</strong></p>
+<h2>Where the two StorageClasses differ</h2>
+<p>The default StorageClass, <code>local-path</code>, had a <code>Delete</code> reclaim policy. <code>local-path-retain</code> used <code>Retain</code>. Both used node-local storage; the difference was how a volume would be handled after its PVC was deleted.</p>
+<leo-compare>
+<leo-side label="local-path · Delete"><p>When PVC deletion releases the volume, the policy calls for deleting the PV and its backing storage. The provisioner carries out the storage cleanup.</p></leo-side>
+<leo-side label="local-path-retain · Retain"><p>After PVC deletion, the PV and backing data are retained rather than automatically cleaned up. An operator must handle subsequent reuse or cleanup.</p></leo-side>
+</leo-compare>
+<p>More precisely, the reclaim policy applies to the PV. A dynamically provisioned PV inherits that policy from its StorageClass. For an important volume, the class name is therefore not enough: the actual PV policy matters. Changing a StorageClass does not retroactively change the policies of all existing PVs.</p>
+<p><code>Retain</code> should not be read as “automatic recovery after deleting a PVC.” It does not preserve the PVC object itself, and a retained PV does not simply reconnect itself to a new claim. It stops automatic reclamation after deletion; it is not a procedure for locating the data and reconnecting it to the application.</p>
+<h2>WaitForFirstConsumer controls when binding happens</h2>
+<p>Both classes used <code>WaitForFirstConsumer</code> as their volume binding mode. Rather than fixing the volume’s location as soon as a PVC is created, binding and dynamic provisioning account for the scheduling requirements of the Pod that will consume it. This helps align the location of local storage with the node where the Pod can run.</p>
+<leo-pipeline>
+<leo-stage title="PVC request">Specify the StorageClass</leo-stage>
+<leo-stage title="Consumer Pod">Account for scheduling constraints</leo-stage>
+<leo-stage title="Volume binding">Use local storage on the selected node</leo-stage>
+</leo-pipeline>
+<p>This is a setting for placement and binding time. Waiting to bind does not create a replica or move data to another server. In a single-node configuration, scheduling-aware binding does not take storage outside that node.</p>
+<h2>Data and backup were inside the same boundary</h2>
+<p>The PostgreSQL data PVC, PostgreSQL backup PVC, and Cowork PVC all used <code>local-path-retain</code>. Cowork’s configuration kept its SQLite database, dedicated Hermes home, and cache under <code>/data</code> on a 1Gi PVC. The working tool’s state, not just PostgreSQL’s data, had a lifetime separate from its Pod.</p>
+<leo-diagram title="The single-node storage boundary" caption="Separate PVCs still depend on one node. Copies outside the host require a separate check.">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 440" style="max-width:320px;margin:0 auto" role="img" aria-label="Separate PVCs still depend on one node. Copies outside the host require a separate check." font-family="sans-serif" font-size="16" fill="currentColor">
+<rect x="12" y="12" width="296" height="282" fill="none" stroke="currentColor"></rect>
+<text x="160" y="42" text-anchor="middle">Single AWS node · k3s</text>
+<path d="M24 62H284M24 112H284M24 162H284M24 212H284" fill="none" stroke="currentColor" opacity="0.35"></path>
+<text x="160" y="93" text-anchor="middle">PostgreSQL data PVC</text>
+<text x="160" y="143" text-anchor="middle">PostgreSQL backup PVC</text>
+<text x="160" y="193" text-anchor="middle">Cowork PVC · /data</text>
+<text x="160" y="258" text-anchor="middle">local-path-retain · local storage</text>
+<path d="M12 320H308" stroke="currentColor" stroke-dasharray="5 5"></path>
+<text x="160" y="357" text-anchor="middle">Off-host recovery</text>
+<text x="160" y="390" text-anchor="middle" font-size="15">External copy + restore procedure</text>
+</svg>
+</leo-diagram>
+<p>Separate PostgreSQL data and backup PVCs distinguish their intended purposes. But <strong>two claims do not imply two failure domains.</strong> If both depend on local storage on the same node, Retain alone cannot address loss of the node or its entire storage. Calling a volume “backup” does not change that boundary.</p>
+<p>Assessing backups must therefore go beyond the existence of storage space. What data is produced, when is it produced, is there a copy outside the original host, and can that copy be used to reconstruct the service? Those are separate questions. Providing backup space on the same node is not the same step as establishing an off-host recovery path.</p>
+<h2>Read deletion policy separately from recovery procedure</h2>
+<p>Retain matters because it prevents PVC deletion from directly triggering data cleanup. It also leaves someone responsible for the retained volume: who manages it, when it is reused, and when it is removed. A retention-friendly policy does not eliminate operational work.</p>
+<p>The conclusion was not “we have persistent volumes, so we are safe.” A Pod restart requires the existing PVC and surviving disk. PVC deletion brings the PV’s reclaim policy into play. Losing the entire host requires data outside it and a recovery procedure. These conditions are too different to collapse into a single promise of persistence.</p>
+<p>The first question to ask of storage is <strong>“How much can disappear while still leaving a way to start again?”</strong> A PVC separates execution from the lifetime of data; Retain changes reclamation after deletion. Recovery beyond the host is the next boundary, and it needs its own design and verification.</p>
+</body>
+</html>

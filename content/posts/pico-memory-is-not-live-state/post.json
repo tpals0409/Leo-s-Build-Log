@@ -1,0 +1,20 @@
+{
+  "category": "ai-agent",
+  "project": "pinlog",
+  "tags": [
+    "Pico",
+    "Knowledge Graph",
+    "Operations"
+  ],
+  "publishedAt": "2026-07-23",
+  "published": false,
+  "featured": false,
+  "ko": {
+    "title": "운영 AI의 기억을 현재 상태로 믿지 않기",
+    "summary": "관측과 운영 계약, 원본과 조회용 데이터를 구분하며 피코의 기억을 운영 판단에 사용하는 방법."
+  },
+  "en": {
+    "title": "Operational AI Memory Is Not Live State",
+    "summary": "Separating observations, contracts, evidence, and query views when using Pico’s memory for operational decisions."
+  }
+}

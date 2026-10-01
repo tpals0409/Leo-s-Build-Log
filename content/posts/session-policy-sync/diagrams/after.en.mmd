@@ -1,0 +1,15 @@
+flowchart TB
+    ENV["Server env (SSoT)"]
+    SPS["SessionPolicyService"]
+    JWT["JwtModule<br/>accessTokenTtl"]
+    COOKIE["cookie.util<br/>JWT exp → maxAge"]
+    REFRESH["TokenRefreshInterceptor<br/>refreshThresholdMs"]
+    API["GET /auth/session-policy"]
+    FE["Frontend<br/>useSessionKeepAlive"]
+
+    ENV --> SPS
+    SPS --> JWT
+    SPS --> REFRESH
+    JWT -.-> |"Token exp claim"| COOKIE
+    SPS --> API
+    API --> FE

@@ -1,0 +1,2 @@
+flowchart LR
+  E[JWT_EXPIRES_IN<br/>Sealed Secret: 7d] ~~~ C[COOKIE_MAX_AGE<br/>hardcoded: 1h] ~~~ R[REFRESH_THRESHOLD<br/>hardcoded: 5m] ~~~ F[SESSION_TIMEOUT<br/>hardcoded: 65m]

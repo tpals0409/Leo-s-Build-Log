@@ -1,0 +1,21 @@
+{
+  "category": "engineering",
+  "project": "algosu",
+  "tags": [
+    "session",
+    "jwt",
+    "cookie",
+    "debugging",
+    "nestjs"
+  ],
+  "publishedAt": "2026-04-10",
+  "thumbnail": "thumbnail.webp",
+  "ko": {
+    "title": "세션이 왜 자꾸 끊기죠? — 4개 레이어의 동기화 삽질기",
+    "summary": "JWT TTL은 2시간인데 1시간 만에 로그아웃됩니다. Cookie maxAge, sliding refresh, 프론트엔드 타이머까지 — 4개 레이어가 각자의 시계를 갖고 있었습니다. SSoT 하나로 통일한 기록입니다."
+  },
+  "en": {
+    "title": "Why Does My Session Keep Dropping? — Debugging 4 Layers of Desynchronization",
+    "summary": "JWT TTL is 2 hours, but users get logged out after 1 hour. Cookie maxAge, sliding refresh, frontend timer — 4 layers each had their own clock. Here's how we unified them into a single source of truth."
+  }
+}

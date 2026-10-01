@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 // DESIGN.md: lg = 44px / 11px 21px / 17px, sm = 36px / 8px 15px / 14px. 980px pill.
 const VARIANT = {
-  primary: 'bg-primary text-on-primary',
+  primary: 'bg-primary text-on-primary primary-hover',
   outline: 'border border-link text-link',
 };
 const SIZE = {

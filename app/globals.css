@@ -4,17 +4,37 @@
 @font-face { font-family: 'Gmarket Sans'; font-weight: 500; font-display: swap; src: url('/fonts/GmarketSansTTFMedium.ttf') format('truetype'); }
 @font-face { font-family: 'Gmarket Sans'; font-weight: 700; font-display: swap; src: url('/fonts/GmarketSansTTFBold.ttf') format('truetype'); }
 
-/* 토큰: DESIGN.md (Apple 웹 레퍼런스) → bg-primary, text-muted, font-sans, max-w-wrap ... */
+/* 토큰. 색은 레오 팔레트(2026-10-01) + 배경 흰색(paper) — DESIGN.md(Apple)는 이제 타이포·레이아웃 참고용.
+   컴포넌트는 역할 이름(primary, fg, surface…)만 쓴다. 팔레트 이름(brand, lion…)은 그래픽·새 역할 정의용. */
 @theme {
-  --color-primary: #0071e3;
-  --color-on-primary: #ffffff;
-  --color-link: #0066cc;
-  --color-fg: #1d1d1f;
-  --color-muted: #6e6e73;
-  --color-secondary: #515154;
-  --color-fog: #f5f5f7;
-  --color-surface: #ffffff;
-  --color-line: #e5e5ea;
+  /* 팔레트 원색 (Tailwind 기본색과 이름이 겹치지 않게: Orange→brand, Slate Blue→steel) */
+  --color-brand: #F28A3A;      /* Brand Orange — 메인 포인트 */
+  --color-brand-deep: #D96824; /* Deep Orange — 버튼 호버, 강조 */
+  --color-lion: #9A6038;       /* Lion Brown — 카테고리, 그래픽 */
+  --color-cocoa: #563A2D;      /* Deep Brown — 진한 포인트 */
+  --color-butter: #F4C86A;     /* Butter Yellow — 하이라이트 */
+  --color-sand: #E7D1B5;       /* Sand — 카드/섹션 배경 */
+  --color-cream: #F6EBDD;      /* Warm Cream — 메인 배경 */
+  --color-sage: #819477;       /* Sage Green — 서브 포인트 */
+  --color-steel: #71829B;      /* Slate Blue — 기술적인 서브 */
+  --color-charcoal: #292725;   /* Charcoal — 본문/제목 */
+  --color-paper: #FFFEFC;      /* 팔레트 밖: 거의 중립인 흰색 (따뜻함 아주 약간) — 페이지 배경 */
+
+  /* 역할 (대비는 paper 배경 기준, WCAG AA 4.5:1 이상) */
+  --color-surface: var(--color-paper);      /* 페이지 배경 */
+  --color-fg: var(--color-charcoal);        /* 본문·제목 14.7:1 */
+  --color-secondary: #494745;               /* 리드 문단 — charcoal 85% on paper, 9.2:1 */
+  --color-muted: #696866;                   /* 요약·날짜 — charcoal 70% on paper, 5.5:1 */
+  --color-label: var(--color-lion);         /* 카테고리 라벨 5.0:1 */
+  --color-link: var(--color-cocoa);         /* 링크 10.1:1 */
+  --color-link-hover: var(--color-brand-deep); /* 링크·메뉴 호버 (일시 상태) */
+  --color-primary: var(--color-brand);      /* 채운 버튼 */
+  --color-primary-hover: var(--color-brand-deep);
+  --color-on-primary: var(--color-charcoal); /* 오렌지 위 글자 — 흰색은 2.5:1이라 불가, 차콜 6.0:1 */
+  --color-fog: var(--color-cream);          /* 입력창·태그·탭·빈 썸네일 (면) */
+  --color-line: var(--color-sand);          /* 구분선 */
+  --color-highlight: var(--color-butter);   /* 텍스트 선택 */
+
   --font-sans: 'Gmarket Sans', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;
   --container-wrap: 1120px;
   --radius-pill: 980px;  /* 버튼, 검색창 */
@@ -37,10 +57,11 @@
 @utility t-label    { font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: .4px; text-transform: uppercase; } /* 카테고리 */
 
 /* 상호작용 — 누를 수 있는 것은 이 셋 중 하나를 쓴다 (AGENTS.md). DESIGN.md엔 호버가 없어 이건 우리 확장.
-   press: 버튼·탭 (호버 살짝 확대, 누르면 살짝 축소) / link-hover: 텍스트 링크 (파랑으로 부드럽게)
+   press: 버튼·탭 (호버 살짝 확대, 누르면 살짝 축소) / link-hover: 텍스트 링크 (Deep Orange로 부드럽게)
+   primary-hover: 채운 버튼 호버 색 (Brand → Deep Orange)
    arrow: 링크 안의 → (부모에 group, 호버 시 오른쪽으로) */
 @utility press {
-  transition: scale 0.2s var(--ease-standard);
+  transition: scale 0.2s var(--ease-standard), background-color 0.2s var(--ease-standard);
   &:hover { scale: 1.03; }
   &:active { scale: 0.97; }
   @media (prefers-reduced-motion: reduce) { transition: none; &:hover, &:active { scale: none; } }
@@ -53,7 +74,11 @@
 }
 @utility link-hover {
   transition: color 0.2s var(--ease-standard);
-  &:hover { color: var(--color-link); }
+  &:hover { color: var(--color-link-hover); }
+}
+/* 채운 버튼의 호버 색 (press의 크기 효과와 함께) */
+@utility primary-hover {
+  &:hover { background-color: var(--color-primary-hover); }
 }
 @utility arrow {
   display: inline-block;
@@ -66,5 +91,6 @@
   body {
     @apply bg-surface text-fg font-sans font-light t-body tracking-[-0.374px] antialiased break-keep overflow-x-clip;
   }
-  :focus-visible { @apply outline-2 outline-offset-2 outline-primary; }
+  :focus-visible { @apply outline-2 outline-offset-2 outline-link; }
+  ::selection { background: var(--color-highlight); color: var(--color-fg); }
 }

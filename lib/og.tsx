@@ -6,7 +6,7 @@ import { SITE } from './site';
 
 // 링크 미리보기(OG) 이미지 1200×630. 이미지 렌더러(Satori)는 CSS 변수·webp를 못 읽어서
 // 색은 app/globals.css 토큰 값을 그대로 옮겨 적고, 로고는 png를 쓴다. 토큰을 바꾸면 여기도 맞출 것.
-const C = { fg: '#1d1d1f', muted: '#6e6e73', surface: '#ffffff', line: '#e5e5ea' };
+const C = { fg: '#292725', label: '#9A6038', surface: '#FFFEFC', line: '#E7D1B5' }; // charcoal, lion, paper, sand
 export const OG_SIZE = { width: 1200, height: 630 };
 
 const pub = (f: string) => readFile(path.join(process.cwd(), 'public', f));
@@ -34,7 +34,7 @@ export async function renderOg({ locale, title, label }: { locale: Locale; title
   const body = title ? (
     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', width: '100%', height: '100%', padding: 80 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        {label && <div style={{ fontSize: 26, fontWeight: 500, color: C.muted, letterSpacing: 1 }}>{label.toUpperCase()}</div>}
+        {label && <div style={{ fontSize: 26, fontWeight: 500, color: C.label, letterSpacing: 1 }}>{label.toUpperCase()}</div>}
         <div style={{ fontSize: title.length > 40 ? 56 : 68, fontWeight: 700, color: C.fg, lineHeight: 1.25, letterSpacing: -1, wordBreak: 'keep-all' }}>{title}</div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, borderTop: `2px solid ${C.line}`, paddingTop: 32 }}>

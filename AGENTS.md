@@ -34,16 +34,21 @@ Next.js 16 (App Router) + PostgreSQL + Tailwind v4, Podman으로 자체 호스�
 ## 디자인 시스템 (반드시 지킬 것)
 
 구조: **토큰(`app/globals.css`) → UI 컴포넌트(`components/ui`) → 도메인 컴포넌트(`components`) → 페이지(`app`)**.
-`DESIGN.md`는 출처(레퍼런스)일 뿐, 실제 기준은 `app/globals.css`의 `@theme`과 `@utility`다.
+`DESIGN.md`(Apple)는 타이포·레이아웃 레퍼런스일 뿐이고, 색은 **레오 팔레트**(2026-10-01)다. 실제 기준은 `app/globals.css`의 `@theme`과 `@utility`.
 
 ### 토큰
-- 색: `primary` `on-primary` `link` `fg` `muted` `secondary` `fog` `surface` `line` → `bg-primary`, `text-muted`, `border-line` …
+- 색(역할): `surface`(paper — 팔레트에 맞춘 흰색 배경) `fg` `secondary` `muted` `label` `link` `link-hover` `primary` `primary-hover` `on-primary` `fog` `line` `highlight`
+  → `bg-surface`, `text-muted`, `text-label`, `border-line` … 컴포넌트는 역할 이름만 쓴다.
+- 색(팔레트 원색): `brand` `brand-deep` `lion` `cocoa` `butter` `sand` `cream` `sage` `steel` `charcoal` (+ 배경용 `paper`) — 그래픽용, 또는 새 역할을 정의할 때.
+  - **오렌지(`brand`)는 글자색으로 쓰지 않는다**(흰 배경 위 2.4:1). 오렌지 면 위 글자는 `on-primary`(charcoal), 흰색 금지(2.5:1).
+  - 새 글자색 조합은 배경(paper) 대비 4.5:1 이상인지 확인한다(`globals.css` 주석에 대비값). `fog`(cream) 면 위라면 그 위에서도 확인.
 - 글자: `t-display` `t-headline` `t-title1` `t-title2` `t-title3` `t-body-lg` `t-body` `t-body-sm` `t-caption` `t-label`
   - `t-*`는 크기·행간만. 굵기는 항상 `font-light|font-medium|font-bold`로 따로 붙인다 (`t-label`만 완성형).
 - 둥글기: `rounded-pill`(버튼·검색창) `rounded-card`(썸네일·입력창) `rounded-panel`(큰 이미지)
 - 곡선: `ease-standard` (CSS) = `EASE` (`lib/motion.ts`)
 - 폭: `max-w-wrap` (1120px, `Container`가 처리)
 - 폰트: Gmarket Sans 하나 (300/500/700). 라이트 모드만.
+- 로고: `public/logo.webp`(헤더), `public/logo.png`(OG 이미지), `app/icon.png`·`app/apple-icon.png`. 배경 투명(apple-icon만 paper — iOS는 투명 부분을 검게 칠함).
 
 ### 금지
 - `text-[17px]`, `rounded-[10px]`, `text-[#fff]` 같은 임의 글자/색/둥글기 값
@@ -61,7 +66,8 @@ Next.js 16 (App Router) + PostgreSQL + Tailwind v4, Podman으로 자체 호스�
 - 페이지 전환은 들어오는 효과만(`app/[locale]/template.tsx`). 나가는 효과는 Next 내부 API가 필요해서 하지 않는다.
 - 호버·클릭은 CSS 유틸리티(`app/globals.css`)로만. DESIGN.md엔 호버가 없어서 이건 우리 확장이다.
   - `press` — 버튼·탭: 호버 시 살짝 확대, 누르면 살짝 축소 (`Button`은 이미 적용)
-  - `link-hover` — 텍스트 링크: 파랑(`link`)으로 부드럽게
+  - `link-hover` — 텍스트 링크: Deep Orange(`link-hover`)로 부드럽게
+  - `primary-hover` — 채운 버튼 호버 색 (`Button` primary에 이미 적용)
   - `arrow` — 링크 끝 →: `<Arrow />` 컴포넌트 + 부모에 `group`. 호버 시 오른쪽으로 3px
   - `press-card` — 카드: 누를 때만 살짝. 썸네일 확대는 카드 안에서 `group-hover:` (`PostCard`, `ProjectCard`)
   - `hover:…`/`active:…`를 직접 쓰지 않는다(`check:design`이 막음). 동작 줄이기는 유틸리티가 처리한다.

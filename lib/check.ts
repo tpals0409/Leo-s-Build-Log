@@ -3,7 +3,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { htmlToText } from './text.ts';
-import { tokenOk } from './auth.ts';
+import { isAdmin, tokenOk } from './auth.ts';
 import {
   MAX_UPLOAD_REQUEST_SIZE,
   readUpload,
@@ -20,6 +20,7 @@ assert.equal(tokenOk('abc', 'abc'), true);
 assert.equal(tokenOk('abd', 'abc'), false);
 assert.equal(tokenOk('abc', undefined), false);
 assert.equal(tokenOk('', 'abc'), false);
+assert.equal(isAdmin(new Request('http://localhost', { headers: { cookie: 'admin_token=%' } })), false);
 
 assert.equal(uploadExtension('photo.JPG', 'image/jpeg', 1), '.jpg');
 assert.equal(uploadExtension('photo.jpg', 'image/png', 1), null);

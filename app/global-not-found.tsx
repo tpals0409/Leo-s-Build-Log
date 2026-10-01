@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Arrow from '@/components/ui/Arrow';
 import { ButtonLink } from '@/components/ui/Button';
 import { DICT } from '@/lib/i18n';
 import { SITE } from '@/lib/site';
@@ -16,13 +15,13 @@ export default function GlobalNotFound() {
       <body>
         <main className="mx-auto flex min-h-dvh max-w-wrap flex-col items-center justify-center px-6 text-center">
           <img src="/logo.webp" alt="" width={96} height={96} className="mb-6 size-24" />
-          <p className="t-label text-label">404</p>
-          <h1 className="mt-3 t-title1 font-bold">{DICT.ko.notFound.title}</h1>
-          <p className="mt-1 t-title3 font-medium text-secondary">{DICT.en.notFound.title}</p>
+          <p className="t-caption text-label">404</p>
+          <h1 className="mt-3 t-section">{DICT.ko.notFound.title}</h1>
+          <p className="mt-1 t-tile text-secondary">{DICT.en.notFound.title}</p>
           <p className="mb-9 mt-4 t-body text-muted">{DICT.ko.notFound.body}<br />{DICT.en.notFound.body}</p>
           <div className="flex gap-3">
-            <ButtonLink href="/ko">{DICT.ko.notFound.home} <Arrow /></ButtonLink>
-            <ButtonLink href="/en" variant="outline">{DICT.en.notFound.home} <Arrow /></ButtonLink>
+            <ButtonLink href="/ko">{DICT.ko.notFound.home} →</ButtonLink>
+            <ButtonLink href="/en" variant="outline">{DICT.en.notFound.home} →</ButtonLink>
           </div>
         </main>
       </body>

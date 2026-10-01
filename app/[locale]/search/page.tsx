@@ -21,7 +21,7 @@ export default async function SearchPage({ params, searchParams }: Props) {
 
   return (
     <Container className="pb-20">
-      <h1 className="pb-8 pt-12 t-title1 font-bold">{q ? t.title(q) : t.placeholder}</h1>
+      <h1 className="pb-8 pt-12 t-section">{q ? t.title(q) : t.placeholder}</h1>
       {posts.length ? <PostGrid posts={posts} locale={locale} /> : q && <p className="py-30 text-center text-muted">{t.empty}</p>}
     </Container>
   );

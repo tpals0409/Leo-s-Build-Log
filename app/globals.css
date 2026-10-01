@@ -5,8 +5,9 @@
 @font-face { font-family: 'Gmarket Sans'; font-weight: 700; font-display: swap; src: url('/fonts/GmarketSansTTFBold.ttf') format('truetype'); }
 
 /* 토큰. 색은 레오 팔레트(2026-10-01) + 배경 흰색(paper) — DESIGN.md(Apple)는 이제 타이포·레이아웃 참고용.
+   `@theme static`: 쓰이지 않아도 모든 토큰을 CSS 변수로 내보낸다 — 글 컴포넌트(lib/leo/style.ts)는 클래스 대신 var()로 쓴다.
    컴포넌트는 역할 이름(primary, fg, surface…)만 쓴다. 팔레트 이름(brand, lion…)은 그래픽·새 역할 정의용. */
-@theme {
+@theme static {
   /* 팔레트 원색 (Tailwind 기본색과 이름이 겹치지 않게: Orange→brand, Slate Blue→steel) */
   --color-brand: #F28A3A;      /* Brand Orange — 메인 포인트 */
   --color-brand-deep: #D96824; /* Deep Orange — 버튼 호버, 강조 */
@@ -27,7 +28,6 @@
   --color-muted: #696866;                   /* 요약·날짜 — charcoal 70% on paper, 5.5:1 */
   --color-label: var(--color-lion);         /* 카테고리 라벨 5.0:1 */
   --color-link: var(--color-cocoa);         /* 링크 10.1:1 */
-  --color-link-hover: var(--color-brand-deep); /* 링크·메뉴 호버 (일시 상태) */
   --color-primary: var(--color-brand);      /* 채운 버튼 */
   --color-primary-hover: var(--color-brand-deep);
   --color-on-primary: var(--color-charcoal); /* 오렌지 위 글자 — 흰색은 2.5:1이라 불가, 차콜 6.0:1 */
@@ -36,60 +36,40 @@
   --color-highlight: var(--color-butter);   /* 텍스트 선택 */
 
   --font-sans: 'Gmarket Sans', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; /* 코드 (Gmarket엔 고정폭이 없음) */
   --container-wrap: 1120px;
-  --radius-pill: 980px;  /* 버튼, 검색창 */
-  --radius-card: 10px;   /* 카드 썸네일, 입력창 */
-  --radius-panel: 18px;  /* 히어로 이미지 */
-  --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1); /* lib/motion.ts EASE와 같은 곡선 → ease-standard */
+  /* 모서리: DESIGN.md 확인값은 버튼 980px뿐. 나머지 둘은 목업 실측(이미지 전용) — 상자·카드에 쓰지 않는다 */
+  --radius-pill: 980px;  /* DESIGN.md: 버튼(44/36px) · 검색창 · 탭 */
+  --radius-card: 10px;   /* 목업: 썸네일 이미지 */
+  --radius-panel: 18px;  /* 목업: 히어로 이미지 */
+  --space-cluster: 20px; /* DESIGN.md: 반복되는 콘텐츠 묶음 간격 */
+
+  /* 타이포 — DESIGN.md의 확인된 6개 역할만. 크기/행간/굵기/자간이 한 세트다.
+     Gmarket Sans는 300·500·700뿐 → DESIGN.md 400은 500(Gmarket의 본문 굵기), 600은 700으로 대응 */
+  --fs-display: 56px; --lh-display: 60px; --fw-display: 700; --ls-display: -0.28px;  /* Display Hero */
+  --fs-section: 40px; --lh-section: 44px; --fw-section: 700; --ls-section: 0;        /* Section */
+  --fs-tile: 28px;    --lh-tile: 32px;    --fw-tile: 500;    --ls-tile: 0.196px;     /* Tile Heading */
+  --fs-body: 17px;    --lh-body: 25px;    --fw-body: 500;    --ls-body: -0.374px;    /* Body */
+  --fs-body-sm: 14px; --lh-body-sm: 18px; --fw-body-sm: 500; --ls-body-sm: -0.224px; /* Body Small */
+  --fs-caption: 12px; --lh-caption: 16px; --fw-caption: 500; --ls-caption: -0.12px;  /* Caption */
 }
 
-/* 타이포 스케일 — 글자 크기는 이것만 쓴다 (text-[NNpx] 금지).
-   t-*는 크기/행간만 정한다. 굵기는 항상 font-light|medium|bold로 따로 (t-label만 완성형). */
-@utility t-display  { font-size: 48px; line-height: 60px; letter-spacing: -0.28px; } /* 홈 히어로 */
-@utility t-headline { font-size: 40px; line-height: 48px; letter-spacing: -0.28px; } /* 글 제목, 모바일 히어로 */
-@utility t-title1   { font-size: 32px; line-height: 40px; } /* 페이지 제목 */
-@utility t-title2   { font-size: 24px; line-height: 32px; } /* 섹션 제목 */
-@utility t-title3   { font-size: 22px; line-height: 30px; } /* 카드 제목 */
-@utility t-body-lg  { font-size: 19px; line-height: 30px; } /* 리드 문단 */
-@utility t-body     { font-size: 17px; line-height: 25px; } /* 본문, 버튼 */
-@utility t-body-sm  { font-size: 15px; line-height: 22px; } /* 요약, 표 */
-@utility t-caption  { font-size: 13px; line-height: 18px; } /* 날짜, 검색창 */
-@utility t-label    { font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: .4px; text-transform: uppercase; } /* 카테고리 */
+/* 타이포 역할 — DESIGN.md 6개 역할 그대로. 클래스 하나가 크기·행간·굵기·자간을 모두 정한다 (font-* 굵기 클래스 쓰지 않음). */
+@utility t-display { font-size: var(--fs-display); line-height: var(--lh-display); font-weight: var(--fw-display); letter-spacing: var(--ls-display); } /* 홈 히어로 */
+@utility t-section { font-size: var(--fs-section); line-height: var(--lh-section); font-weight: var(--fw-section); letter-spacing: var(--ls-section); } /* 페이지·글 제목, 모바일 히어로 */
+@utility t-tile { font-size: var(--fs-tile); line-height: var(--lh-tile); font-weight: var(--fw-tile); letter-spacing: var(--ls-tile); } /* 섹션 제목·카드 제목 */
+@utility t-body { font-size: var(--fs-body); line-height: var(--lh-body); font-weight: var(--fw-body); letter-spacing: var(--ls-body); } /* 본문·버튼·리드 */
+@utility t-body-sm { font-size: var(--fs-body-sm); line-height: var(--lh-body-sm); font-weight: var(--fw-body-sm); letter-spacing: var(--ls-body-sm); } /* 요약·메뉴·표 */
+@utility t-caption { font-size: var(--fs-caption); line-height: var(--lh-caption); font-weight: var(--fw-caption); letter-spacing: var(--ls-caption); } /* 날짜·라벨·작은 글 */
 
-/* 상호작용 — 누를 수 있는 것은 이 셋 중 하나를 쓴다 (AGENTS.md). DESIGN.md엔 호버가 없어 이건 우리 확장.
-   press: 버튼·탭 (호버 살짝 확대, 누르면 살짝 축소) / link-hover: 텍스트 링크 (Deep Orange로 부드럽게)
-   primary-hover: 채운 버튼 호버 색 (Brand → Deep Orange)
-   arrow: 링크 안의 → (부모에 group, 호버 시 오른쪽으로) */
-@utility press {
-  transition: scale 0.2s var(--ease-standard), background-color 0.2s var(--ease-standard);
-  &:hover { scale: 1.03; }
-  &:active { scale: 0.97; }
-  @media (prefers-reduced-motion: reduce) { transition: none; &:hover, &:active { scale: none; } }
-}
-/* 카드: 커지지 않고 누를 때만 아주 살짝 (썸네일 확대는 카드 안 group-hover) */
-@utility press-card {
-  transition: scale 0.2s var(--ease-standard);
-  &:active { scale: 0.99; }
-  @media (prefers-reduced-motion: reduce) { transition: none; &:active { scale: none; } }
-}
-@utility link-hover {
-  transition: color 0.2s var(--ease-standard);
-  &:hover { color: var(--color-link-hover); }
-}
-/* 채운 버튼의 호버 색 (press의 크기 효과와 함께) */
+/* 호버: DESIGN.md는 호버 모습을 정하지 않았고 "추측하지 말 것"이라 한다. 유일한 예외는 팔레트가 지정한 버튼 호버(Brand → Deep Orange). */
 @utility primary-hover {
   &:hover { background-color: var(--color-primary-hover); }
-}
-@utility arrow {
-  display: inline-block;
-  transition: translate 0.2s var(--ease-standard);
-  :where(.group):hover & { translate: 3px 0; }
-  @media (prefers-reduced-motion: reduce) { transition: none; :where(.group):hover & { translate: none; } }
 }
 
 @layer base {
   body {
-    @apply bg-surface text-fg font-sans font-light t-body tracking-[-0.374px] antialiased break-keep overflow-x-clip;
+    @apply bg-surface text-fg font-sans t-body antialiased break-keep overflow-x-clip;
   }
   :focus-visible { @apply outline-2 outline-offset-2 outline-link; }
   ::selection { background: var(--color-highlight); color: var(--color-fg); }

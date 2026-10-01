@@ -18,7 +18,7 @@ export default async function ProjectsPage({ params }: Props) {
   const locale = await localeOf(params);
   return (
     <Container className="pb-20">
-      <h1 className="pb-8 pt-12 t-title1 font-bold">{DICT[locale].projects.title}</h1>
+      <h1 className="pb-8 pt-12 t-section">{DICT[locale].projects.title}</h1>
       <ProjectGrid projects={PROJECTS} locale={locale} />
     </Container>
   );

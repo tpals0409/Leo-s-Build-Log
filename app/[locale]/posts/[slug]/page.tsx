@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import PostBody from '@/components/PostBody';
-import ReadingProgress from '@/components/ReadingProgress';
 import Container from '@/components/ui/Container';
 import Eyebrow from '@/components/ui/Eyebrow';
 import { getPost } from '@/lib/db';
@@ -29,10 +28,9 @@ export default async function PostPage({ params }: Props) {
 
   return (
     <article className="pb-20">
-      <ReadingProgress />
       <Container className="pb-8 pt-14 text-center">
         <Eyebrow>{DICT[locale].category[post.category]}</Eyebrow>
-        <h1 className="mb-4 mt-3 t-headline font-bold">{post.title}</h1>
+        <h1 className="mb-4 mt-3 t-section">{post.title}</h1>
         <p className="t-body-sm text-muted">
           <time dateTime={post.created_at.toISOString()}>{fmtDate(post.created_at, locale)}</time>
           {project && <> · <Link href={`/${locale}/projects/${project.slug}`} className="text-link">{project.name}</Link></>}
@@ -43,7 +41,7 @@ export default async function PostPage({ params }: Props) {
           </ul>
         )}
       </Container>
-      <PostBody html={post.html} />
+      <PostBody html={post.html} locale={locale} />
     </article>
   );
 }

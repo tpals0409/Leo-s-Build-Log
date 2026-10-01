@@ -1,6 +1,5 @@
 'use client';
 import { usePathname } from 'next/navigation';
-import Arrow from '@/components/ui/Arrow';
 import { ButtonLink } from '@/components/ui/Button';
 import Container from '@/components/ui/Container';
 import { DICT, isLocale } from '@/lib/i18n';
@@ -13,10 +12,10 @@ export default function NotFound() {
   const t = DICT[locale].notFound;
   return (
     <Container className="py-30 text-center">
-      <p className="t-label text-label">404</p>
-      <h1 className="mb-4 mt-3 t-title1 font-bold">{t.title}</h1>
+      <p className="t-caption text-label">404</p>
+      <h1 className="mb-4 mt-3 t-section">{t.title}</h1>
       <p className="mb-9 t-body text-muted">{t.body}</p>
-      <ButtonLink href={`/${locale}`}>{t.home} <Arrow /></ButtonLink>
+      <ButtonLink href={`/${locale}`}>{t.home} →</ButtonLink>
     </Container>
   );
 }

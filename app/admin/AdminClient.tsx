@@ -36,7 +36,7 @@ export default function AdminClient({ posts }: { posts: Row[] | null }) {
   return (
     <>
       {err && <p className="text-muted">{err}</p>}
-      <table className="w-full border-collapse t-body-sm [&_td]:border-b [&_td]:border-line [&_td]:px-2 [&_td]:py-3 [&_th]:border-b [&_th]:border-line [&_th]:px-2 [&_th]:py-3 [&_th]:text-left [&_th]:t-label [&_th]:text-muted">
+      <table className="w-full border-collapse t-body-sm [&_td]:border-b [&_td]:border-line [&_td]:px-2 [&_td]:py-3 [&_th]:border-b [&_th]:border-line [&_th]:px-2 [&_th]:py-3 [&_th]:text-left [&_th]:t-caption [&_th]:text-muted">
         <thead><tr><th>제목</th><th>카테고리</th><th>작성일</th><th>발행</th><th>Featured</th><th /></tr></thead>
         <tbody>
           {posts.map((p) => (

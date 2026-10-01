@@ -24,12 +24,12 @@ export default async function PostsPage({ params, searchParams }: Props) {
 
   return (
     <Container className="pb-20">
-      <h1 className="pb-6 pt-12 t-title1 font-bold">{t.posts.title}</h1>
+      <h1 className="pb-6 pt-12 t-section">{t.posts.title}</h1>
       <nav className="mb-8 flex flex-wrap gap-2">
         {tabs.map((tab) => (
           <Link key={tab.key} href={`/${locale}/posts${tab.key ? `?category=${tab.key}` : ''}`}
             aria-current={tab.key === active ? 'page' : undefined}
-            className="press rounded-pill bg-fog px-4 py-1.5 t-body-sm font-medium aria-[current=page]:bg-fg aria-[current=page]:text-surface">
+            className="rounded-pill bg-fog px-4 py-1.5 t-body-sm aria-[current=page]:bg-fg aria-[current=page]:text-surface">
             {tab.label}
           </Link>
         ))}

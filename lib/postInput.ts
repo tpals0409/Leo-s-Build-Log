@@ -1,5 +1,6 @@
 import { CATEGORIES, LOCALES, type Category, type Locale } from './i18n.ts';
 import { getProject } from './projects.ts';
+import { validateLeo } from './leo/index.ts';
 
 export type Translation = { title: string; summary: string; html: string };
 export type PostInput = {
@@ -29,7 +30,10 @@ export function parsePostInput(b: any): { ok: true; value: PostInput } | { ok: f
   for (const l of LOCALES) {
     const t = b?.[l];
     if (!str(t?.title) || !str(t?.html)) errors.push(`${l}: { title, html } 필수 (한/영 둘 다 있어야 발행)`);
-    else tr[l] = { title: str(t.title), summary: str(t.summary), html: t.html };
+    else {
+      tr[l] = { title: str(t.title), summary: str(t.summary), html: t.html };
+      errors.push(...validateLeo(t.html).map((e) => `${l}.html ${e}`)); // 글 컴포넌트 태그 검사
+    }
   }
 
   if (errors.length) return { ok: false, errors };

@@ -14,6 +14,10 @@ import {
 } from './uploads.ts';
 import { toShadowHtml } from './postHtml.ts';
 import { parsePostInput } from './postInput.ts';
+import { validateLeo } from './leo/index.ts';
+import { CODE_DOC, SPECS } from './leo/specs.ts';
+import { postComponentsMarkdown } from './leo/docs.ts';
+import { readFileSync } from 'node:fs';
 
 assert.equal(htmlToText('<html><head><style>p{color:red}</style></head><body><h1>제목</h1><p>본문 &amp; 끝</p><script>alert(1)</script></body></html>'), '제목 본문 & 끝');
 assert.equal(tokenOk('abc', 'abc'), true);
@@ -86,7 +90,7 @@ const doc = `<!doctype html><html><head><title>t</title>
 <style>body{font-family:Georgia} html body p{color:red} :root{--c:1} .body{x:1}</style></head>
 <body class="b"><h1 onclick="steal()">제목</h1><p>본문</p><a href="javascript:alert(1)">x</a>
 <script>fetch('/api/posts')</script><style>body h2{margin:0}</style></body></html>`;
-const out = toShadowHtml(doc);
+const out = (await toShadowHtml(doc, 'ko'));
 assert.ok(out.startsWith('<template shadowrootmode="open">'));
 assert.ok(out.includes('<div class="post-root"><h1>제목</h1><p>본문</p>'), 'body content kept, wrapped');
 assert.ok(!/script|onclick|javascript:|<title>/i.test(out), 'unsafe stripped');
@@ -97,12 +101,12 @@ assert.ok(out.includes('.body{x:1}'), 'class .body untouched');
 assert.ok(out.includes('.post-root h2{margin:0}'), 'body <style> rewritten too');
 assert.ok(out.endsWith('family=Noto+Serif"></template>'.replace('"></template>', '">')), 'font link outside template');
 assert.equal(out.match(/<\/template>/g)?.length, 1);
-assert.ok(!toShadowHtml('<p>a</p></template><style>body{display:none}</style>').includes('</template><style>'), 'cannot escape template');
+assert.ok(!(await toShadowHtml('<p>a</p></template><style>body{display:none}</style>', 'ko')).includes('</template><style>'), 'cannot escape template');
 
 const demoDoc = `<html><body><p>설명</p><script>outside()</script>
 <template data-demo data-height="400" data-title="Counter"><!doctype html><button onclick="n++">+</button><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script>let n=0"</script></template>
 <p>끝</p></body></html>`;
-const d = toShadowHtml(demoDoc);
+const d = (await toShadowHtml(demoDoc, 'ko'));
 const frame = d.match(/<iframe data-demo-frame[^>]*><\/iframe>/)?.[0] ?? '';
 assert.ok(frame, 'demo → iframe');
 assert.ok(frame.includes('sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"') && !frame.includes('allow-same-origin'), 'sandboxed, no same-origin');
@@ -112,7 +116,7 @@ assert.ok(frame.includes('chart.js'), 'external lib allowed inside demo');
 assert.ok(/srcdoc="&lt;!doctype html&gt;/.test(frame), 'doctype stays first (no quirks mode)');
 assert.ok(!d.replace(frame, '').includes('outside()'), 'scripts outside demo still stripped');
 assert.ok(d.indexOf('<p>설명</p>') < d.indexOf(frame) && d.indexOf(frame) < d.indexOf('<p>끝</p>'), 'demo stays in place');
-assert.ok(toShadowHtml('<template data-demo>a</template>').includes('height:320px'), 'default height');
+assert.ok((await toShadowHtml('<template data-demo>a</template>', 'ko')).includes('height:320px'), 'default height');
 
 const good = { slug: 'agent-orchestration', category: 'ai-agent', project: 'algosu', tags: ['claude-code'],
   ko: { title: '제목', summary: '요약', html: '<p>본문</p>' }, en: { title: 'Title', html: '<p>Body</p>' } };
@@ -127,4 +131,32 @@ assert.ok(errs({ ...good, category: 'cicd' }).some((e) => e.startsWith('category
 assert.ok(errs({ ...good, project: 'nope' }).some((e) => e.startsWith('project')));
 assert.ok(parsePostInput({ ...good, project: '' }).ok, 'empty project = none');
 assert.equal(errs(null).length, 4, 'null body → slug, category, ko, en');
+
+// ── 글 컴포넌트 (lib/leo) ──
+// 등록부의 모든 예시는 검증을 통과하고 오류 없이 렌더돼야 한다 (문서·견본 페이지가 깨진 예시를 보여주지 않게)
+const allExamples = SPECS.map((s) => s.example).filter(Boolean).join('\n') + CODE_DOC.example;
+assert.deepEqual(validateLeo(allExamples), [], 'all registry examples validate');
+const rendered = await toShadowHtml(`<body>${allExamples}</body>`, 'ko');
+assert.ok(!rendered.includes('class="leo-error"'), 'all examples render');
+assert.ok(rendered.includes('class="shiki leo"'), 'code highlighted with leo theme');
+assert.ok(/class="line leo-hl"/.test(rendered), 'data-highlight marks line');
+assert.ok(rendered.includes('└── ') && rendered.includes('├── '), 'tree connectors');
+assert.ok(rendered.includes('data-value="184s"'), 'chart marks carry tooltip data');
+// 코드 예시 안의 글자는 정화되지 않는다 (예전 정규식 정화는 onclick=… 글자를 지웠다)
+const codeDoc = await toShadowHtml('<pre><code class="language-html">&lt;button onclick="go()"&gt;x&lt;/button&gt;</code></pre><p onclick="evil()">p</p>', 'ko');
+assert.ok(codeDoc.includes('onclick') && !codeDoc.includes('evil'), 'code text kept, real attribute removed');
+assert.ok((await toShadowHtml('<iframe srcdoc="<script>x</script>"></iframe><iframe src="https://www.youtube.com/embed/x"></iframe><iframe src="http://x"></iframe>', 'ko')).match(/<iframe/g)?.length === 1, 'only https iframe, no srcdoc');
+assert.ok((await toShadowHtml('<leo-nope>x</leo-nope>', 'ko')).includes('class="leo-error"'), 'unknown tag shows error box');
+// 검증 오류 문구
+const v = (h: string) => validateLeo(h).join(' | ');
+assert.match(v('<leo-chart>{}</leo-chart>'), /type 속성 필수/);
+assert.match(v('<leo-chart type="pie">{}</leo-chart>'), /type="pie"/);
+assert.match(v('<leo-chart type="bar">{"labels":["a"],"series":[{"name":"x","values":[1,2]}]}</leo-chart>'), /labels와 같은 개수/);
+assert.match(v('<leo-metric value="1" label="a"></leo-metric>'), /<leo-metrics> 바로 안에서만/);
+assert.match(v('<leo-steps></leo-steps>'), /<leo-step>가 하나 이상/);
+assert.match(v('<leo-diagram></leo-diagram>'), /<svg> 또는 <img>/);
+assert.match(v('<leo-sparkle></leo-sparkle>'), /없는 컴포넌트/);
+const bad = parsePostInput({ ...good, en: { title: 'T', html: '<leo-callout type="danger">x</leo-callout>' } });
+assert.ok(!bad.ok && bad.errors.some((e) => e.startsWith('en.html <leo-callout>')), 'post upload rejects bad component');
+assert.equal(readFileSync(new URL('../docs/post-components.md', import.meta.url), 'utf8'), postComponentsMarkdown(), 'docs/post-components.md가 등록부와 다름 — npm run docs:post');
 console.log('ok');

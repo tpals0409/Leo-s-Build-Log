@@ -13,7 +13,7 @@ const SIZE = {
 type Props = { variant?: keyof typeof VARIANT; size?: keyof typeof SIZE; className?: string };
 
 const cls = ({ variant = 'primary', size = 'lg', className = '' }: Props) =>
-  `group press inline-flex items-center gap-1.5 rounded-pill font-medium cursor-pointer ${VARIANT[variant]} ${SIZE[size]} ${className}`;
+  `inline-flex items-center gap-1.5 rounded-pill cursor-pointer ${VARIANT[variant]} ${SIZE[size]} ${className}`;
 
 export function ButtonLink({ variant, size, className, ...props }: Props & React.ComponentProps<typeof Link>) {
   return <Link className={cls({ variant, size, className })} {...props} />;

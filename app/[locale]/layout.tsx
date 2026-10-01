@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Header from '@/components/Header';
-import MotionProvider from '@/components/MotionProvider';
 import { LOCALES } from '@/lib/i18n';
 import { layoutLocale, pageMeta } from '@/lib/page';
 import { SITE, SITE_URL } from '@/lib/site';
@@ -26,9 +25,7 @@ export default async function LocaleLayout({ children, params }: Props & { child
     <html lang={locale}>
       <body>
         <Header locale={locale} />
-        <MotionProvider>
-          <main>{children}</main>
-        </MotionProvider>
+        <main>{children}</main>
       </body>
     </html>
   );

@@ -1,3 +1,3 @@
 export default function Eyebrow({ children }: { children: React.ReactNode }) {
-  return <span className="t-label text-label">{children}</span>;
+  return <span className="t-caption text-label">{children}</span>;
 }

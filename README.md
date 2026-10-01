@@ -19,6 +19,7 @@ podman compose up -d --build
   - 공통: `slug`(영문 소문자·숫자·하이픈, 한/영 공유), `category`(`ai-agent` | `engineering` | `retrospective`)
   - 선택: `project`(`algosu` | `finch` | `janus` | `pinlog`), `tags`(문자열 배열), `thumbnail`(업로드 URL), `featured`, `published`(기본 true)
   - 언어별: `ko`, `en` 각각 `{ title, html, summary? }` — `html`은 스타일 포함 완성 HTML 문서
+  - 다이어그램·차트 등은 `<leo-*>` 태그로 — **[docs/post-components.md](docs/post-components.md)**, 견본 `/ko/design`. 잘못 쓰면 400과 이유
 - `PATCH /api/posts/:slug` — `{ "featured"?, "published"? }`
 - `DELETE /api/posts/:slug`
 - `GET /api/posts` — 전체 목록(미발행 포함)

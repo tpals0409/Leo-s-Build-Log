@@ -38,56 +38,65 @@ Next.js 16 (App Router) + PostgreSQL + Tailwind v4, Podman으로 자체 호스�
 
 ## 디자인 시스템 (반드시 지킬 것)
 
-구조: **토큰(`app/globals.css`) → UI 컴포넌트(`components/ui`) → 도메인 컴포넌트(`components`) → 페이지(`app`)**.
-`DESIGN.md`(Apple)는 타이포·레이아웃 레퍼런스일 뿐이고, 색은 **레오 팔레트**(2026-10-01)다. 실제 기준은 `app/globals.css`의 `@theme`과 `@utility`.
+**`DESIGN.md`를 엄격히 따른다.** 확인된 값만 쓰고, 빈칸을 그럴듯한 기본값으로 채우지 않는다(DESIGN.md "Unknowns").
+DESIGN.md보다 우선하는 사용자 지정은 셋뿐: **레오 팔레트**(색), **Gmarket Sans**, **목업 레이아웃**(이미지 모서리 등).
+구조: 토큰(`app/globals.css`) → UI 컴포넌트(`components/ui`) → 도메인 컴포넌트(`components`) → 페이지(`app`).
+
+### 원칙 (DESIGN.md)
+- **내용이 주인공, 컨트롤은 절제.** 상자·배경 채움·그림자로 감싸지 않는다. 구분은 여백(`--space-cluster` 20px)과 가는 선.
+- **한 구성 안에 강조색은 하나**(`brand`). 나머지는 charcoal~sand 무채색 단계로.
+- **글자는 6개 역할만.** 대문자·자간 벌린 작은 라벨(eyebrow) 쓰지 않는다.
+- **호버·움직임을 지어내지 않는다.** DESIGN.md엔 호버 모습도 움직임 토큰도 없다.
+  예외는 팔레트가 정한 버튼 호버(`primary-hover`, Brand → Deep Orange) 하나. 키보드 포커스 표시(접근성)는 유지.
 
 ### 토큰
-- 색(역할): `surface`(paper — 팔레트에 맞춘 흰색 배경) `fg` `secondary` `muted` `label` `link` `link-hover` `primary` `primary-hover` `on-primary` `fog` `line` `highlight`
-  → `bg-surface`, `text-muted`, `text-label`, `border-line` … 컴포넌트는 역할 이름만 쓴다.
-- 색(팔레트 원색): `brand` `brand-deep` `lion` `cocoa` `butter` `sand` `cream` `sage` `steel` `charcoal` (+ 배경용 `paper`) — 그래픽용, 또는 새 역할을 정의할 때.
-  - **오렌지(`brand`)는 글자색으로 쓰지 않는다**(흰 배경 위 2.4:1). 오렌지 면 위 글자는 `on-primary`(charcoal), 흰색 금지(2.5:1).
-  - 새 글자색 조합은 배경(paper) 대비 4.5:1 이상인지 확인한다(`globals.css` 주석에 대비값). `fog`(cream) 면 위라면 그 위에서도 확인.
-- 글자: `t-display` `t-headline` `t-title1` `t-title2` `t-title3` `t-body-lg` `t-body` `t-body-sm` `t-caption` `t-label`
-  - `t-*`는 크기·행간만. 굵기는 항상 `font-light|font-medium|font-bold`로 따로 붙인다 (`t-label`만 완성형).
-- 둥글기: `rounded-pill`(버튼·검색창) `rounded-card`(썸네일·입력창) `rounded-panel`(큰 이미지)
-- 곡선: `ease-standard` (CSS) = `EASE` (`lib/motion.ts`)
-- 폭: `max-w-wrap` (1120px, `Container`가 처리)
-- 폰트: Gmarket Sans 하나 (300/500/700). 라이트 모드만.
-- 로고: `public/logo.webp`(헤더), `public/logo.png`(OG 이미지), `app/icon.png`·`app/apple-icon.png`. 배경 투명(apple-icon만 paper — iOS는 투명 부분을 검게 칠함).
+- 글자 역할 `t-*` — 클래스 하나가 크기·행간·굵기·자간을 다 정한다(굵기 클래스 `font-*` 쓰지 않음):
 
-### 금지
-- `text-[17px]`, `rounded-[10px]`, `text-[#fff]` 같은 임의 글자/색/둥글기 값
-- `text-sm`, `text-xl` 등 Tailwind 기본 글자크기, `bg-blue-500`, `bg-white` 등 기본 팔레트, hex 색
-- 레이아웃 임의값(`w-[calc(..)]`, `grid-cols-[..]`, `aspect-[..]`, 컴포넌트 고유 padding)은 허용
+  | 클래스 | DESIGN.md 역할 | 값 | 쓰는 곳 |
+  |---|---|---|---|
+  | `t-display` | Display Hero | 56/60 · 700 · -0.28px | 홈 히어로 |
+  | `t-section` | Section | 40/44 · 700 | 페이지·섹션·글 제목, 모바일 히어로 |
+  | `t-tile` | Tile Heading | 28/32 · 500 · 0.196px | 카드 제목, 로고(데스크톱) |
+  | `t-body` | Body | 17/25 · 500 · -0.374px | 본문·버튼·리드 |
+  | `t-body-sm` | Body Small | 14/18 · 500 · -0.224px | 요약·메뉴·표·작은 버튼 |
+  | `t-caption` | Caption | 12/16 · 500 · -0.12px | 날짜·카테고리·보조 |
 
-새 값이 정말 필요하면 컴포넌트에 박지 말고 `globals.css`에 토큰을 추가한 뒤 쓴다.
+  Gmarket Sans는 300·500·700뿐 → DESIGN.md의 400은 500(Gmarket 본문 굵기), 600은 700으로 대응.
+- 버튼(`ui/Button`): DESIGN.md 그대로 — lg 44px · 11px 21px · 17px, sm 36px · 8px 15px · 14px, 980px pill.
+- 색(역할): `surface`(paper 흰 배경) `fg` `secondary` `muted` `label` `link` `primary` `primary-hover` `on-primary` `fog` `line` `highlight`
+  - 팔레트 원색: `brand` `brand-deep` `lion` `cocoa` `butter` `sand` `cream` `sage` `steel` `charcoal` `paper` — 새 역할을 정할 때만.
+  - **오렌지(`brand`)는 글자색 금지**(흰 배경 위 2.4:1). 오렌지 면 위 글자는 `on-primary`(charcoal). 새 글자색은 4.5:1 이상 확인.
+- 모서리: `rounded-pill`(DESIGN.md 버튼·검색창·탭). `rounded-card`(10)·`rounded-panel`(18)은 **목업 실측, 이미지 전용** — 상자에 쓰지 않는다.
+- 간격: `--space-cluster` 20px (DESIGN.md 콘텐츠 묶음).
+- **모든 토큰은 CSS 변수로도 있다** (`@theme static`). 문자열 CSS(글 컴포넌트 `lib/leo/style.ts` 등)는 var()로:
+  `--fs-*`·`--lh-*`·`--fw-*`·`--ls-*`(역할별) `--radius-*` `--space-cluster` `--color-*` `--font-sans|mono`
+- 폭: `max-w-wrap` (1120px, `Container`). 라이트 모드만.
+- 로고: `public/logo.webp`(헤더), `public/logo.png`(OG), `app/icon.png`·`app/apple-icon.png`. 배경 투명(apple-icon만 paper).
 
-### 움직임 (Motion)
-기조는 **은은하게** — 짧고 작은 움직임, 내용이 주인공. 라이브러리는 Motion(`motion`).
-- Motion props는 `lib/motion.ts` 프리셋만 쓴다(`{...reveal(i)}`, `{...pageEnter}`). `initial={{…}}` 같은 인라인 값 금지(`check:design`이 막음).
-  새 움직임이 필요하면 `lib/motion.ts`에 프리셋을 추가한다.
-- 서버 컴포넌트에서는 `motion/react-client`를 쓴다(그 요소만 클라이언트로 동작). 컴포넌트 전체를 `'use client'`로 바꾸지 않는다.
-- 스크롤 등장(`ui/Reveal`)은 카드·섹션에만. **글 본문과 페이지 맨 위 제목에는 쓰지 않는다**(JS 전엔 투명해서 검색·가독성 손해).
-- 페이지 전환은 들어오는 효과만(`app/[locale]/template.tsx`). 나가는 효과는 Next 내부 API가 필요해서 하지 않는다.
-- 호버·클릭은 CSS 유틸리티(`app/globals.css`)로만. DESIGN.md엔 호버가 없어서 이건 우리 확장이다.
-  - `press` — 버튼·탭: 호버 시 살짝 확대, 누르면 살짝 축소 (`Button`은 이미 적용)
-  - `link-hover` — 텍스트 링크: Deep Orange(`link-hover`)로 부드럽게
-  - `primary-hover` — 채운 버튼 호버 색 (`Button` primary에 이미 적용)
-  - `arrow` — 링크 끝 →: `<Arrow />` 컴포넌트 + 부모에 `group`. 호버 시 오른쪽으로 3px
-  - `press-card` — 카드: 누를 때만 살짝. 썸네일 확대는 카드 안에서 `group-hover:` (`PostCard`, `ProjectCard`)
-  - `hover:…`/`active:…`를 직접 쓰지 않는다(`check:design`이 막음). 동작 줄이기는 유틸리티가 처리한다.
-- 동작 줄이기 설정은 `MotionProvider`(Motion)와 `motion-reduce:`(CSS)로 존중한다.
+### 금지 (`npm run check:design`이 검사)
+- 임의 글자/색/둥글기 값(`text-[17px]`, `rounded-[10px]`, `text-[#fff]`), Tailwind 기본 글자크기·팔레트, hex 색
+- 굵기 클래스(`font-medium` 등) — 역할이 정한다
+- `hover:`·`active:`, 움직임 클래스(`transition-*`, `animate-*`, `duration-*`, `ease-*`)
+- 문자열 CSS의 `font-size`·`line-height`·`font-weight`·`letter-spacing`·`border-radius` 숫자, `transition`·`animation`, `box-shadow`, (글 컴포넌트의) hex 색
+- 레이아웃 임의값(`w-[calc(..)]`, `grid-cols-[..]`, `aspect-[..]`)은 허용. 원형은 `border-radius:50%`
+
+새 값이 정말 필요하면 DESIGN.md에 근거가 있는지 먼저 본다. 없으면 만들지 말고 사용자에게 묻는다.
 
 ### 컴포넌트
 있는 것부터 쓴다. 새로 만들기 전에 `components/ui`, `components`를 확인.
 - `ui/Button`, `ui/ButtonLink` — `variant: primary|outline`, `size: lg(44px)|sm(36px)`
-- `ui/Container` `ui/Eyebrow` `ui/SectionHeader` `ui/Thumb` `ui/Reveal` `ui/Arrow`
-- `Header` `LocaleSwitch` `FeaturedHero` `PostCard(size: md|sm)` `PostGrid(cols: 3|4)` `ProjectCard` `ProjectGrid` `PostBody` `DemoAutoHeight` `ReadingProgress` `MotionProvider`
+- `ui/Container` `ui/Eyebrow` `ui/SectionHeader` `ui/Thumb`
+- `Header` `LocaleSwitch` `FeaturedHero` `PostCard(size: md|sm)` `PostGrid(cols: 3|4)` `ProjectCard` `ProjectGrid` `PostBody` `PostEnhancer`(차트 값 툴팁·코드 복사·데모 높이)
 - 도메인 컴포넌트는 `locale` prop을 받아 링크(`/${locale}/…`)와 문구를 만든다.
 
 variant/size는 객체 맵(`const VARIANT = {...}`)으로 정의한다 (Button, PostCard 참고). 클래스 조합 라이브러리 추가 금지.
 
 ### 글 본문
+**글을 쓰기 전에 `docs/post-components.md`를 읽는다.** 다이어그램·차트·지표·비교·단계·타임라인·콜아웃·ADR·코드·파일 트리·터미널은
+직접 HTML/CSS로 그리지 말고 `<leo-*>` 태그를 쓴다 — 서버가 블로그 디자인으로 그리고, 등록 때 검사한다. 견본은 `/ko/design`.
+- 컴포넌트를 추가·수정할 때: `lib/leo/specs.ts`(등록부: 속성 규칙·예시·렌더) + `lib/leo/style.ts`(스타일) → `npm run docs:post`.
+  예시는 반드시 검증을 통과해야 한다(`npm run check`가 모든 예시를 검증·렌더하고, 문서가 등록부와 다르면 실패).
+- 처리 순서: 데모 슬롯 → `lib/leo`가 트리로 정화(스크립트·이벤트 속성 제거) + 컴포넌트 렌더 + 코드 강조(Shiki) → 글 CSS 변환.
 글은 자체 스타일이 든 완성 HTML이고, `PostBody`가 서버에서 Shadow DOM으로 렌더한다(`lib/postHtml.ts`).
 본문이 페이지 HTML에 들어가 검색엔진이 읽고, 글 CSS는 shadow root에 격리된다. 블로그 토큰 규칙은 글 HTML에 적용되지 않는다.
 - **움직이는 부분(차트·토글·예제 등)은 반드시 `<template data-demo>`로 감싼다.** 그 안은 스크립트·외부 라이브러리(CDN)를 쓸 수 있는
@@ -99,7 +108,7 @@ variant/size는 객체 맵(`const VARIANT = {...}`)으로 정의한다 (Button, 
 ## 검증
 - `npm run check:design` — 위 금지 규칙 검사. UI를 고친 뒤 반드시 통과시킬 것.
   git pre-commit 훅(`.githooks/`, `npm install` 시 자동 등록)이 커밋마다 실행한다. `--no-verify`로 우회하지 말 것.
-- `npm run check` — auth, 텍스트 추출, 본문 변환, 글 등록 검증 self-check
+- `npm run check` — auth, 텍스트 추출, 본문 변환, 글 등록 검증, 글 컴포넌트 예시·문서 self-check
 - `npm run build`
 - GitHub Actions(`.github/workflows/ci.yml`)가 main 푸시·PR마다 위 세 가지를 Node 24로 다시 돌린다. 실패한 채로 두지 말 것.
   main 푸시는 검사 통과 후 k3s(arm64)용 이미지를 GHCR에 `main-<sha>`로 올린다. 배포 요건(포트·probe·PVC·env)은 README "k3s 배포".

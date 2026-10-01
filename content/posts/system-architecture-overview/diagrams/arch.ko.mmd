@@ -1,0 +1,16 @@
+flowchart TD
+  U([브라우저]) --> FE[Frontend<br/>Next.js]
+  FE --> GW[Gateway<br/>NestJS · 유일한 외부 진입점]
+  subgraph BE[백엔드 서비스 · Database per Service]
+    ID[Identity] --- IDB[(identity_db)]
+    SB[Submission<br/>Saga Orchestrator] --- SDB[(submission_db)]
+    PB[Problem] --- PDB[(problem_db)]
+  end
+  GW -->|HTTP + X-Internal-Key| ID
+  GW -->|HTTP + X-Internal-Key| SB
+  GW -->|HTTP + X-Internal-Key| PB
+  SB -->|RabbitMQ| GH[GitHub Worker]
+  SB -->|RabbitMQ| AI[AI Analysis<br/>FastAPI]
+  AI --> CL([Claude API])
+  SB -.->|Redis Pub/Sub| GW
+  GW -.->|SSE| FE

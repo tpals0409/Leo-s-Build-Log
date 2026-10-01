@@ -1,0 +1,7 @@
+flowchart TD
+  A[DB_SAVED] --> B[GITHUB_QUEUED]
+  B --> C[AI_QUEUED]
+  C --> D([DONE])
+  B -. GitHub 실패 .-> C
+  C -. AI 실패 .-> E([DONE · aiDelayed])
+  B -. TOKEN_INVALID .-> F([DONE · aiSkipped])

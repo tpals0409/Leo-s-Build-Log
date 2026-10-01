@@ -10,6 +10,7 @@
 - Mermaid는 글 쓰는 쪽에서 SVG로 바꿔 `<leo-diagram>` 안에 넣는다:
   `npx -p @mermaid-js/mermaid-cli mmdc -i a.mmd -o a.svg -c mermaid.config.json -b transparent`
   (블로그 팔레트가 입혀진다. 가로로 긴 흐름은 `flowchart TD`가 작은 화면에서 읽기 좋다)
+  **변환하는 컴퓨터에 Gmarket Sans가 설치돼 있어야 한다** (`public/fonts/*.ttf`). 없으면 다른 글꼴 폭으로 상자를 만들어 블로그에서 글자가 잘린다.
 - 직접 만든 인터랙티브 예제는 `<template data-demo>` (격리 iframe). 외부 영상 등은 `https://` iframe.
 - 글 안 `<script>`, `on*=` 속성, `javascript:` 링크, `srcdoc`은 제거된다.
 

@@ -1,7 +1,7 @@
 {
   "theme": "base",
   "themeVariables": {
-    "fontFamily": "Gmarket Sans, -apple-system, Apple SD Gothic Neo, sans-serif",
+    "fontFamily": "Gmarket Sans, Gmarket Sans TTF, -apple-system, Apple SD Gothic Neo, sans-serif",
     "fontSize": "14px",
     "background": "transparent",
     "primaryColor": "#FFFFFF",

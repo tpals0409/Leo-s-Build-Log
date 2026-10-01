@@ -13,7 +13,7 @@ strong{font-weight:var(--fw-section)}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="Scope"><p>This article describes monitoring placement in a single-node environment, based on PinLog's operational records and implementation contracts as of July 23, 2026. It is not a report of a reproduced outage or measured detection times.</p></leo-callout>
+
 <p>Once monitoring is installed on a server and alerts are connected, it can feel as though the system is ready to watch for failures. But change one question and a gap appears: <strong>if the server itself stops, rather than just the application, who sends the alert?</strong></p>
 <p>PinLog ran its k3s control plane and application workloads together on a single AWS node. Prometheus and Alertmanager ran on that node too. Both the system collecting service state and the system reporting it depended on the survival of the very server they watched.</p>
 <h2>Separate processes can still fail together</h2>

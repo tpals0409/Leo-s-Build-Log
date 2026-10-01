@@ -14,7 +14,7 @@ code{font-family:var(--font-mono);overflow-wrap:anywhere}
 </head>
 <body>
 <p>When adding AI to incident notifications, I had a question to settle before worrying about good prose: <strong>which decisions should AI be allowed to make?</strong> Processing an alert into readable text is not the same as notifying an entire channel. Changing a sentence and changing a mention policy carry different consequences.</p>
-<p>In PinLog, Sentinel uses Hermes to process alert payloads. But its generated output is not automatically the final message. Trusted code revalidates mentions, URLs, and formatting. This post describes that division of responsibility as recorded in the July 23, 2026 operations snapshot.</p>
+<p>In PinLog, Sentinel uses Hermes to process alert payloads. But its generated output is not automatically the final message. Trusted code revalidates mentions, URLs, and formatting.</p>
 <h2>An alert explains a situation—and calls for attention</h2>
 <p>The person receiving an operational alert needs to know what happened, whether it is still happening, and what to do now. That is the reason to turn a payload into something a person can read. A message contains more than an explanation, though. A mention requests someone else's attention, and a URL points them toward the next place to investigate.</p>
 <p>I did not want to treat all of those elements as unrestricted text generation. If freedom to rephrase also means freedom to change who gets notified or which message rules apply, operational policy becomes dependent on generated output. Before producing a plausible message for each alert, I wanted <strong>the same policy to apply to the same state</strong>.</p>

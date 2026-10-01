@@ -3,7 +3,7 @@
   "project": "pinlog",
   "tags": ["observability", "alerting", "hermes", "ai-agent"],
   "publishedAt": "2026-07-23",
-  "published": false,
+  "published": true,
   "featured": false,
   "ko": {
     "title": "장애 알림에 AI를 붙여도, 최종 형식은 코드가 결정하게 했습니다",

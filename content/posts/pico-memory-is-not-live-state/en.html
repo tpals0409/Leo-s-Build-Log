@@ -8,7 +8,7 @@ a{color:var(--color-link)}
 code{font-family:var(--font-mono);font-size:.9em;background:var(--color-fog);padding:0 4px}
 blockquote{margin:1.5em 0;padding-left:var(--space-cluster);border-left:2px solid var(--color-line);color:var(--color-secondary)}
 blockquote p{margin:0}
-</style></head><body><leo-callout type="note" title="Historical scope"><p>This article describes the knowledge-management structure and principles recorded in Pico’s July 23, 2026 operations snapshot.</p></leo-callout>
+</style></head><body>
 <p>As the infrastructure owner for PinLog, I worked with information that carried different time horizons. The branch Argo CD deploys from is configuration. A Pod being Ready is a state observed at a particular moment.</p><p>Pico needed both kinds of knowledge, but they could not be trusted in the same way. Reading yesterday’s healthy status as today’s can produce a wrong operational decision from an otherwise accurate record.</p>
 <h2>Contracts and observations have different lifetimes</h2><p>The July 23 snapshot distinguished observations from implementation contracts. Observations were values directly inspected that day; contracts described structures verified in repository configuration and operating documents.</p>
 <leo-compare><leo-side label="Observation"><p>The monitoring workloads were Ready.</p><p>This describes their state then. Their health now requires another query.</p></leo-side><leo-side label="Implementation contract"><p>Argo CD reconciles deployments against main.</p><p>This describes the operating structure. Later configuration changes still need checking.</p></leo-side></leo-compare>

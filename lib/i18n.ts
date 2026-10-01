@@ -15,6 +15,7 @@ export const DICT = {
     posts: { title: '글', all: '전체', empty: '글이 없습니다.' },
     projects: { title: '프로젝트', posts: '관련 글', noPosts: '아직 관련 글이 없습니다.' },
     about: { title: '소개', placeholder: '소개를 준비하고 있습니다.', contact: '연락' },
+    notFound: { title: '페이지를 찾을 수 없어요', body: '주소가 바뀌었거나 없는 페이지예요.', home: '홈으로' },
     switchTo: 'English',
   },
   en: {
@@ -25,6 +26,7 @@ export const DICT = {
     posts: { title: 'Posts', all: 'All', empty: 'No posts.' },
     projects: { title: 'Projects', posts: 'Related posts', noPosts: 'No related posts yet.' },
     about: { title: 'About', placeholder: 'Coming soon.', contact: 'Contact' },
+    notFound: { title: 'Page not found', body: 'This page has moved or doesn’t exist.', home: 'Go home' },
     switchTo: '한국어',
   },
 } satisfies Record<Locale, unknown>;

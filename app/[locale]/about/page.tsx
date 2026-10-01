@@ -3,6 +3,9 @@ import { DICT } from '@/lib/i18n';
 import { localeOf, pageMeta } from '@/lib/page';
 import { SITE } from '@/lib/site';
 
+// 요청 시 렌더: SITE_URL(canonical·OG 주소)을 빌드 때가 아니라 실행 환경에서 읽도록
+export const dynamic = 'force-dynamic';
+
 type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props) {

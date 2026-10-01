@@ -22,7 +22,7 @@ export type PostCard = {
 export type Post = PostCard & { html: string };
 
 const g = globalThis as unknown as { sql?: postgres.Sql; ready?: Promise<unknown> };
-const sql = (g.sql ??= postgres(process.env.DATABASE_URL!));
+const sql = (g.sql ??= postgres(process.env.DATABASE_URL!, { onnotice: () => {} })); // schema.sql의 'already exists' 알림 끔
 // 마이그레이션 도구 없음: 첫 쿼리 전에 schema.sql 한 번 실행
 const ready = () => (g.ready ??= sql.unsafe(readFileSync(path.join(process.cwd(), 'db/schema.sql'), 'utf8')));
 
@@ -57,6 +57,13 @@ export async function getPost(slug: string, locale: Locale) {
   const [post] = await sql<Post[]>`
     select ${cardCols}, t.html from ${fromLocale(locale)} where p.slug = ${slug} and p.published`;
   return post;
+}
+
+// sitemap용: 발행된 글 주소와 수정일
+export async function listSlugs() {
+  await ready();
+  return sql<{ slug: string; project: string | null; updated_at: Date }[]>`
+    select slug, project, updated_at from posts where published order by created_at desc`;
 }
 
 // 관리자용: 미발행 포함, 한글 제목

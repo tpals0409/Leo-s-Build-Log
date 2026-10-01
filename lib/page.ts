@@ -12,6 +12,13 @@ export const alternates = (locale: Locale, path: string) => ({
 
 // [locale] 페이지 공통: params에서 언어 꺼내기. ko/en 외는 404.
 // (layout의 dynamicParams=false는 페이지가 동적 렌더면 프로덕션에서 안 막아준다 — 여기서 직접 검사)
+// layout 전용: 던지지 않고 ko로 대체. layout에서 notFound()를 던지면 위에 잡을 경계가 없어 Next 기본 404가 뜬다 —
+// 대신 페이지의 localeOf가 던지고, [locale]/not-found.tsx가 이 layout 안에서 잡는다.
+export const layoutLocale = async (params: Promise<{ locale: string }>): Promise<Locale> => {
+  const { locale } = await params;
+  return isLocale(locale) ? locale : 'ko';
+};
+
 export const localeOf = async (params: Promise<{ locale: string }>): Promise<Locale> => {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();

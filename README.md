@@ -36,3 +36,35 @@ curl -X POST localhost:3000/api/posts -H "Authorization: Bearer $ADMIN_TOKEN" \
 그 밖의 `<script>`와 이벤트 속성은 제거된다.
 주소: `/ko/...`, `/en/...` (`/`는 `/ko`로). 홈: 대표 글(featured) 1 / 최신 글 3 / 프로젝트 4.
 DB 구조(`db/schema.sql`)를 바꾸면 테이블을 지우고 다시 만든다 — 마이그레이션 도구 없음.
+
+## 백업과 복원
+`scripts/backup.sh` — DB(`pg_dump`)와 업로드 이미지를 `backups/`에 날짜별로 저장하고 14일 지난 것은 지운다(`BACKUP_DIR`, `KEEP_DAYS`로 변경).
+서버에서 매일 새벽 4시에 돌리려면 `crontab -e`에:
+```
+0 4 * * * cd /path/to/blog && sh scripts/backup.sh >> backups/backup.log 2>&1
+```
+`backups/`를 서버 밖(다른 디스크·클라우드)으로도 복사해 둘 것 — 같은 디스크에만 있으면 디스크가 망가질 때 같이 사라진다.
+
+복원 (컨테이너가 떠 있는 상태에서):
+```bash
+gzip -cd backups/db-YYYYMMDD-HHMMSS.sql.gz | podman compose exec -T db psql -U blog -d blog
+podman compose exec -T app sh -c 'rm -rf /app/uploads/* && tar -C /app -xzf -' < backups/uploads-YYYYMMDD-HHMMSS.tar.gz
+```
+
+## 운영 체크
+- `SITE_URL`을 실제 도메인(https)으로 — canonical, hreflang, 링크 미리보기, sitemap, robots가 모두 이 값을 쓴다(재빌드 불필요, 재시작만).
+- HTTPS 프록시는 `x-forwarded-proto`를 넘겨야 관리자 쿠키에 `Secure`가 붙는다.
+- `/sitemap.xml`, `/robots.txt`는 자동 생성된다. 관리자·API·검색 페이지는 검색엔진에서 제외.
+
+## k3s 배포 (이미지)
+main에 푸시되면 CI가 검사를 통과한 뒤 `ghcr.io/tpals0409/leo-s-build-log:main-<git sha>` (linux/arm64)를 올린다. `latest` 태그는 없다.
+매니페스트(aether-gitops 등)가 맞춰야 할 것:
+- **포트** 3000, **probe** `GET /api/health` (DB를 안 봐서 DB 장애로 재시작되지 않음)
+- **env**: `DATABASE_URL`, `ADMIN_TOKEN`, `SITE_URL`(https 도메인). `ADMIN_TOKEN`·DB 비밀번호는 SealedSecret 등으로
+- **업로드**: `/app/uploads`에 PVC. 컨테이너는 `node`(uid 1000)로 돌므로 `securityContext.fsGroup: 1000`
+  — ReadWriteOnce PVC면 **replicas 1** (여러 개 띄우려면 RWX 또는 오브젝트 스토리지로 바꿔야 함)
+- **Postgres**: 별도로. 추후 챗봇(pgvector)을 생각하면 `pgvector/pgvector` 이미지. 스키마는 앱이 첫 쿼리 때 만든다
+- **Ingress**: TLS는 Ingress(Traefik)에서. `X-Forwarded-Proto`가 넘어와야 관리자 쿠키에 `Secure`가 붙는다 (Traefik 기본값으로 넘김)
+- **백업**: `scripts/backup.sh`는 compose 전용이다. k3s에선 `pg_dump` CronJob + 업로드 PVC 백업을 따로 둔다
+- private 패키지면 `imagePullSecrets` (예: `ghcr-pull-secret`)
+

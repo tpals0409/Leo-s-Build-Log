@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import MotionProvider from '@/components/MotionProvider';
 import { LOCALES } from '@/lib/i18n';
-import { localeOf, pageMeta } from '@/lib/page';
+import { layoutLocale, pageMeta } from '@/lib/page';
 import { SITE, SITE_URL } from '@/lib/site';
 import '../globals.css';
 
@@ -12,7 +12,7 @@ export const generateStaticParams = () => LOCALES.map((locale) => ({ locale }));
 type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const locale = await localeOf(params);
+  const locale = await layoutLocale(params);
   return {
     metadataBase: new URL(SITE_URL),
     title: { default: SITE.name[locale], template: `%s — ${SITE.name[locale]}` },
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function LocaleLayout({ children, params }: Props & { children: React.ReactNode }) {
-  const locale = await localeOf(params);
+  const locale = await layoutLocale(params);
   return (
     <html lang={locale}>
       <body>

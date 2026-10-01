@@ -28,6 +28,11 @@ Next.js 16 (App Router) + PostgreSQL + Tailwind v4, Podman으로 자체 호스�
 - DB: `posts`(공통) + `post_translations`(ko/en 행). 등록 검증은 `lib/postInput.ts`.
 - 새 페이지는 `lib/page.ts`의 `localeOf(params)`로 언어를 받고(ko/en 외 404), `generateMetadata`는 `pageMeta(locale, path, { title, description })`를 돌려준다
   (canonical·hreflang·링크 미리보기 텍스트가 한 번에 들어감).
+- **`SITE_URL`은 실행 환경 값이다.** 컨테이너 빌드 때는 없으므로, metadata(canonical·OG)를 내는 페이지와 sitemap·robots는
+  정적 생성되면 안 된다(`export const dynamic = 'force-dynamic'`). 새 정적 페이지를 만들면 주소가 `localhost`로 굳는다.
+- 404: 언어 안의 `notFound()`는 `app/[locale]/not-found.tsx`(레이아웃 안, 주소로 언어 판단), 어떤 route에도 안 맞는 주소는
+  `app/global-not-found.tsx`(Next 실험 기능, 한/영 함께). layout에서는 `notFound()`를 던지지 말 것 — 잡을 경계가 없어 Next 기본 404가 뜬다
+  (`layoutLocale`이 ko로 대체하고, 페이지의 `localeOf`가 던진다).
 - 링크 미리보기 이미지: `app/[locale]/opengraph-image.tsx`(기본: 로고+블로그 이름)를 모든 페이지가 물려받고, 글·프로젝트는 각 폴더의 `opengraph-image.tsx`가 제목 카드를 만든다.
   그리는 코드는 `lib/og.tsx` 하나 — 색은 `globals.css` 토큰 값을 옮겨 적은 것이라 토큰을 바꾸면 여기도 맞춘다.
 
@@ -97,3 +102,4 @@ variant/size는 객체 맵(`const VARIANT = {...}`)으로 정의한다 (Button, 
 - `npm run check` — auth, 텍스트 추출, 본문 변환, 글 등록 검증 self-check
 - `npm run build`
 - GitHub Actions(`.github/workflows/ci.yml`)가 main 푸시·PR마다 위 세 가지를 Node 24로 다시 돌린다. 실패한 채로 두지 말 것.
+  main 푸시는 검사 통과 후 k3s(arm64)용 이미지를 GHCR에 `main-<sha>`로 올린다. 배포 요건(포트·probe·PVC·env)은 README "k3s 배포".

@@ -6,7 +6,7 @@ import Container from '@/components/ui/Container';
 import Eyebrow from '@/components/ui/Eyebrow';
 import { getPost } from '@/lib/db';
 import { DICT, fmtDate } from '@/lib/i18n';
-import { alternates, localeOf } from '@/lib/page';
+import { localeOf, pageMeta } from '@/lib/page';
 import { getProject } from '@/lib/projects';
 
 export const dynamic = 'force-dynamic';
@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const locale = await localeOf(params);
   const post = await getPost(slug, locale);
-  return post ? { title: post.title, description: post.summary, alternates: alternates(locale, `/posts/${slug}`) } : {};
+  return post ? pageMeta(locale, `/posts/${slug}`, { title: post.title, description: post.summary, type: 'article' }) : {};
 }
 
 export default async function PostPage({ params }: Props) {
@@ -28,7 +28,7 @@ export default async function PostPage({ params }: Props) {
   const project = post.project ? getProject(post.project) : undefined;
 
   return (
-    <article>
+    <article className="pb-20">
       <ReadingProgress />
       <Container className="pb-8 pt-14 text-center">
         <Eyebrow>{DICT[locale].category[post.category]}</Eyebrow>

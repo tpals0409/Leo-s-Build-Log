@@ -14,7 +14,11 @@ export default function Header({ locale }: { locale: Locale }) {
   return (
     <header className="sticky top-0 z-10 border-b border-line/60 bg-surface/85 backdrop-blur-xl backdrop-saturate-180">
       <Container className="flex h-15 items-center gap-4 sm:gap-8">
-        <Link href={`/${locale}`} className="link-hover shrink-0 whitespace-nowrap t-body font-medium sm:t-title2">{SITE.name[locale]}</Link>
+        <Link href={`/${locale}`} className="link-hover flex shrink-0 items-center gap-2 whitespace-nowrap t-body font-medium sm:t-title2">
+          {/* 이름이 바로 옆에 있으니 이미지는 장식(alt 비움) */}
+          <img src="/logo.webp" alt="" width={36} height={36} className="size-8 sm:size-9" />
+          {SITE.name[locale]}
+        </Link>
         <nav className="mx-auto hidden gap-10 t-body-sm font-medium lg:flex">
           {nav.map((n) => <Link key={n.href} href={n.href} className="link-hover">{n.label}</Link>)}
         </nav>
@@ -25,11 +29,12 @@ export default function Header({ locale }: { locale: Locale }) {
           <input name="q" placeholder={t.search.placeholder} aria-label={t.search.placeholder}
             className="h-[34px] w-28 rounded-pill bg-fog pl-[34px] pr-3.5 t-caption sm:w-45" />
         </form>
-        <LocaleSwitch locale={locale} />
+        <div className="hidden lg:block"><LocaleSwitch locale={locale} /></div>
       </Container>
-      {/* 좁은 화면: 메뉴를 한 줄로 */}
+      {/* 좁은 화면: 메뉴 + 언어 전환을 둘째 줄로 (첫 줄은 로고·검색만) */}
       <Container className="flex gap-6 pb-3 t-body-sm font-medium lg:hidden">
         {nav.map((n) => <Link key={n.href} href={n.href} className="link-hover">{n.label}</Link>)}
+        <span className="ml-auto"><LocaleSwitch locale={locale} /></span>
       </Container>
     </header>
   );

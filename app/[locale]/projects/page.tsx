@@ -1,14 +1,14 @@
 import ProjectGrid from '@/components/ProjectGrid';
 import Container from '@/components/ui/Container';
 import { DICT } from '@/lib/i18n';
-import { alternates, localeOf } from '@/lib/page';
+import { localeOf, pageMeta } from '@/lib/page';
 import { PROJECTS } from '@/lib/projects';
 
 type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props) {
   const locale = await localeOf(params);
-  return { title: DICT[locale].projects.title, alternates: alternates(locale, '/projects') };
+  return pageMeta(locale, '/projects', { title: DICT[locale].projects.title });
 }
 
 export default async function ProjectsPage({ params }: Props) {

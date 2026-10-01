@@ -3,5 +3,5 @@ node_modules
 .next
 uploads
 .env*
-*.png
+블로그 목업.png
 .git

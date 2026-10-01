@@ -5,7 +5,7 @@ import SectionHeader from '@/components/ui/SectionHeader';
 import Thumb from '@/components/ui/Thumb';
 import { listPosts } from '@/lib/db';
 import { DICT } from '@/lib/i18n';
-import { alternates, localeOf } from '@/lib/page';
+import { localeOf, pageMeta } from '@/lib/page';
 import { getProject } from '@/lib/projects';
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const locale = await localeOf(params);
   const project = getProject(slug);
-  return project ? { title: project.name, description: project.summary[locale], alternates: alternates(locale, `/projects/${slug}`) } : {};
+  return project ? pageMeta(locale, `/projects/${slug}`, { title: project.name, description: project.summary[locale] }) : {};
 }
 
 export default async function ProjectPage({ params }: Props) {

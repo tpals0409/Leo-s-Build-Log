@@ -1,9 +1,8 @@
 import type { Metadata } from 'next';
-import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import MotionProvider from '@/components/MotionProvider';
 import { LOCALES } from '@/lib/i18n';
-import { alternates, localeOf } from '@/lib/page';
+import { localeOf, pageMeta } from '@/lib/page';
 import { SITE, SITE_URL } from '@/lib/site';
 import '../globals.css';
 
@@ -17,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     metadataBase: new URL(SITE_URL),
     title: { default: SITE.name[locale], template: `%s — ${SITE.name[locale]}` },
-    alternates: alternates(locale, ''),
+    ...pageMeta(locale, ''),
   };
 }
 
@@ -30,7 +29,6 @@ export default async function LocaleLayout({ children, params }: Props & { child
         <MotionProvider>
           <main>{children}</main>
         </MotionProvider>
-        <Footer locale={locale} />
       </body>
     </html>
   );

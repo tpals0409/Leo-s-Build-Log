@@ -3,7 +3,7 @@ import PostGrid from '@/components/PostGrid';
 import Container from '@/components/ui/Container';
 import { listPosts } from '@/lib/db';
 import { CATEGORIES, DICT } from '@/lib/i18n';
-import { alternates, localeOf } from '@/lib/page';
+import { localeOf, pageMeta } from '@/lib/page';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +11,7 @@ type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ cate
 
 export async function generateMetadata({ params }: Props) {
   const locale = await localeOf(params);
-  return { title: DICT[locale].posts.title, alternates: alternates(locale, '/posts') };
+  return pageMeta(locale, '/posts', { title: DICT[locale].posts.title });
 }
 
 export default async function PostsPage({ params, searchParams }: Props) {

@@ -17,7 +17,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   const { featured, latest } = await getHome(locale);
 
   return (
-    <Container>
+    <Container className="pb-20">
       {featured && <FeaturedHero post={featured} locale={locale} />}
 
       <section className={featured ? '' : 'pt-12'}>

@@ -1,13 +1,13 @@
 import Container from '@/components/ui/Container';
 import { DICT } from '@/lib/i18n';
-import { alternates, localeOf } from '@/lib/page';
+import { localeOf, pageMeta } from '@/lib/page';
 import { SITE } from '@/lib/site';
 
 type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props) {
   const locale = await localeOf(params);
-  return { title: DICT[locale].about.title, alternates: alternates(locale, '/about') };
+  return pageMeta(locale, '/about', { title: DICT[locale].about.title });
 }
 
 // TODO(김세민): 소개 내용 — 지금은 자리표시

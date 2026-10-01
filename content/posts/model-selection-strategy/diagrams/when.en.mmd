@@ -1,0 +1,6 @@
+flowchart TD
+  T[Next task] --> Q{What kind of work?}
+  Q -->|features · bug fixes · docs| N[Everyday model<br/>Opus · Sonnet]
+  Q -->|boundary-heavy decomposition · debt payoff<br/>unfamiliar territory| P[Premium model<br/>targeted deployment]
+  P --> B([Clean abstraction boundaries])
+  B -.->|everyday models do better afterwards| N

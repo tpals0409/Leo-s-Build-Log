@@ -1,0 +1,14 @@
+flowchart TD
+  T([push · PR → main]) --> S[secret-scan<br/>gitleaks · .env 차단]
+  T --> D[detect-changes<br/>paths-filter]
+  D --> QN[quality-nestjs ×5] --> TN[test-node ×5]
+  D --> QP[quality-python] --> TA[test-ai-analysis]
+  D --> QF[quality-frontend] --> TF[test-frontend]
+  D --> AU[audit-npm ×6]
+  TN & TA & AU & S --> BS[build-services<br/>ARM64 ×6]
+  TF & AU & S --> BF[build-frontend]
+  S --> BB[build-blog]
+  BS & BF & BB --> TR[trivy-scan ×8<br/>CRITICAL·HIGH 차단]
+  TR & S --> DE[deploy<br/>aether-gitops 태그 갱신]
+  DE --> AC([ArgoCD sync → k3s])
+  DE --> NO[notify<br/>Grafana annotation]

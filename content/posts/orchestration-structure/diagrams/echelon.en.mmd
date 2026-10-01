@@ -1,0 +1,17 @@
+flowchart TD
+  PM([PM · human]) <-->|single channel| O[Oracle · Arbiter<br/>planning · coordination]
+  O -->|delegates| E1
+  subgraph E1[Echelon 1 · Mission Critical · Opus · incl. Oracle]
+    direction LR
+    C[Conductor<br/>Orchestrator<br/>Saga] ~~~ G[Gatekeeper<br/>Guardian<br/>auth · security] ~~~ L[Librarian<br/>Records Keeper<br/>DB schema]
+  end
+  E1 --> E2
+  subgraph E2[Echelon 2 · Core]
+    direction LR
+    AR[Architect<br/>Infra Designer<br/>k8s·CI/CD] ~~~ PO[Postman<br/>Delivery<br/>GitHub·MQ] ~~~ CU[Curator<br/>Problem Setter<br/>problems · deadlines] ~~~ SC[Scribe<br/>Chronicler<br/>docs · memory]
+  end
+  E2 --> E3
+  subgraph E3[Echelon 3 · Enhancement]
+    direction LR
+    SE[Sensei<br/>Analyst<br/>AI analysis] ~~~ HE[Herald<br/>Messenger<br/>frontend] ~~~ PA[Palette<br/>Designer<br/>design system] ~~~ SO[Scout<br/>Recon<br/>user testing]
+  end

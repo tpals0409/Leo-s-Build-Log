@@ -1,0 +1,17 @@
+flowchart TD
+  PM([PM · 사람]) <-->|유일한 창구| O[Oracle · 심판관<br/>기획 결정 · 조율]
+  O -->|위임| E1
+  subgraph E1[Echelon 1 · Mission Critical · Opus · Oracle 포함]
+    direction LR
+    C[Conductor<br/>지휘자<br/>Saga] ~~~ G[Gatekeeper<br/>관문지기<br/>인증·보안] ~~~ L[Librarian<br/>기록관리자<br/>DB 스키마]
+  end
+  E1 --> E2
+  subgraph E2[Echelon 2 · Core]
+    direction LR
+    AR[Architect<br/>기반설계자<br/>k8s·CI/CD] ~~~ PO[Postman<br/>배달부<br/>GitHub·MQ] ~~~ CU[Curator<br/>출제자<br/>문제·마감] ~~~ SC[Scribe<br/>서기관<br/>문서·메모리]
+  end
+  E2 --> E3
+  subgraph E3[Echelon 3 · Enhancement]
+    direction LR
+    SE[Sensei<br/>분석가<br/>AI 분석] ~~~ HE[Herald<br/>전령<br/>프론트엔드] ~~~ PA[Palette<br/>팔레트<br/>디자인 시스템] ~~~ SO[Scout<br/>정찰병<br/>사용자 테스트]
+  end

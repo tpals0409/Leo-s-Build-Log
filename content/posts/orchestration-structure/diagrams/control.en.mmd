@@ -1,0 +1,6 @@
+flowchart TD
+  PM([PM · human]) <-->|single channel · reported if undecided in 4h| O[Oracle · Arbiter<br/>decides what]
+  O -->|delegate · consolidate| A[11 agents<br/>each owns the how]
+  A -.->|escalate when out of scope or in conflict| O
+  R[(persona-base.md<br/>shared rules · SSoT)] -.->|mandatory read before work| O
+  R -.->|mandatory read before work| A

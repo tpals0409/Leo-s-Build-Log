@@ -1,0 +1,7 @@
+# podman/docker 둘 다 읽는 이름 (podman compose가 부르는 docker-compose는 .containerignore를 무시함)
+node_modules
+.next
+uploads
+.env*
+*.png
+.git

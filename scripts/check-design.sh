@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.." || exit 1
 P='slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|white|black'
 fail=0
 check() { # 메시지 정규식
-  out=$(grep -rnE "$2" app components --include='*.tsx' | grep -v 'components/PostFrame.tsx')
+  out=$(grep -rnE "$2" app components --include='*.tsx')
   [ -n "$out" ] && { echo "✗ $1"; echo "$out" | sed 's/^/  /'; fail=1; }
 }
 check '임의 글자/색/둥글기 값 → t-*, 색·radius 토큰' '(text|leading|tracking|font|bg|border|rounded|ring|fill|stroke|outline)-\['

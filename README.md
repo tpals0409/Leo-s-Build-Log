@@ -28,5 +28,5 @@ curl -X POST localhost:3000/api/posts -H "Authorization: Bearer $ADMIN_TOKEN" \
   -d '{"slug":"hello","title":"첫 글","category":"Product","summary":"요약","html":"<!doctype html><html><body><h1>안녕</h1></body></html>"}'
 ```
 
-글 HTML은 상세 페이지에서 sandbox iframe(스크립트 허용, same-origin 불가)으로 격리 렌더된다.
+글 HTML은 상세 페이지에서 서버가 Shadow DOM으로 렌더한다(SEO용으로 본문이 HTML에 포함, 글 CSS는 격리). `<script>`와 이벤트 속성은 제거된다.
 홈: Featured 최신 1개 / 최신 3개 / 다음 4개 자동 배치.

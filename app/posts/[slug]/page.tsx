@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import PostFrame from '@/components/PostFrame';
+import PostBody from '@/components/PostBody';
 import Container from '@/components/ui/Container';
 import Eyebrow from '@/components/ui/Eyebrow';
 import { getPost } from '@/lib/db';
@@ -24,7 +24,7 @@ export default async function PostPage({ params }: Props) {
         <h1 className="mb-4 mt-3 t-headline font-bold">{post.title}</h1>
         <time dateTime={post.created_at.toISOString()} className="text-muted">{fmtDate(post.created_at)}</time>
       </Container>
-      <PostFrame html={post.html} title={post.title} />
+      <PostBody html={post.html} />
     </article>
   );
 }

@@ -7,7 +7,7 @@
     "start": "next start",
     "check": "node --experimental-strip-types lib/check.ts",
     "check:design": "sh scripts/check-design.sh",
-    "prepare": "git config core.hooksPath .githooks"
+    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
   },
   "dependencies": {
     "next": "^16.3.8",

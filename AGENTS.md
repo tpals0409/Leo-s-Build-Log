@@ -41,15 +41,21 @@ Next.js 16 (App Router) + PostgreSQL + Tailwind v4, Podman으로 자체 호스�
 ## 디자인 시스템 (반드시 지킬 것)
 
 **`DESIGN.md`를 엄격히 따른다.** 확인된 값만 쓰고, 빈칸을 그럴듯한 기본값으로 채우지 않는다(DESIGN.md "Unknowns").
-DESIGN.md보다 우선하는 사용자 지정은 셋뿐: **레오 팔레트**(색), **Gmarket Sans**, **목업 레이아웃**(이미지 모서리 등).
+DESIGN.md보다 우선하는 사용자 지정은 넷뿐: **레오 팔레트**(색), **Gmarket Sans**, **목업 레이아웃**(이미지 모서리 등), **호버·등장 움직임**(아래).
 구조: 토큰(`app/globals.css`) → UI 컴포넌트(`components/ui`) → 도메인 컴포넌트(`components`) → 페이지(`app`).
 
 ### 원칙 (DESIGN.md)
 - **내용이 주인공, 컨트롤은 절제.** 상자·배경 채움·그림자로 감싸지 않는다. 구분은 여백(`--space-cluster` 20px)과 가는 선.
 - **한 구성 안에 강조색은 하나**(`brand`). 나머지는 charcoal~sand 무채색 단계로.
 - **글자는 6개 역할만.** 대문자·자간 벌린 작은 라벨(eyebrow) 쓰지 않는다.
-- **호버·움직임을 지어내지 않는다.** DESIGN.md엔 호버 모습도 움직임 토큰도 없다.
-  예외는 팔레트가 정한 버튼 호버(`primary-hover`, Brand → Deep Orange) 하나. 키보드 포커스 표시(접근성)는 유지.
+- **호버·누름은 정해진 상호작용 유틸리티만 쓴다** (`app/globals.css`). DESIGN.md엔 호버·움직임이 없어서 사용자 지정(2026-10-01)으로 둔 것:
+  `press`(버튼·탭: 호버 살짝 확대, 누르면 살짝 축소) · `press-card`(카드: 누를 때만) · `thumb-zoom`(카드 썸네일: 카드에 올리면 확대, 카드에 `group`) · `link-hover`(텍스트 링크 → 링크색) ·
+  `arrow`(`ui/Arrow`의 →, 부모에 `group`) · `primary-hover`(채운 버튼 색, 팔레트 Brand → Deep Orange). `ui/Button`은 이미 `press`를 쓴다.
+  새로 누를 수 있는 것을 만들면 이 중 하나를 붙인다. 글 본문(Shadow DOM) 안은 `lib/leo/style.ts`에 같은 값으로 있다(본문 링크·코드 복사 버튼).
+- **등장 움직임도 정해진 셋만** (사용자 지정, 2026-10-01): `reveal`(카드 — `ui/Reveal`로 감싸면 화면 아래쪽 것만 스크롤 시 떠오름) ·
+  `page-enter`(페이지 이동 시, `app/[locale]/template.tsx`) · `read-progress`(글 상단 읽기 진행 막대). 들어오는 것만, 나가는 효과 없음.
+  글 본문·페이지 맨 위 제목에는 등장 효과를 쓰지 않는다. 시간·곡선은 토큰(`--duration-hover|reveal`, `--ease-standard`)만.
+  움직임 줄이기 설정을 존중하고, 키보드 포커스 표시는 유지.
 
 ### 토큰
 - 글자 역할 `t-*` — 클래스 하나가 크기·행간·굵기·자간을 다 정한다(굵기 클래스 `font-*` 쓰지 않음):
@@ -78,16 +84,16 @@ DESIGN.md보다 우선하는 사용자 지정은 셋뿐: **레오 팔레트**(�
 ### 금지 (`npm run check:design`이 검사)
 - 임의 글자/색/둥글기 값(`text-[17px]`, `rounded-[10px]`, `text-[#fff]`), Tailwind 기본 글자크기·팔레트, hex 색
 - 굵기 클래스(`font-medium` 등) — 역할이 정한다
-- `hover:`·`active:`, 움직임 클래스(`transition-*`, `animate-*`, `duration-*`, `ease-*`)
-- 문자열 CSS의 `font-size`·`line-height`·`font-weight`·`letter-spacing`·`border-radius` 숫자, `transition`·`animation`, `box-shadow`, (글 컴포넌트의) hex 색
+- `hover:`·`active:`, 움직임 클래스(`transition-*`, `animate-*`, `duration-*`, `ease-*`)를 직접 쓰는 것 — 위 상호작용 유틸리티로
+- 문자열 CSS의 `font-size`·`line-height`·`font-weight`·`letter-spacing`·`border-radius` 숫자, `transition`·`animation`의 시간·곡선 숫자(토큰 var()로), `box-shadow`, (글 컴포넌트의) hex 색
 - 레이아웃 임의값(`w-[calc(..)]`, `grid-cols-[..]`, `aspect-[..]`)은 허용. 원형은 `border-radius:50%`
 
 새 값이 정말 필요하면 DESIGN.md에 근거가 있는지 먼저 본다. 없으면 만들지 말고 사용자에게 묻는다.
 
 ### 컴포넌트
 있는 것부터 쓴다. 새로 만들기 전에 `components/ui`, `components`를 확인.
-- `ui/Button`, `ui/ButtonLink` — `variant: primary|outline`, `size: lg(44px)|sm(36px)`
-- `ui/Container` `ui/Eyebrow` `ui/SectionHeader` `ui/Thumb`
+- `ui/Button`, `ui/ButtonLink` — `variant: primary|outline`, `size: lg(44px)|sm(36px)` · `ui/Arrow`(호버 시 움직이는 →)
+- `ui/Container` `ui/Eyebrow` `ui/SectionHeader` `ui/Thumb` `ui/Reveal`(스크롤 등장)
 - `Header` `LocaleSwitch` `FeaturedHero` `PostCard(size: md|sm)` `PostGrid(cols: 3|4)` `ProjectCard` `ProjectGrid` `PostBody` `PostEnhancer`(차트 값 툴팁·코드 복사·데모 높이)
 - 도메인 컴포넌트는 `locale` prop을 받아 링크(`/${locale}/…`)와 문구를 만든다.
 

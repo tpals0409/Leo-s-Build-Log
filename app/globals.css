@@ -43,6 +43,11 @@
   --radius-card: 10px;   /* 목업: 썸네일 이미지 */
   --radius-panel: 18px;  /* 목업: 히어로 이미지 */
   --space-cluster: 20px; /* DESIGN.md: 반복되는 콘텐츠 묶음 간격 */
+  /* 호버 움직임: 사용자 지정(2026-10-01). DESIGN.md엔 움직임 토큰이 없다 — 아래 상호작용 유틸리티만 쓴다 */
+  --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --duration-hover: 0.2s;   /* 호버·누름 */
+  --duration-reveal: 0.45s; /* 등장 (스크롤·페이지) */
+  --duration-zoom: 0.5s;    /* 카드 썸네일 확대 */
 
   /* 타이포 — DESIGN.md의 확인된 6개 역할만. 크기/행간/굵기/자간이 한 세트다.
      Gmarket Sans는 300·500·700뿐 → DESIGN.md 400은 500(Gmarket의 본문 굵기), 600은 700으로 대응 */
@@ -69,9 +74,61 @@
   &::after { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%); }
 }
 
-/* 호버: DESIGN.md는 호버 모습을 정하지 않았고 "추측하지 말 것"이라 한다. 유일한 예외는 팔레트가 지정한 버튼 호버(Brand → Deep Orange). */
-@utility primary-hover {
+/* 호버·누름: 사용자 지정(2026-10-01) — DESIGN.md는 호버를 정하지 않아 이건 우리 확장. 누를 수 있는 것은 아래 중 하나를 쓴다.
+   primary-hover: 채운 버튼 색(팔레트: Brand → Deep Orange) / press: 버튼·탭 (호버 살짝 확대, 누르면 살짝 축소)
+   press-card: 카드 (누를 때만 아주 살짝) / thumb-zoom: 카드 썸네일 (카드에 올리면 확대) / link-hover: 텍스트 링크 (링크색으로) / arrow: 링크 안의 → (부모에 group)
+   움직임 줄이기 설정이면 움직이지 않는다. */
+@utility primary-hover { /* 색 전환 시간은 press가 맡는다 (Button은 둘 다 씀 — transition이 둘이면 하나가 덮인다) */
   &:hover { background-color: var(--color-primary-hover); }
+}
+@utility press {
+  transition: scale var(--duration-hover) var(--ease-standard), background-color var(--duration-hover) var(--ease-standard), color var(--duration-hover) var(--ease-standard);
+  &:hover { scale: 1.03; }
+  &:active { scale: 0.97; }
+  @media (prefers-reduced-motion: reduce) { &:hover, &:active { scale: none; } }
+}
+@utility press-card {
+  transition: scale var(--duration-hover) var(--ease-standard);
+  &:active { scale: 0.99; }
+  @media (prefers-reduced-motion: reduce) { &:active { scale: none; } }
+}
+/* 카드 썸네일: 카드(group)에 올리면 틀(overflow-hidden) 안에서 살짝 확대 */
+@utility thumb-zoom {
+  transition: scale var(--duration-zoom) var(--ease-standard);
+  :where(.group):hover & { scale: 1.03; }
+  @media (prefers-reduced-motion: reduce) { :where(.group):hover & { scale: none; } }
+}
+@utility link-hover {
+  transition: color var(--duration-hover) var(--ease-standard);
+  &:hover { color: var(--color-link); }
+}
+@utility arrow {
+  display: inline-block;
+  transition: translate var(--duration-hover) var(--ease-standard);
+  :where(.group):hover & { translate: 3px 0; }
+  @media (prefers-reduced-motion: reduce) { :where(.group):hover & { translate: none; } }
+}
+
+/* 등장 — 사용자 지정(2026-10-01). 들어오는 것만, 나가는 효과 없음.
+   reveal: 카드 (ui/Reveal이 화면 아래쪽 것만 숨겼다가 보이면 data-in) / page-enter: 페이지 이동 시 (app/[locale]/template.tsx)
+   read-progress: 글 읽기 진행 막대 (스크롤 연동 CSS, 지원 안 하는 브라우저에선 안 보임) */
+@utility reveal {
+  transition: opacity var(--duration-reveal) var(--ease-standard), translate var(--duration-reveal) var(--ease-standard);
+  transition-delay: calc(min(var(--i, 0), 4) * 60ms);
+  &[data-armed]:not([data-in]) { opacity: 0; translate: 0 16px; }
+  @media (prefers-reduced-motion: reduce) { &[data-armed]:not([data-in]) { opacity: 1; translate: none; } }
+}
+@keyframes page-enter { from { opacity: 0; translate: 0 8px; } }
+@utility page-enter {
+  animation: page-enter var(--duration-reveal) var(--ease-standard) backwards; /* 끝나면 효과를 남기지 않음 → 고정 위치 요소 기준이 바뀌지 않게 */
+  @media (prefers-reduced-motion: reduce) { animation: none; }
+}
+@keyframes read-progress { from { scale: 0 1; } }
+@utility read-progress {
+  display: none;
+  @supports (animation-timeline: scroll()) {
+    display: block; transform-origin: left; animation: read-progress linear both; animation-timeline: scroll(root);
+  }
 }
 
 @layer base {

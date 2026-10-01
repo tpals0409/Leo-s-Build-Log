@@ -28,6 +28,7 @@ export default async function PostPage({ params }: Props) {
 
   return (
     <article className="pb-20">
+      <div aria-hidden className="read-progress fixed inset-x-0 top-0 z-20 h-0.5 bg-primary" />
       <Container className="pb-8 pt-14 text-center">
         <Eyebrow>{DICT[locale].category[post.category]}</Eyebrow>
         <h1 className="mb-4 mt-3 t-section">{post.title}</h1>

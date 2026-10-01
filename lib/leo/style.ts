@@ -1,7 +1,7 @@
 // 글 컴포넌트 스타일 — DESIGN.md를 엄격히 따른다.
 //  · 내용이 주인공: 상자·배경·그림자 없이 여백(--space-cluster 20px)과 가는 선으로 구분
 //  · 강조색은 한 구성에 하나(brand). 나머지는 charcoal~sand 무채색 단계
-//  · 글자는 DESIGN.md 6개 역할만(role()), 대문자 라벨·움직임·지어낸 호버 없음
+//  · 글자는 DESIGN.md 6개 역할만(role()), 대문자 라벨 없음. 호버는 블로그와 같은 것만(사용자 지정, 토큰 var())
 // 값은 전부 토큰 var()로 — 숫자를 직접 쓰지 않는다 (check:design이 검사). 원형만 50%.
 // 기본 요소 스타일(table 등)은 :where()로 우선순위 0 → 글 CSS가 항상 이긴다.
 const role = (r: 'display' | 'section' | 'tile' | 'body' | 'body-sm' | 'caption', family = 'var(--font-sans)') =>
@@ -114,7 +114,13 @@ export const LEO_CSS = `
 .leo-code .leo-add{background:color-mix(in srgb,var(--color-sage) 22%,transparent)}
 .leo-code .leo-del{background:color-mix(in srgb,var(--color-brand) 16%,transparent)}
 .leo-copy{position:absolute;right:0;top:0;padding:0;border:0;background:none;${role('caption')};color:var(--color-link);cursor:pointer}
+.leo-copy{transition:scale var(--duration-hover) var(--ease-standard)}.leo-copy:hover{scale:1.03}.leo-copy:active{scale:.97}
 .leo-copy::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)} /* 터치 영역 44px */
+
+/* 호버 — 블로그와 같은 상호작용(globals.css press·link-hover)을 본문 안에도. 본문 링크는 링크색 → 글자색 */
+:where(.post-root) :where(a){transition:color var(--duration-hover) var(--ease-standard)}
+:where(.post-root) a:hover{color:var(--color-fg)}
+@media (prefers-reduced-motion:reduce){.leo-copy:hover,.leo-copy:active{scale:none}}
 
 /* 파일 트리 — 상자 없이 고정폭 글자만 */
 .leo-tree{margin:2em 0;font:var(--fw-body) var(--fs-body-sm)/var(--lh-body) var(--font-mono);overflow-x:auto}

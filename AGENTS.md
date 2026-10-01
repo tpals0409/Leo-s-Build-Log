@@ -87,3 +87,4 @@ variant/size는 객체 맵(`const VARIANT = {...}`)으로 정의한다 (Button, 
   git pre-commit 훅(`.githooks/`, `npm install` 시 자동 등록)이 커밋마다 실행한다. `--no-verify`로 우회하지 말 것.
 - `npm run check` — auth, 텍스트 추출, 본문 변환, 글 등록 검증 self-check
 - `npm run build`
+- GitHub Actions(`.github/workflows/ci.yml`)가 main 푸시·PR마다 위 세 가지를 Node 24로 다시 돌린다. 실패한 채로 두지 말 것.

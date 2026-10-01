@@ -1,0 +1,32 @@
+# 어떤 에이전트/사람이 올리든 같은 검사를 통과해야 한다 (AGENTS.md 검증 항목).
+# pre-commit 훅은 --no-verify로 건너뛸 수 있어서, 여기서 한 번 더 막는다.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24 # Containerfile과 같은 버전
+          cache: npm
+      - run: npm ci
+      - name: 디자인 규칙
+        run: npm run check:design
+      - name: Self-check (auth, 본문 변환, 글 등록 검증)
+        run: npm run check
+      - name: 빌드
+        run: npm run build

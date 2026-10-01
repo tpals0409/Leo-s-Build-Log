@@ -7,7 +7,7 @@
     "msa",
     "kubernetes"
   ],
-  "publishedAt": "2026-04-09",
+  "publishedAt": "2026-04-09T10:00:00+09:00",
   "thumbnail": "thumbnail.webp",
   "ko": {
     "title": "MSA 설계, 사람이 결정하고 AI가 실행한다",

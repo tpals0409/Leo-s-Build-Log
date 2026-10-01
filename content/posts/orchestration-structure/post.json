@@ -1,0 +1,19 @@
+{
+  "category": "ai-agent",
+  "project": "algosu",
+  "tags": [
+    "ai-dev",
+    "agent",
+    "governance"
+  ],
+  "publishedAt": "2026-04-09T11:00:00+09:00",
+  "thumbnail": "thumbnail.webp",
+  "ko": {
+    "title": "12명의 AI를 통제하는 법",
+    "summary": "AI 에이전트가 늘어날수록 통제가 문제였다. 심판관, 3-Echelon 계층, SSoT 규칙 — 혼자서 만든 거버넌스 구조 실전기."
+  },
+  "en": {
+    "title": "How to Control 12 AI Agents",
+    "summary": "As AI agents multiplied, control became the problem. An arbiter, a 3-echelon hierarchy, SSoT rules — a firsthand account of building a governance structure solo."
+  }
+}

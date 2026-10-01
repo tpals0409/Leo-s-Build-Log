@@ -1,0 +1,21 @@
+{
+  "category": "engineering",
+  "project": "pinlog",
+  "tags": [
+    "kubernetes",
+    "storage",
+    "persistence",
+    "recovery"
+  ],
+  "publishedAt": "2026-07-23",
+  "published": true,
+  "featured": false,
+  "ko": {
+    "title": "PVC를 남기는 것과 데이터를 복구하는 것은 달랐습니다",
+    "summary": "단일 노드 k3s의 local-path와 local-path-retain을 살펴보며, Pod 재시작·PVC 삭제·노드 손실에 서로 다른 답이 필요하다는 것을 정리했습니다."
+  },
+  "en": {
+    "title": "Keeping a PVC Was Not the Same as Recovering Data",
+    "summary": "Looking at local-path and local-path-retain on a single-node k3s cluster, I separated three questions: Pod restarts, PVC deletion, and recovery after losing the node."
+  }
+}

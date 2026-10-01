@@ -18,7 +18,7 @@ blockquote p{margin:0}
 .card ul{padding-left:1.1em}
 .card li+li{margin-top:4px}
 </style></head><body>
-<leo-callout type="note" title="Historical scope"><p>This article draws on the deployment review recorded on July 27, 2026, and the infrastructure ownership boundary confirmed on July 29. It distinguishes the agreed contract from what had actually been applied at that time.</p></leo-callout>
+
 <p>I was responsible for infrastructure in PinLog: deploying each team&#x27;s services to Kubernetes, connecting their dependencies, observing their health, and handling recovery.</p>
 <p>In the previous retrospective, I wrote about agreeing on structure, conventions, and responsibilities as a team. This article looks at how that agreement translated into deployment.</p>
 <p>An image lets you start a container. Its address alone does not tell you which port to connect to, what counts as healthy, or which configuration and external services it needs. A team deployment required that information as well.</p>

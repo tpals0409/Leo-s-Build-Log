@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>When the Server Dies, Its Monitoring Dies Too</title>
+<style>
+body{font:var(--fw-body) var(--fs-body)/var(--lh-body) var(--font-sans);letter-spacing:var(--ls-body);color:var(--color-fg);max-width:var(--container-wrap);box-sizing:border-box;margin:0 auto;padding:0 24px 80px}
+h2{font:var(--fw-tile) var(--fs-tile)/var(--lh-tile) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-tile);margin:2.4em 0 .8em}
+h3{font:var(--fw-section) var(--fs-body)/var(--lh-body) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-body);margin:2em 0 .5em}
+p,ul,ol{margin:0 0 1em}
+strong{font-weight:var(--fw-section)}
+</style>
+</head>
+<body>
+
+<p>Once monitoring is installed on a server and alerts are connected, it can feel as though the system is ready to watch for failures. But change one question and a gap appears: <strong>if the server itself stops, rather than just the application, who sends the alert?</strong></p>
+<p>PinLog ran its k3s control plane and application workloads together on a single AWS node. Prometheus and Alertmanager ran on that node too. Both the system collecting service state and the system reporting it depended on the survival of the very server they watched.</p>
+<h2>Separate processes can still fail together</h2>
+<p>The useful concept here is a failure domain: the scope of components that one failure can affect together. The application and its monitoring can live in different Pods and separate namespaces, yet neither can execute when their shared node stops. Logical separation is not the same as independence from failure.</p>
+<p>This does not make internal monitoring useless. While the node is running, it can observe resources and workload state and collect clues about problems. But if the last line of notification for a complete node failure also depends on that internal path, the alerting system can disappear at exactly the moment it is needed.</p>
+<h2>Keep the internal path, add an outside vantage point</h2>
+<p>PinLog's internal alert path begins with metric collection and rule evaluation in Prometheus, passes through Alertmanager, and reaches a Sentinel Receiver on the host before being delivered to Mattermost. The alert travels through these stages:</p>
+<leo-pipeline>
+  <leo-stage title="Prometheus">Collect internal metrics and evaluate rules</leo-stage>
+  <leo-stage title="Alertmanager">Handle generated alerts</leo-stage>
+  <leo-stage title="Host Sentinel">Receive and process alerts on the host</leo-stage>
+  <leo-stage title="Mattermost">Present alerts to the operator</leo-stage>
+</leo-pipeline>
+<p>The important detail is that placing Sentinel on the host rather than inside the cluster does not make it independent of node failure. It runs at a different layer but relies on the same node. Moving to a host process crosses a boundary, but not the boundary that matters here: <strong>the failure domain of the whole node.</strong></p>
+<p>The external HTTPS/TLS monitor therefore runs in a GitHub-hosted environment and sends its results directly to Mattermost. It does not go through the service node's Prometheus or Sentinel. Rather than removing internal alerts or moving the entire observability stack, the design adds a separate path that checks reachability from outside the node.</p>
+<leo-pipeline>
+  <leo-stage title="GitHub-hosted execution">Start the check outside the service node</leo-stage>
+  <leo-stage title="HTTPS / TLS">Check service access from outside</leo-stage>
+  <leo-stage title="Mattermost">Deliver directly, bypassing the internal receiver</leo-stage>
+</leo-pipeline>
+<p>What matters is placement and dependencies more than the name of the execution service. Even a check performed outside the node runs into the same problem if its result must return to a receiver on the failed node. We need to follow not just where the check starts, but the entire route to the operator.</p>
+<h2>These paths do not observe the same thing twice</h2>
+<p>The internal and external paths answer different questions. Internal monitoring supplies clues about what is happening inside the service. External checks ask whether the service can be reached from outside. One provides information closer to the cause; the other observes an externally visible symptom.</p>
+<leo-compare>
+  <leo-side label="Internal monitoring"><p>Prometheus · Alertmanager · host Sentinel</p><p>Metrics and alerts describe internal state. Collection and delivery depend on the service node's execution environment.</p></leo-side>
+  <leo-side label="External checks"><p>GitHub-hosted HTTPS/TLS monitor</p><p>Checks access from outside the node. Bypasses the internal alert path, but does not explain the internal cause.</p></leo-side>
+</leo-compare>
+<p>Adding more monitoring processes to the same node is not an adequate alternative for this problem. More processes remain exposed to the same complete node failure. Conversely, keeping only external checks would leave less information to explain internal state. The reason to retain both paths is not to accumulate duplicate tools, but to preserve different scopes of observation.</p>
+<h2>A failed connection is not a verdict that the node is dead</h2>
+<p>An external monitor reporting failure does not by itself establish that the node has died. A complete node failure can cause a connection failure, but DNS problems, the network path, TLS configuration, or application response problems can also make an external check fail. <strong>The check reports an observed condition; the cause still needs investigation.</strong></p>
+<p>The first question when reading that signal should therefore be closer to “What failed, from which vantage point?” than “Is the server dead?” From there, checking whether internal metrics are available and whether the host can be reached can help narrow the scope. The external signal starts the investigation; it does not finish the diagnosis.</p>
+<p>Being outside the node also does not mean independence from every possible failure. The external execution environment, network, and notification destination remain dependencies. In particular, both paths terminate at Mattermost. A check executing and a person receiving its alert are distinct things.</p>
+<h2>In retrospect, draw the boundary before listing the tools</h2>
+<p>The change I find important in this design is not the number of monitoring tools. It is the separation between a path that explains internal state and a path that can attempt an observation from outside when that interior stops. External monitoring does not recover the service or turn a single node into a highly available system. Expanding what we can learn and keeping the service running are separate tasks.</p>
+<p>When reviewing monitoring architecture, I want to start by grouping the components that share a failure, rather than simply listing component names. Follow the route through collectors, rule evaluators, receivers, and the notification destination, asking at each step: “Could this still operate if this node were gone?”</p>
+<p>When a server dies, the watcher inside it dies too. That is why <strong>checking where the watcher stands matters as much as looking more closely at what it watches.</strong></p>
+</body>
+</html>

@@ -1,16 +1,16 @@
 flowchart TB
-    subgraph IN["in-context (매 세션 자동 로딩)"]
-        SW["sprint-window.md<br/>크기 2 윈도우"]
-        MEM["MEMORY.md<br/>인덱스 + 1줄 요약"]
-        CL["CLAUDE.md<br/>변하지 않는 규약"]
-        AG[".claude/commands/agents/<br/>12 페르소나 SSoT"]
+    subgraph IN["매 세션 자동으로 읽는 곳"]
+        SW["sprint-window.md<br/>지금 하는 일<br/>(크기 2 윈도우)"]
+        MEM["MEMORY.md<br/>스프린트별<br/>1줄 요약 (인덱스)"]
+        CL["CLAUDE.md<br/>변하지 않는<br/>프로젝트 규칙"]
+        AG[".claude/commands/agents/<br/>에이전트 12명의 역할 정의"]
     end
 
-    subgraph OUT["on-demand (필요할 때만)"]
-        ADR["docs/adr/sprints/sprint-NNN.md<br/>영구 결정 기록"]
+    subgraph OUT["필요할 때만 여는 곳"]
+        ADR["docs/adr/sprints/sprint-NNN.md<br/>스프린트별 결정 기록<br/>(영구)"]
         RB["docs/runbook/*.md<br/>운영 매뉴얼"]
         OTHER["기타 도메인 문서"]
     end
 
-    SW -->|/stop 시 슬라이드| ADR
-    MEM -->|"필요 시 grep 후 Read"| ADR
+    SW -->|/stop 때 밀려나 보관| ADR
+    MEM -->|"필요할 때 경로로 찾아 읽기"| ADR

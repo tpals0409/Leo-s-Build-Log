@@ -1,17 +1,17 @@
 flowchart TD
-  PM([PM · human]) <-->|single channel| O[Oracle · Arbiter<br/>planning · coordination]
+  PM([PM · human]) <-->|only channel| O[Oracle<br/>lead agent<br/>planning · coordination]
   O -->|delegates| E1
-  subgraph E1[Echelon 1 · Mission Critical · Opus · incl. Oracle]
+  subgraph E1[Priority tier 1 · if it breaks, everything stops · Opus · incl. Oracle]
     direction LR
-    C[Conductor<br/>Orchestrator<br/>Saga] ~~~ G[Gatekeeper<br/>Guardian<br/>auth · security] ~~~ L[Librarian<br/>Records Keeper<br/>DB schema]
+    C[Conductor<br/>submission flow] ~~~ G[Gatekeeper<br/>auth & security] ~~~ L[Librarian<br/>database]
   end
   E1 --> E2
-  subgraph E2[Echelon 2 · Core]
+  subgraph E2[Priority tier 2 · infrastructure and core features]
     direction LR
-    AR[Architect<br/>Infra Designer<br/>k8s·CI/CD] ~~~ PO[Postman<br/>Delivery<br/>GitHub·MQ] ~~~ CU[Curator<br/>Problem Setter<br/>problems · deadlines] ~~~ SC[Scribe<br/>Chronicler<br/>docs · memory]
+    AR[Architect<br/>infrastructure<br/>k8s · CI/CD] ~~~ PO[Postman<br/>GitHub integration] ~~~ CU[Curator<br/>problem management<br/>problems · deadlines] ~~~ SC[Scribe<br/>documentation<br/>decision records · memory]
   end
   E2 --> E3
-  subgraph E3[Echelon 3 · Enhancement]
+  subgraph E3[Priority tier 3 · adds value · starts once tiers 1 and 2 are stable]
     direction LR
-    SE[Sensei<br/>Analyst<br/>AI analysis] ~~~ HE[Herald<br/>Messenger<br/>frontend] ~~~ PA[Palette<br/>Designer<br/>design system] ~~~ SO[Scout<br/>Recon<br/>user testing]
+    SE[Sensei<br/>AI analysis] ~~~ HE[Herald<br/>frontend] ~~~ PA[Palette<br/>design system] ~~~ SO[Scout<br/>user testing]
   end

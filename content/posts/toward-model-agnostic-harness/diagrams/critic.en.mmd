@@ -1,5 +1,5 @@
 flowchart LR
-  A[12 agents<br/>same model family] --> PR[PR] --> C{Critic<br/>different model family}
-  C -->|flags P1 · P2| A
+  A[12 agents<br/>same family] --> PR[PR] --> C{Critic<br/>review agent<br/>other family}
+  C -->|flags critical issues · fixes| A
   C -->|passes| M([merge to main])
-  A -.->|direct push to main · process bypass<br/>never reaches the Critic| M
+  A -.->|direct push to main<br/>skips the process<br/>never reaches the Critic| M

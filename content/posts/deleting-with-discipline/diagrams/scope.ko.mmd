@@ -1,7 +1,7 @@
 flowchart LR
   subgraph IN["grep을 돌린 범위: blog/"]
-    DEL[검색 기능 삭제<br/>search-index.json<br/>생성 중단]
+    DEL[검색 기능 삭제<br/>search-index.json<br/>더는 만들지 않음]
   end
-  OUT["scripts/<br/>check-adr-links.mjs<br/>blog/ 밖"] -.->|search-index.json<br/>존재를 검증| DEL
-  DEL --> PR[PR 머지<br/>필수 체크가 아니라 통과]
-  PR --> M([main 깨짐<br/>/stop 게이트에서 발견])
+  OUT["scripts/check-adr-links.mjs<br/>링크 검사 스크립트<br/>blog/ 밖"] -.->|search-index.json이<br/>있는지 확인| DEL
+  DEL --> PR[PR 머지<br/>필수 검사가 아니라<br/>실패해도 통과]
+  PR --> M([main 깨짐<br/>스프린트 종료 때<br/>/stop 검사가 발견])

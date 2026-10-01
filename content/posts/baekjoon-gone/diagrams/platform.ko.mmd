@@ -1,6 +1,6 @@
 flowchart LR
-  P[(문제 테이블<br/>sourcePlatform 컬럼)] --> GW[Gateway<br/>외부 메타데이터 API]
+  P[(문제 테이블<br/>sourcePlatform<br/>출처 플랫폼 컬럼)] --> GW[Gateway<br/>외부 문제 정보 API]
   GW --> BOJ[백준 · Solved.ac<br/>기존 문제<br/>그대로 유지]
-  GW --> PRG[프로그래머스<br/>사전 큐레이션<br/>JSON 373건]
-  P --> GHW[GitHub Worker<br/>formatPlatform: boj_ · prg_]
-  P --> AI[AI 피드백<br/>프롬프트에 sourcePlatform]
+  GW --> PRG[프로그래머스<br/>미리 골라 둔<br/>JSON 373문제]
+  P --> GHW[GitHub<br/>업로드 서비스<br/>파일명 접두어<br/>boj_ · prg_]
+  P --> AI[AI 피드백<br/>프롬프트에<br/>출처 플랫폼 포함]

@@ -1,4 +1,4 @@
 flowchart LR
-  S8[Sprint 8<br/>httpOnly Cookie 도입] --> S12[Sprint 12<br/>DB 3개 분리] --> S51[Sprint 51<br/>Gateway DB 완전 분리<br/>Identity API 0 → 34] --> S62[Sprint 62–64<br/>필터 버그 · 알림 누락] --> S65[Sprint 65<br/>localStorage 함수<br/>11개 제거] --> S67([Sprint 67<br/>테스트 2,432건<br/>커버리지 99.51%])
+  S8[Sprint 8<br/>httpOnly 쿠키<br/>도입] --> S12[Sprint 12<br/>DB 3개 분리] --> S51[Sprint 51<br/>Gateway의<br/>DB 직접 접근 제거<br/>사용자·인증 API<br/>0 → 34] --> S62[Sprint 62–64<br/>필터 버그<br/>알림 누락] --> S65[Sprint 65<br/>localStorage<br/>함수 11개 제거] --> S67([Sprint 67<br/>테스트 2,432건<br/>커버리지 99.51%])
   S12 -.->|40 스프린트 뒤 빛남| S51
   S8 -.->|57 스프린트 뒤 빛남| S65

@@ -9,6 +9,6 @@ flowchart TD
   TF & AU & S --> BF[build-frontend]
   S --> BB[build-blog]
   BS & BF & BB --> TR[trivy-scan ×8<br/>CRITICAL·HIGH 차단]
-  TR & S --> DE[deploy<br/>aether-gitops 태그 갱신]
+  TR & S --> DE[deploy<br/>배포 설정 저장소<br/>태그 갱신]
   DE --> AC([ArgoCD sync → k3s])
   DE --> NO[notify<br/>Grafana annotation]

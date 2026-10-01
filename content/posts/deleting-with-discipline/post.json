@@ -11,10 +11,10 @@
   "thumbnail": "thumbnail.webp",
   "ko": {
     "title": "삭제의 기술",
-    "summary": "기능을 지우는 건 추가하는 것보다 무섭습니다. 무엇이 따라올지 모르니까요. AlgoSu에서 ADR 그래프와 검색을 지우며 배운 것은 — 안전하게 지우는 데도 방법이 있다는 것이었습니다."
+    "summary": "기능을 지우는 건 추가하는 것보다 무섭습니다. 무엇이 따라 깨질지 모르니까요. AlgoSu의 블로그에서 결정 기록(ADR)을 보여주던 관계 그래프와 검색 기능을 지우며 배운 것은, 안전하게 지우는 데도 방법이 있다는 것이었습니다."
   },
   "en": {
     "title": "The Art of Deletion",
-    "summary": "Deleting a feature is scarier than adding one. You never know what might follow. Building and removing the ADR graph and search in AlgoSu taught me that safe deletion is a craft with its own method."
+    "summary": "Deleting a feature is scarier than adding one. You never know what else might break. Removing the decision-record (ADR) relationship graph and search from AlgoSu's blog taught me that safe deletion is a craft with its own method."
   }
 }

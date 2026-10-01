@@ -11,10 +11,10 @@
   "thumbnail": "thumbnail.webp",
   "ko": {
     "title": "종속 없는 하네스를 향해 — Critic 도입기",
-    "summary": "Codex를 들였다, 교체가 아니라 추가로. 17 라운드 끝에 깨달은 건 — 다른 모델이 필요한 게 아니라 종속에서 해방되는 시스템이 필요했다는 사실이었다."
+    "summary": "다른 회사의 코딩 모델 Codex를 리뷰 에이전트로 들였다, 교체가 아니라 추가로. 17 라운드 리뷰 끝에 깨달은 건 — 다른 모델이 필요한 게 아니라 특정 모델에 묶이지 않는 시스템이 필요했다는 사실이었다."
   },
   "en": {
     "title": "Toward a Model-Agnostic Harness — Adopting a Critic",
-    "summary": "I brought in Codex — as an addition, not a replacement. After 17 rounds of review, I realized what I needed wasn't a different model. It was a system freed from dependency itself."
+    "summary": "I brought in Codex, another company's coding model, as a review agent — as an addition, not a replacement. After 17 rounds of review, I realized what I needed wasn't a different model. It was a system not tied to any one model."
   }
 }

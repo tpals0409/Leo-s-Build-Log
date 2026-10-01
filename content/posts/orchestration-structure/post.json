@@ -10,10 +10,10 @@
   "thumbnail": "thumbnail.webp",
   "ko": {
     "title": "12명의 AI를 통제하는 법",
-    "summary": "AI 에이전트가 늘어날수록 통제가 문제였다. 심판관, 3-Echelon 계층, SSoT 규칙 — 혼자서 만든 거버넌스 구조 실전기."
+    "summary": "AI 에이전트가 늘어날수록 통제가 문제였다. 총괄 에이전트 하나로 모은 소통 창구, 우선순위 3단계, 공통 규칙 파일 하나 — 혼자서 만든 거버넌스 구조 실전기."
   },
   "en": {
     "title": "How to Control 12 AI Agents",
-    "summary": "As AI agents multiplied, control became the problem. An arbiter, a 3-echelon hierarchy, SSoT rules — a firsthand account of building a governance structure solo."
+    "summary": "As AI agents multiplied, control became the problem. One lead agent as the only channel, three priority tiers, one shared rules file — a firsthand account of building a governance structure solo."
   }
 }

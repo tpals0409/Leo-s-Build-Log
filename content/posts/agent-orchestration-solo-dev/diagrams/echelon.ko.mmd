@@ -1,17 +1,17 @@
 flowchart TD
-  PM([PM · 사람]) <-->|유일한 창구| O[Oracle · 심판관<br/>기획 결정 · 조율]
+  PM([PM · 사람]) <-->|유일한 대화 창구| O[Oracle<br/>총괄 에이전트<br/>기획 결정 · 조율]
   O -->|위임| E1
-  subgraph E1[Echelon 1 · Mission Critical · Opus · Oracle 포함]
+  subgraph E1[우선순위 1단계 · 멈추면 서비스 전체가 멈춤 · Opus · Oracle 포함]
     direction LR
-    C[Conductor<br/>지휘자<br/>Saga] ~~~ G[Gatekeeper<br/>관문지기<br/>인증·보안] ~~~ L[Librarian<br/>기록관리자<br/>DB 스키마]
+    C[Conductor<br/>제출 흐름 담당] ~~~ G[Gatekeeper<br/>인증·보안 담당] ~~~ L[Librarian<br/>DB 담당]
   end
   E1 --> E2
-  subgraph E2[Echelon 2 · Core]
+  subgraph E2[우선순위 2단계 · 기반 인프라와 핵심 기능]
     direction LR
-    AR[Architect<br/>기반설계자<br/>k8s·CI/CD] ~~~ PO[Postman<br/>배달부<br/>GitHub·MQ] ~~~ CU[Curator<br/>출제자<br/>문제·마감] ~~~ SC[Scribe<br/>서기관<br/>문서·메모리]
+    AR[Architect<br/>인프라 담당<br/>k8s · CI/CD] ~~~ PO[Postman<br/>GitHub 연동 담당] ~~~ CU[Curator<br/>문제 관리 담당<br/>문제 · 마감] ~~~ SC[Scribe<br/>문서 담당<br/>결정 기록 · 메모리]
   end
   E2 --> E3
-  subgraph E3[Echelon 3 · Enhancement]
+  subgraph E3[우선순위 3단계 · 서비스 가치를 높이는 일 · 1·2단계가 안정된 뒤]
     direction LR
-    SE[Sensei<br/>분석가<br/>AI 분석] ~~~ HE[Herald<br/>전령<br/>프론트엔드] ~~~ PA[Palette<br/>팔레트<br/>디자인 시스템] ~~~ SO[Scout<br/>정찰병<br/>사용자 테스트]
+    SE[Sensei<br/>AI 분석 담당] ~~~ HE[Herald<br/>프론트엔드 담당] ~~~ PA[Palette<br/>디자인 시스템 담당] ~~~ SO[Scout<br/>사용자 관점<br/>테스트 담당]
   end

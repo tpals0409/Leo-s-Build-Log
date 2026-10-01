@@ -1,6 +1,6 @@
 flowchart LR
-  P[(problem table<br/>sourcePlatform column)] --> GW[Gateway<br/>external metadata API]
+  P[(problem table<br/>sourcePlatform<br/>source-site column)] --> GW[Gateway<br/>external problem-data API]
   GW --> BOJ[Baekjoon · Solved.ac<br/>existing problems kept]
-  GW --> PRG[Programmers<br/>373 pre-curated JSON problems]
-  P --> GHW[GitHub Worker<br/>formatPlatform: boj_ · prg_]
-  P --> AI[AI feedback<br/>sourcePlatform in the prompt]
+  GW --> PRG[Programmers<br/>373 problems<br/>hand-picked<br/>as JSON]
+  P --> GHW[GitHub upload service<br/>file prefix<br/>boj_ · prg_]
+  P --> AI[AI feedback<br/>source platform<br/>in prompt]

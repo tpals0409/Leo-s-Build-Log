@@ -2,6 +2,6 @@ flowchart LR
   subgraph IN["Where grep ran: blog/"]
     DEL[Search feature deleted<br/>search-index.json<br/>no longer built]
   end
-  OUT["scripts/<br/>check-adr-links.mjs<br/>outside blog/"] -.->|checks that<br/>search-index.json exists| DEL
-  DEL --> PR[PR merged<br/>not a required check, so it passed]
-  PR --> M([main broken<br/>caught by the /stop gate])
+  OUT["scripts/check-adr-links.mjs<br/>link-check script<br/>outside blog/"] -.->|checks that<br/>search-index.json exists| DEL
+  DEL --> PR[PR merged<br/>failed, but not<br/>a required check,<br/>so it merged anyway]
+  PR --> M([main broken<br/>caught by the sprint-end /stop checks])

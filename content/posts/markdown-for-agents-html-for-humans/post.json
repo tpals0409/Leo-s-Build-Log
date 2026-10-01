@@ -12,10 +12,10 @@
   "thumbnail": "thumbnail.webp",
   "ko": {
     "title": "토큰 비용을 더 쓰기로 했다 — 사람을 위한 ADR 뷰 만들기",
-    "summary": "Agent를 위한 Markdown ADR과 사람을 위한 HTML ADR을 분리하면서 배운 것."
+    "summary": "AI 에이전트가 읽는 Markdown 결정 기록(ADR)과 사람이 읽는 HTML 버전을 나누면서 배운 것."
   },
   "en": {
     "title": "I Chose to Spend More Tokens — Building an ADR View for Humans",
-    "summary": "What I learned by separating Markdown ADRs for agents from HTML ADRs for humans."
+    "summary": "What I learned by splitting decision records (ADRs) into Markdown for AI agents and HTML for people."
   }
 }

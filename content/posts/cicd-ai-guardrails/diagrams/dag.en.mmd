@@ -9,6 +9,6 @@ flowchart TD
   TF & AU & S --> BF[build-frontend]
   S --> BB[build-blog]
   BS & BF & BB --> TR[trivy-scan ×8<br/>blocks CRITICAL·HIGH]
-  TR & S --> DE[deploy<br/>bump aether-gitops tag]
+  TR & S --> DE[deploy<br/>bump tag in deploy-config repo]
   DE --> AC([ArgoCD sync → k3s])
   DE --> NO[notify<br/>Grafana annotation]

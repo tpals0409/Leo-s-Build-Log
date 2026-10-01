@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<style>
+body{font:var(--fw-body) var(--fs-body)/var(--lh-body) var(--font-sans);letter-spacing:var(--ls-body);color:var(--color-fg);max-width:var(--container-wrap);box-sizing:border-box;margin:0 auto;padding:0 24px 80px}
+h2{font:var(--fw-tile) var(--fs-tile)/var(--lh-tile) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-tile);margin:2.4em 0 .8em}
+h3{font:var(--fw-section) var(--fs-body)/var(--lh-body) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-body);margin:2em 0 .5em}
+p,ul,ol{margin:0 0 1em}
+strong{font-weight:var(--fw-section)}
+a{color:var(--color-link)}
+code{font-family:var(--font-mono);font-size:.9em;background:var(--color-fog);padding:0 4px}
+blockquote{margin:1.5em 0;padding-left:var(--space-cluster);border-left:2px solid var(--color-line);color:var(--color-secondary)}
+blockquote p{margin:0}
+</style>
+</head>
+<body>
+<h2>"참고만 하다가 직접 해본 이야기"</h2>
+<p><a href="https://channel.io/ko/team/blog/articles/backend-ci-refactoring-73fca77d">채널톡 Backend CI Refactoring 글</a>을 처음 읽었을 때, 즉각 "AlgoSu에도 이렇게 하면 되겠다"는 생각이 들었습니다. 36.6분짜리 CI를 15분 38초로 줄인 이야기. 방법이 구체적이고 원리가 명확했습니다.</p>
+<p>그런데 그대로 따라할 수 없었습니다. AlgoSu는 채널톡과 다릅니다. <strong>1인 개발자 + AI 에이전트 오케스트레이션 구조</strong>, Docker 전용 파이프라인, 그리고 에이전트에게 작업을 디스패치하는 Oracle 방식의 워크플로. 레퍼런스의 원리는 차용할 수 있었지만, 그 원리를 <strong>AlgoSu 맥락에 맞게 번역</strong>하는 과정이 필요했습니다.</p>
+<p>이 글은 완성된 CI 아키텍처를 소개하는 글이 아닙니다. Sprint 102~106, 5스프린트에 걸쳐 레퍼런스를 읽고, 실험하고, 때로는 계획을 중단한 여정의 기록입니다. 특히 "구현 0줄로 스프린트를 닫은" 두 번의 경험이 왜 실패가 아닌 성과였는지를 중심으로 이야기합니다.</p>
+<leo-adr>
+  <leo-problem><p>잘 만든 CI 레퍼런스는 많았지만 1인 + AI 에이전트 구조인 우리 파이프라인에 그대로 들어맞지 않았다. 대기 PR 30건, 반복되는 준비 단계, 막지 않는 커버리지가 쌓여 있었다.</p></leo-problem>
+  <leo-decision><p>레퍼런스에서 원리만 골라 4 스프린트 로드맵으로 Auto-merge부터 실측 규약까지 단계적으로 직접 적용했다.</p></leo-decision>
+  <leo-result><p>대기 PR은 자동 병합되고, Composite Action으로 중복 67줄이 사라졌고, 커버리지 게이트는 70%가 됐다. 남은 3 트랙 중 2개는 선자문으로 &quot;이미 처리됨&quot;을 확인해 구현 0줄로 끝냈다.</p></leo-result>
+</leo-adr>
+<h2>왜 레퍼런스가 필요했나</h2>
+<p>Sprint 102 착수 시점의 상태를 정직하게 기록하면 이렇습니다.</p>
+<p><strong>Before — 세 가지 문제:</strong></p>
+<ul><li>Dependabot이 매주 생성하는 PR이 수동 squash-merge 부담으로 쌓여 <strong>대기 PR 30건</strong></li><li><code>setup-node + cache + npm ci</code> 3단계가 매트릭스 노드마다 3~4벌 반복 (DRY 제로)</li><li>coverage 측정은 하고 있었지만 임계치 미달 시 <strong>PR을 막지 않음</strong> (측정만 있고 게이트 없음)</li></ul>
+<leo-metrics>
+  <leo-metric value="30" unit="건" note="매주 생성, 수동 squash-merge 누적" label="Dependabot 대기 PR"></leo-metric>
+  <leo-metric value="3~4" unit="벌" note="잡×서비스마다 setup-node + cache + npm ci 반복" label="중복 준비 단계"></leo-metric>
+  <leo-metric value="없음" note="측정은 하지만 PR 머지 차단 안 함" label="Coverage 게이트"></leo-metric>
+</leo-metrics>
+<p>이 세 문제는 독립적으로 보이지만 공통 원인이 있었습니다. <strong>"지금 당장 동작하면 됐다"는 관성.</strong> CI가 통과하면 배포했고, 반복 코드를 정리할 여유는 항상 다음 스프린트로 밀렸습니다.</p>
+<p>채널톡 글에서 차용한 원리는 세 가지입니다.</p>
+<ol><li><strong>작은 범위 파일럿 → 확산</strong> — 전체 서비스에 한 번에 적용하지 않고 가장 단순한 서비스에서 먼저 검증한 뒤 확장한다</li><li><strong>워크플로 + 저장소 설정 결합</strong> — GitHub Actions 파일만 만들면 반쪽이다. 저장소 설정이 뒷받침되어야 실효된다</li><li><strong>DRY는 목적이 아니라 결과</strong> — 중복 제거를 위해 composite을 만드는 게 아니라, 좋은 추상이 자연스럽게 중복을 없앤다</li></ol>
+<p>차용하지 <strong>않은</strong> 원리도 있습니다. 채널톡 글의 S3 폴링 prepare 초기화 겹치기와 동적 큐 테스트 분배는 AlgoSu에서 오버엔지니어링이었습니다. GHA artifact로 충분했고, 테스트 규모가 분배 오버헤드의 이득을 초과하지 않았습니다. 레퍼런스를 번역할 때는 차용하지 않을 것을 고르는 것도 작업입니다.</p>
+<p>AlgoSu에서 한 가지 더 다른 점이 있었습니다. AlgoSu는 Oracle이 에이전트에게 작업을 디스패치하는 구조입니다. "파일럿 후 확산"이라는 원리를 스프린트 단위로 적용할 수 있었지만, 동시에 에이전트의 <strong>본업 매칭</strong>을 매 스프린트 시작 전에 재확인해야 했습니다. Sprint 102에서 "CI는 Gatekeeper 담당"으로 잘못 매칭했다가 Architect로 재조정한 일이 있었습니다. 에이전트 오케스트레이션에서 역할 경계 검증은 코드 작성만큼 중요합니다.</p>
+<h2>4스프린트 로드맵 — 전체 그림</h2>
+<p>채널톡 레퍼런스를 읽고 수립한 로드맵은 4스프린트(Sprint 102~105)였습니다. 실제로는 이월 항목을 처리하는 Sprint 106이 추가됐습니다. 각 스프린트의 목적과 실제 산출물은 다음과 같습니다.</p>
+<leo-steps>
+  <leo-step title="S102 · 운영 자동화"><p>Dependabot 그룹화 + Auto-merge + Branch Protection</p></leo-step>
+  <leo-step title="S103 · Composite 파일럿"><p>setup-node-service 신설 + github-worker 한정 적용 + Coverage Gate 60%</p></leo-step>
+  <leo-step title="S104 · 확산"><p>전 Node 서비스 Composite 확산 (67줄 삭제) + AI Coverage 통합</p></leo-step>
+  <leo-step title="S105 · 실측 규약화"><p>rebuild_all 런북 + github-worker 실측 + commitlint 동적 scope</p></leo-step>
+  <leo-step title="S106 · 이월 처리"><p>Coverage 70% 달성 (실구현) + L2·최적화 선자문 기반 조기 종결</p></leo-step>
+</leo-steps>
+<p>각 스프린트가 독립적이면서도 앞 스프린트의 교훈을 다음 스프린트의 설계에 반영하는 구조였습니다. Sprint 103의 "인프라 PR 실측 불가" 교훈이 Sprint 105의 rebuild_all 규약으로 이어졌고, Sprint 105의 선자문 패턴이 Sprint 106의 "구현 0줄 결론"을 가능하게 했습니다.</p>
+<h2>Sprint 102 — Auto-merge와 Branch Protection</h2>
+<p>첫 번째 문제는 Dependabot 대기 PR 30건이었습니다. 매주 생성되는 patch/minor 업데이트를 수동으로 review하고 merge하는 반복 작업이 누적된 결과였습니다.</p>
+<p>해결 방향은 두 단계였습니다: <strong>dependabot.yml 그룹화</strong>로 개별 PR 수를 줄이고, <strong>auto-merge 워크플로</strong>로 patch/minor를 자동으로 병합한다.</p>
+<h3>Dependabot 그룹화</h3>
+<pre><code class="language-yaml"># .github/dependabot.yml (발췌)
+updates:
+  - package-ecosystem: npm
+    directory: /services/gateway
+    schedule:
+      interval: weekly
+    groups:
+      gateway-minor-patch:
+        update-types:
+          - minor
+          - patch</code></pre>
+<p>8개 ecosystem(Node 서비스 5개 + Frontend + Blog + Python)에 <code>{service}-minor-patch</code> 그룹을 추가했습니다. Docker 이미지 업데이트 2건은 보안 영향이 클 수 있어 그룹에서 제외했습니다.</p>
+<h3>Auto-merge 워크플로</h3>
+<pre><code class="language-yaml"># .github/workflows/dependabot-automerge.yml (핵심 발췌)
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+
+      - name: Auto-merge patch and minor
+        if: |
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Skip major updates
+        if: steps.metadata.outputs.update-type == 'version-update:semver-major'
+        run: |
+          echo "Major update detected — skipping auto-merge."
+          exit 0</code></pre>
+<p>여기서 중요한 결정이 있었습니다. <code>pull_request</code> 대신 <strong><code>pull_request_target</code></strong>을 트리거로 선택했습니다. Dependabot이 만드는 PR은 포크 PR과 유사한 컨텍스트를 가지며, secrets에 접근하려면 <code>pull_request_target</code>이 필요합니다. 단, 코드 인젝션 위험을 막기 위해 <code>actions/checkout</code>을 완전히 제거했습니다 — PR 코드를 실행하는 단계가 없으면 인젝션 경로도 없습니다.</p>
+<p>job-level <code>if: github.actor == 'dependabot[bot]'</code>, step-level metadata type 검증, <code>actions/checkout</code> 제거의 <strong>3중 방어</strong>입니다.</p>
+<h3>저장소 설정 결합</h3>
+<p>워크플로를 만들고 나서 auto-merge가 동작하지 않았습니다. 이유를 찾아보니 저장소 설정에 있었습니다.</p>
+<p>GitHub의 auto-merge는 두 가지 전제가 필요합니다:</p>
+<ol><li>저장소의 <code>allow_auto_merge: true</code> 설정</li><li>Branch Protection의 required status checks가 통과</li></ol>
+<p>Oracle이 gh API로 직접 설정을 추가했습니다.</p>
+<pre><code># 저장소 설정 (gh api 직접 설정)
+allow_auto_merge: true
+delete_branch_on_merge: true
+
+# main Branch Protection
+strict: true
+required_checks: ["Secret &amp; Env Scan", "Detect Changed Services"]
+allow_force_pushes: false
+allow_deletions: false
+required_conversation_resolution: true</code></pre>
+<p>required checks를 최소화한 이유가 있습니다. <code>quality-nestjs</code>, <code>test-node</code> 같은 잡은 변경된 서비스가 없으면 skip됩니다. skip 상태를 required check에 등록하면 해당 잡이 실행되지 않을 때 PR이 merge되지 않습니다. 항상 실행되는 <code>Secret &amp; Env Scan</code>과 <code>Detect Changed Services</code>만 등록했습니다.</p>
+<p>결과: Dependabot 대기 PR <strong>30건 → 2건</strong>. 28건이 그룹 PR 7개로 재편되어 auto-merge 예약됐습니다. 예상치 못한 보너스도 있었습니다 — dependabot이 grouping을 감지하자 기존 개별 PR을 자동으로 close하고 그룹 PR로 재생성했습니다. 수동으로 close할 필요도 없었습니다.</p>
+<p>Sprint 102 PR #102 검증 결과:</p>
+<table><thead><tr><th>검증 항목</th><th>결과</th></tr></thead><tbody><tr><td>PR #102 CI 전체</td><td>✅ 26 success / 10 skipped / 0 failure</td></tr><tr><td>Auto-merge 워크플로 실행</td><td>✅ 7/7 success (PR #104~#110)</td></tr><tr><td>실제 자동 병합 실증</td><td>✅ PR #104 (github-worker 3 updates) — <code>app/github-actions</code> merger 확인</td></tr><tr><td>Branch Protection 실효</td><td>✅ main 직접 push 차단, strict 모드에서 최신 base 요구</td></tr></tbody></table>
+<leo-callout type="note" title="핵심 교훈: 워크플로 ≠ 기능"><p>Auto-merge 워크플로만 만들면 반쪽입니다. <code>allow_auto_merge: true</code> + required status checks가 함께 있어야 실효됩니다. "코드는 맞는데 왜 안 되지?"의 원인이 저장소 설정일 수 있습니다. CI 자동화는 파일 하나로 끝나지 않습니다.</p></leo-callout>
+<h2>Sprint 103~104 — Composite Action과 파일럿→확산</h2>
+<p>두 번째 문제는 <code>setup-node + cache + npm ci</code> 3단계 반복이었습니다. <code>quality-nestjs</code>, <code>audit-npm</code>, <code>test-node</code> 3개 잡의 5개 서비스 매트릭스마다 동일한 준비 단계가 반복됐습니다.</p>
+<p>채널톡 레퍼런스의 "작은 서비스에서 먼저 검증 후 확산" 원리를 스프린트 단위로 적용했습니다. <strong>Sprint 103에서 github-worker 한정 파일럿, Sprint 104에서 전 서비스 확산.</strong></p>
+<h3>Sprint 103 — Composite Action 파일럿</h3>
+<p>github-worker를 파일럿 서비스로 고른 이유는 명확합니다. 5개 Node 서비스 중 가장 단순한 구조(순수 Node.js, NestJS 미사용)라서 패턴 변경의 부작용을 최소 범위에서 검증할 수 있었습니다.</p>
+<pre><code class="language-yaml"># .github/actions/setup-node-service/action.yml
+name: 'Setup Node Service'
+description: 'setup-node + lockfile cache + conditional install for a single service'
+inputs:
+  service-path:
+    description: 'Relative path to the service directory'
+    required: true
+  node-version:
+    description: 'Node.js version'
+    default: '20'
+  install-command:
+    description: 'Install command to run'
+    default: 'npm ci'
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Cache node_modules
+      id: cache
+      uses: actions/cache@v5
+      with:
+        path: ${{ inputs.service-path }}/node_modules
+        key: node-${{ inputs.node-version }}-${{ hashFiles(format('{0}/package-lock.json', inputs.service-path)) }}
+        restore-keys: |
+          node-${{ inputs.node-version }}-
+
+    - name: Install dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: ${{ inputs.install-command }}
+      working-directory: ${{ inputs.service-path }}</code></pre>
+<p>중요한 설계 결정이 하나 있었습니다: <strong><code>actions/checkout</code>을 composite에 포함하지 않았습니다.</strong> checkout은 각 잡의 공통 첫 단계이고 서비스 경로와 무관하게 항상 동일합니다. composite는 "서비스별 분기점"인 setup-node + cache + install만 추출했습니다.</p>
+<p>이 결정으로 composite의 범용성이 높아졌습니다. 각 잡에서 checkout 방식(예: sparse-checkout)을 자유롭게 선택할 수 있고, composite은 그 결과물(체크아웃된 파일)을 그냥 사용합니다. audit-npm 잡에서는 <code>install-command: 'npm ci --ignore-scripts'</code>를 전달해 보안 스캔 정책을 유지했습니다.</p>
+<h3>Sprint 103 — Coverage Gate</h3>
+<p>Coverage 측정은 이미 하고 있었지만, 임계치 미달 시 PR을 막지 않았습니다. <code>scripts/check-coverage.mjs</code>를 새로 작성해서 이 공백을 채웠습니다.</p>
+<pre><code class="language-js">// scripts/check-coverage.mjs (핵심 로직 발췌)
+import { readdirSync, readFileSync, existsSync } from 'fs';
+import { join } from 'path';
+
+function parseLcov(content) {
+  let lh = 0, lf = 0, brh = 0, brf = 0;
+  for (const line of content.split('\n')) {
+    if (line.startsWith('LH:')) lh += parseInt(line.slice(3));
+    else if (line.startsWith('LF:')) lf += parseInt(line.slice(3));
+    else if (line.startsWith('BRH:')) brh += parseInt(line.slice(4));
+    else if (line.startsWith('BRF:')) brf += parseInt(line.slice(4));
+  }
+  return { lh, lf, brh, brf };
+}
+
+// coverage/ 디렉토리 존재 여부 가드
+if (!existsSync(coverageDir)) {
+  process.stdout.write('No coverage artifacts found. Skipping gate.\n');
+  process.exit(0);
+}
+
+// 재귀 탐색 — 서비스 추가 시 스크립트 무수정
+function findLcovFiles(dir) { /* ... */ }</code></pre>
+<p>외부 npm 패키지 없이 커스텀 스크립트로 작성했습니다. supply chain 리스크를 없애고, 로직도 단순합니다: 모든 lcov.info를 재귀 탐색 → LH/LF/BRH/BRF 합산 → lines AND branches 동시 검증 → 임계치 미달 시 exit 1.</p>
+<p>글로벌 60% 임계치로 시작했습니다. 각 서비스의 jest/pytest threshold(Node 92~100%, Python 98%, Frontend 83%)가 이미 60%를 크게 초과하므로, 글로벌 60%는 "새 서비스 추가 시 바닥 방어"용이었습니다.</p>
+<h3>Sprint 104 — 전 서비스 확산</h3>
+<p>Sprint 104는 단순합니다. <code>matrix.service != 'github-worker'</code> 조건을 제거하고 전 서비스가 composite를 경유하도록 했습니다.</p>
+<pre><code class="language-yaml"># ci.yml (확산 후 — 이 패턴이 quality-nestjs / audit-npm / test-node 3개 잡에 모두 적용)
+- name: Setup Node service
+  uses: ./.github/actions/setup-node-service
+  with:
+    service-path: services/${{ matrix.service }}
+    # audit-npm 잡에서는:
+    # install-command: 'npm ci --ignore-scripts'</code></pre>
+<p>inline 3스텝(Setup Node + Cache + Install) × 3잡 = <strong>ci.yml 67줄 삭제</strong>, 약 25% 압축. 성능 측정보다 먼저 체감할 수 있는 유지보수성 개선이었습니다.</p>
+<leo-callout type="warn" title="함정: 인프라 PR은 자기 자신의 실측을 만들지 못한다"><p>Sprint 103 PR #111과 Sprint 104 PR #113, 둘 다 <code>.github/workflows/ci.yml</code>만 수정했습니다. <code>detect-changes</code> path-filter가 <code>services/github-worker/**</code> 변경을 감지하지 않아 서비스 잡 전체가 skip됐습니다. composite action을 추가했지만, 그 action이 실제로 실행된 런이 없었습니다. Post 표본 0건 — 실측 불가. 이 구조적 공백은 Sprint 105로 이월됐습니다.</p></leo-callout>
+<h2>Sprint 105 — 실측 규약과 commitlint 자동화</h2>
+<p>Sprint 105는 4스프린트 로드맵의 <strong>마감 스프린트</strong>였습니다. 세 가지 과제를 묶었습니다.</p>
+<h3>[A] rebuild_all 운영 규약</h3>
+<p>Sprint 103·104의 함정(인프라 PR은 자기 실측을 만들지 못함)에 대한 해결책은 이미 ci.yml에 있었습니다. <code>workflow_dispatch.inputs.rebuild_all=true</code> — Sprint 103부터 구현되어 있었지만 언제, 누가, 어떻게 쓰는지 규약이 없었습니다.</p>
+<p>추가 코드 없이 <strong>운영 규약 문서화만으로</strong> 해결했습니다. <code>docs/runbook/ci-rebuild-all.md</code>를 신규 작성하고, <code>.github/pull_request_template.md</code>에 체크박스를 추가했습니다.</p>
+<p>발동 조건 3개를 명문화했습니다:</p>
+<ol><li><code>.github/workflows/*.yml</code> 단독 변경 PR</li><li><code>.github/actions/**</code> composite 변경 PR</li><li><code>scripts/check-coverage.mjs</code> 등 CI 공통 스크립트 변경 PR</li></ol>
+<p>런북이 의미 있으려면 작성 직후 리허설이 필요합니다. [A] 런북은 머지 2시간 내에 [B] 실측에서 실제로 사용됐습니다.</p>
+<h3>[B] github-worker 실측 — 선자문으로 N=1</h3>
+<p>실측을 어떻게 할지가 먼저 문제였습니다. 원안은 Post 샘플 5건이었습니다. 이걸 Sensei에게 먼저 물었습니다.</p>
+<p>Sensei의 답변 핵심: "Welch-Satterthwaite 공식에서 Pre n=4가 자유도(df)를 4로 고정합니다. Post n을 2→6으로 늘려도 MDE 개선이 0.8s에 불과합니다. 원안 N=5는 오버엔지니어링입니다. N=1로 충분합니다."</p>
+<p>runner-minutes 낭비를 사전에 막은 것입니다. PR #117(<code>6f42b0f</code>)에 더미 앵커 주석을 추가해 <code>detect-changes</code>를 트리거, 자연 런 2건(run 24702740418·24702828670) + <code>rebuild_all=true</code> 합성 런 1건(run 24703075569)을 합쳐 Post n=3을 확보했습니다.</p>
+<p>결과:</p>
+<table><thead><tr><th>잡</th><th>Before (n=4)</th><th>After (n=3)</th><th>차이</th></tr></thead><tbody><tr><td>Quality — github-worker</td><td>22.2s (σ 5.8s)</td><td>22.3s (σ 2.5s)</td><td>+0.1s (+0.4%)</td></tr><tr><td>Audit — github-worker</td><td>19.8s (σ 3.7s)</td><td>18.0s (σ 3.0s)</td><td>-1.8s (-8.9%)</td></tr><tr><td>Test GitHub Worker</td><td>19.2s (σ 1.9s)</td><td>20.0s (σ 1.0s)</td><td>+0.8s (+3.9%)</td></tr></tbody></table>
+<p>3개 잡 모두 ±10% 실용 임계 이내. Welch t-test 결과 <code>|t_obs| &lt; 0.7</code> (t_crit=2.776). composite action 확산은 github-worker 개별 잡 런타임에 측정 가능한 영향을 미치지 않음이 확인됐습니다.</p>
+<p>선자문으로 <strong>runner-minutes 75% 절감</strong>. "계획 승인 → 즉시 실행"이 항상 최적이 아니라는 것을 처음으로 체감했습니다.</p>
+<h3>[C] commitlint 동적 scope-enum</h3>
+<p>Sprint 103에서 scope 오류로 CI가 실패한 적 있었습니다. <code>ci(actions)</code>와 <code>ci(coverage)</code> — 직관적으로 보이지만 <code>commitlint.config.mjs</code> scope-enum에 없어서 PR CI에서 발견됐습니다. 로컬 pre-commit 훅이 없으면 scope 오류는 PR 제출 후에야 알 수 있습니다.</p>
+<p>두 가지를 동시에 해결했습니다: <strong>husky로 로컬 검증 앞당기기</strong>, <strong>scope-enum 동적 생성으로 수동 유지 제거</strong>.</p>
+<p>root <code>package.json</code>에 husky를 추가하고 commit-msg 훅을 설정했습니다.</p>
+<pre><code class="language-json">// package.json (root — 신규 생성)
+{
+  "devDependencies": {
+    "@commitlint/cli": "^19.0.0",
+    "@commitlint/config-conventional": "^19.0.0",
+    "husky": "^9.0.0"
+  },
+  "scripts": {
+    "prepare": "husky"
+  }
+}</code></pre>
+<pre><code class="language-bash"># .husky/commit-msg
+npx --no -- commitlint --edit "$1"</code></pre>
+<p>root <code>package.json</code>을 추가해도 기존 CI 잡에는 영향이 없습니다. 각 잡은 <code>working-directory</code>를 서비스 디렉토리로 지정하거나 composite action을 경유하기 때문입니다. PR #116 CI 전체 잡이 SUCCESS로 검증됐습니다.</p>
+<pre><code class="language-js">// commitlint.config.mjs
+import { readdirSync } from 'fs';
+
+// services/ 디렉토리 자동 스캔 — 새 서비스 추가 시 자동 등록
+const dynamicScopes = readdirSync('./services', { withFileTypes: true })
+  .filter((d) =&gt; d.isDirectory())
+  .map((d) =&gt; d.name);
+
+const staticScopes = [
+  'ci', 'docs', 'blog', 'frontend', 'infra',
+  'deps', 'security', 'adr', 'e2e', 'runbook',
+];
+
+export default {
+  extends: ['@commitlint/config-conventional'],
+  rules: {
+    'scope-enum': [
+      2,
+      'always',
+      [...new Set([...dynamicScopes, ...staticScopes])].sort(),
+    ],
+  },
+};</code></pre>
+<p>이제 <code>services/</code>에 새 디렉토리를 만들면 scope가 자동으로 등록됩니다. 반복됐던 "새 디렉토리 추가 시 scope-enum도 함께 등록하세요" 피드백이 구조적으로 해소됐습니다. <strong>사람 의존 피드백을 시스템 자동화로 승격</strong>한 사례입니다.</p>
+<h2>Sprint 106 — "구현 0줄"의 의사결정</h2>
+<p>Sprint 106은 Sprint 105까지 이월됐던 세 항목을 처리하는 스프린트였습니다. 결과적으로 3 트랙 중 <strong>하나만 실구현</strong>됐고, <strong>둘은 구현 없이 종결</strong>됐습니다.</p>
+<table><thead><tr><th>트랙</th><th>내용</th><th>결과</th></tr></thead><tbody><tr><td>[A] Coverage 70% 상향</td><td>Frontend branches 69.55% → 71%+ 달성 + 글로벌 게이트 70%</td><td>✅ 실구현 (PR #121, #122)</td></tr><tr><td>[B] L2 캐시 레이어</td><td>Docker 빌드 40% 단축 목표</td><td>❌ 미도입 (Sensei 선자문 중단)</td></tr><tr><td>[C] Frontend 빌드 최적화</td><td><code>swcMinify</code> · <code>optimizePackageImports</code> · <code>sourceMaps</code> 3개</td><td>❌ 미도입 (Sensei 선자문 중단)</td></tr></tbody></table>
+<h3>[A] Coverage 70% — 병목은 Frontend branches 단독</h3>
+<p>글로벌 coverage-gate를 60%에서 70%로 올리려면 먼저 병목을 찾아야 했습니다. 전 서비스 weighted 집계 branches는 약 82%로 이미 70%를 초과하고 있었습니다. 그런데 왜 70% 게이트를 올리지 못하고 있었을까요?</p>
+<p>Sensei 선자문으로 확인한 구조적 이유가 있었습니다. <code>check-coverage.mjs</code>는 path-filter로 감지된 서비스의 lcov.info만 집계합니다. <strong>frontend-only PR에서는 frontend 단독 branches만 집계</strong>됩니다. 그리고 frontend branches는 69.55%였습니다.</p>
+<p>"전 서비스 통합 branches = 82%, 글로벌 게이트 70% → 통과"라는 직관이 틀립니다. frontend-only PR을 내면 69.55%만 집계되어 70% 게이트에서 막힙니다. path-filter 기반 CI 설계에서 coverage-gate는 "어떤 lcov 셋으로 동작하는가"를 PR 범위별로 명시해야 합니다.</p>
+<p>병목 해소: Frontend branches를 71%까지 올리는 신규 테스트 작성.</p>
+<p>Sensei의 gap 분석:</p>
+<table><thead><tr><th>목표</th><th>필요 branches hit</th><th>현재</th><th>Gap</th></tr></thead><tbody><tr><td>71.0% (계약 목표)</td><td>1,330</td><td>1,302</td><td>+28</td></tr><tr><td>72.0% (안전 버퍼)</td><td>1,348</td><td>1,302</td><td>+46</td></tr></tbody></table>
+<p>권장 파일 3개(<code>lib/feedback.ts</code>, <code>components/ui/CodeBlock.tsx</code>, <code>components/providers/EventTracker.tsx</code>)에 약 120~190 LOC 신규 테스트 작성으로 달성 가능.</p>
+<p>실제 결과: 77개 테스트 추가(PR #121), branches <strong>69.55% → 76.42%</strong> (+6.87pp, 목표 71% 대비 +5.42pp 초과). 보수적으로 설계된 시나리오였습니다.</p>
+<leo-metrics>
+  <leo-metric value="69.55" unit="%" note="1302 / 1872 branches hit" label="Frontend branches (Before)"></leo-metric>
+  <leo-metric value="76.42" unit="%" note="목표 71% 대비 +5.42pp 초과 달성" label="Frontend branches (After)"></leo-metric>
+</leo-metrics>
+<p>그리고 PR #122에서 <code>ci.yml</code>의 coverage threshold를 <code>60 → 70</code>으로 변경했습니다. <strong>PR #121이 CI green 선행 머지된 뒤에만</strong> #122를 머지하는 순서 보호 장치가 필수였습니다. #122를 먼저 머지하면, 그 즉시 frontend-only PR이 coverage-gate에서 막히게 됩니다. Sensei 경고를 PR #122 본문에 명시해서 순서 보호를 강제했습니다.</p>
+<h3>[B] L2 캐시 — Docker buildkit이 이미 L2였다</h3>
+<p>Sprint 105의 패턴을 반복했습니다. 구현 전에 Sensei에게 먼저 물었습니다.</p>
+<p>Sensei의 발견은 충격적이었습니다. <code>docker/build-push-action</code>에 이미 <code>--cache-from=type=gha,mode=max</code>가 설정되어 있고, <code>mode=max</code>는 빌더 스테이지의 <strong>모든 중간 레이어</strong>를 GHA cache에 저장합니다.</p>
+<pre><code># NestJS 빌드 레이어 — mode=max 캐시 커버 범위
+Layer 1: FROM node:22-alpine AS builder         → 캐시 저장
+Layer 2: COPY package*.json ./                  → package.json 미변경 시 HIT
+Layer 3: RUN npm ci                             → package.json 미변경 시 HIT
+Layer 4: COPY . .                               → 소스 변경 시 MISS
+Layer 5: RUN npm run build   ← dist/ 생성       → Layer 4 MISS 시 재실행</code></pre>
+<p><code>RUN npm run build</code>(= <code>dist/</code> 생성 단계)가 이미 GHA cache 레이어로 저장되고 있었습니다. 외부 GHA 파일시스템 캐시 추가는 <strong>100% 중복</strong>이었습니다.</p>
+<p>추가 발견이 있었습니다. <code>ci.yml L624~630</code>에 <code>Frontend .next/cache</code> GHA 캐시 단계가 이미 있었는데, 이것도 비기능 코드였습니다. <code>build-frontend</code> 잡은 host-side <code>npm run build</code> 없이 Docker 빌드만 하기 때문에, <code>.next/cache</code>가 host filesystem에 생성되지 않습니다. restore해도 save할 게 없고, save해도 빈 디렉토리만 저장되는 구조였습니다. Docker 전용 파이프라인 전환 이전 유산이었습니다.</p>
+<p>더 근본적인 발견: <strong>전 빌드 잡에서 host filesystem에서 <code>npm run build</code>를 실행하는 잡이 단 하나도 없었습니다.</strong> 모든 TypeScript/Next.js 컴파일은 Docker 컨테이너 내부에서만 발생합니다. GHA 파일시스템 캐시는 host filesystem에만 적용되므로, 현 Docker 전용 아키텍처에서는 활용 경로 자체가 없었습니다.</p>
+<p>결론: L2 캐시 도입 중단. 코드 변경 없음. 비기능 단계(ci.yml L624~630) 별도 PR로 제거.</p>
+<h3>[C] Frontend 최적화 — 세 항목 모두 "이미 처리됨"</h3>
+<p>세 가지 Next.js 최적화 옵션을 적용하려 했습니다. Sensei가 실측으로 확인한 결과:</p>
+<table><thead><tr><th>항목</th><th>계획</th><th>실측 결과</th><th>판정</th></tr></thead><tbody><tr><td><code>swcMinify: true</code></td><td>명시 설정</td><td>Next.js 15.5.15 <code>config-schema.js</code>에서 완전 제거 (<code>z.strictObject</code> 위반)</td><td><strong>HARD BLOCK</strong></td></tr><tr><td><code>optimizePackageImports</code></td><td><code>@radix-ui/react-*</code>, <code>lucide-react</code> 추가</td><td>와일드카드 미지원 + <code>lucide-react</code> 기본 포함 목록에 이미 존재</td><td><strong>제외</strong></td></tr><tr><td><code>productionBrowserSourceMaps: false</code></td><td>명시 설정</td><td><code>config-schema.js</code>에서 기본값이 이미 <code>false</code></td><td><strong>제외</strong></td></tr></tbody></table>
+<p><code>swcMinify</code>는 Next.js 14.x 기준으로 플랜을 작성할 때는 유효한 옵션이었습니다. 그러나 15.5.15에서 config 스키마에서 완전 제거됐고, <code>z.strictObject()</code> 검증 때문에 추가하면 빌드가 깨집니다. 플랜 수립 후 라이브러리 버전이 올라간 경우, 공식 문서만으로는 부족합니다. <code>node_modules/</code> 소스 레벨 직접 실측이 정확도 보증의 유일한 방법입니다.</p>
+<p>결론: 세 항목 모두 적용 불가 또는 이미 기본값. 코드 변경 없음.</p>
+<leo-callout type="note" title="선자문이 &#x27;어떻게&#x27;에서 &#x27;해야 하는가&#x27;로 승격됐다"><p>Sprint 105에서 선자문은 Post 샘플 N을 줄이는 <strong>최적화 도구</strong>였습니다. Sprint 106 [B]와 [C]에서는 구현 자체가 불필요함을 사전 확인하는 <strong>필요성 게이트</strong>로 기능했습니다. 플랜에 명시적 중단 조건("중복 시 이득 0 → 중단")을 적어두면, 선자문 단계에서 판단 기준이 분명해집니다. 구현 0줄도 결론입니다.</p></leo-callout>
+<leo-diagram title="선자문은 구현 필요성 게이트" caption="구현 전에 정말 필요한지 먼저 묻는다. "이미 처리됨"이면 만들지 않는 것이 결론이다">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 738.286px; background-color: transparent;" viewBox="4 4 738.3 230" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:Gmarket Sans,Gmarket Sans TTF,-apple-system,Apple SD Gothic Neo,sans-serif;font-size:14px;fill:#292725;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#FFFFFF;}#my-svg .error-text{fill:#292725;stroke:#292725;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#696866;stroke:#696866;}#my-svg .marker.cross{stroke:#696866;}#my-svg svg{font-family:Gmarket Sans,Gmarket Sans TTF,-apple-system,Apple SD Gothic Neo,sans-serif;font-size:14px;}#my-svg p{margin:0;}#my-svg .label{font-family:Gmarket Sans,Gmarket Sans TTF,-apple-system,Apple SD Gothic Neo,sans-serif;color:#292725;}#my-svg .cluster-label text{fill:#292725;}#my-svg .cluster-label span{color:#292725;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#292725;color:#292725;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#FFFFFF;stroke:#292725;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#696866!important;stroke-width:0;stroke:#696866;}#my-svg .arrowheadPath{fill:rgba(255, 255, 255, 0);}#my-svg .edgePaths .path{stroke:#696866;stroke-width:1px;}#my-svg .flowchart-link{stroke:#696866;fill:none;}#my-svg .edgeLabel{background-color:#FFFFFF;text-align:center;}#my-svg .edgeLabel p{background-color:#FFFFFF;}#my-svg .edgeLabel rect{opacity:0.5;background-color:#FFFFFF;fill:#FFFFFF;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:#FFFFFF;stroke:#DFDFDE;stroke-width:1px;}#my-svg .cluster text{fill:#292725;}#my-svg .cluster span{color:#292725;}#my-svg .node .collapsed-indicator{fill:#DFDFDE;stroke:none;opacity:0.6;}#my-svg .node .collapsed-separator{stroke:#DFDFDE;stroke-width:0.75px;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:Gmarket Sans,Gmarket Sans TTF,-apple-system,Apple SD Gothic Neo,sans-serif;font-size:12px;background:#FFFFFF;border:1px solid #DFDFDE;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#292725;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:#FFFFFF;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:#FFFFFF;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:#FFFFFF;fill:#FFFFFF;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#292725;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#292725;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edges edgePaths"><path d="M164,119L200,119" id="my-svg-L_P_S_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style="stroke-dasharray: 0 0 32 4; stroke-dashoffset: 0;;" data-edge="true" data-et="edge" data-id="L_P_S_0" data-points="W3sieCI6MTY0LCJ5IjoxMTguOTk5OTk5OTk5OTk5OTl9LHsieCI6MjA0LCJ5IjoxMTguOTk5OTk5OTk5OTk5OTl9XQ==" data-look="neo" marker-end="url(#my-svg_flowchart-v2-pointEnd-margin)"/><path d="M367.3,90.3L396,90.3L408.9,90.3Q416,90.3 416,83.3L416,62.6Q416,55.5 423.1,55.5L543.3,55.5" id="my-svg-L_S_I_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style="stroke-dasharray: 0 0 201.43740844726562 4; stroke-dashoffset: 0;;" data-edge="true" data-et="edge" data-id="L_S_I_0" data-points="W3sieCI6MzY3LjMzMzI4MjQ3MDcwMzEsInkiOjkwLjMzMzMzMzMzMzMzMzMzfSx7IngiOjM5NiwieSI6OTAuMzMzMzMzMzMzMzMzMzN9LHsieCI6NDE2LCJ5Ijo5MC4zMzMzMzMzMzMzMzMzM30seyJ4Ijo0MTYsInkiOjU1LjV9LHsieCI6NTQ3LjI2NTYyNSwieSI6NTUuNX1d" data-look="neo" marker-end="url(#my-svg_flowchart-v2-pointEnd-margin)"/><path d="M367.3,147.7L396,147.7L408.9,147.7Q416,147.7 416,154.7L416,175.4Q416,182.5 423.1,182.5L543.3,182.5" id="my-svg-L_S_Z_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style="stroke-dasharray: 0 0 201.43739318847656 4; stroke-dashoffset: 0;;" data-edge="true" data-et="edge" data-id="L_S_Z_0" data-points="W3sieCI6MzY3LjMzMzI4MjQ3MDcwMzEsInkiOjE0Ny42NjY2NjY2NjY2NjY2OX0seyJ4IjozOTYsInkiOjE0Ny42NjY2NjY2NjY2NjY2OX0seyJ4Ijo0MTYsInkiOjE0Ny42NjY2NjY2NjY2NjY2OX0seyJ4Ijo0MTYsInkiOjE4Mi41fSx7IngiOjU0Ny4yNjU2MjUsInkiOjE4Mi41fV0=" data-look="neo" marker-end="url(#my-svg_flowchart-v2-pointEnd-margin)"/></g><g class="edgeLabels"><g class="edgeLabel" transform="translate(471.6, 55)"><g class="label" data-id="L_S_I_0" transform="translate(-13.5, -10.5)"><foreignObject width="26.9" height="21"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>필요</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(471.6, 182)"><g class="label" data-id="L_S_Z_0" transform="translate(-35.6, -10.5)"><foreignObject width="71.3" height="21"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>이미 처리됨</p></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-P-0" data-look="neo" transform="translate(88, 119)"><rect class="basic label-container" style="" x="-76" y="-22.5" width="152" height="45"/><g class="label" style="" transform="translate(-60, -10.5)"><rect/><foreignObject width="120" height="21"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: nowrap; line-height: 1.5; max-width: 120px; text-align: center; width: 120px;"><span class="nodeLabel"><p>계획한 작업</p></span></div></foreignObject></g></g><g class="node default" id="my-svg-flowchart-S-1" data-look="neo" transform="translate(300, 119)"><polygon points="96,0 192,-96 96,-192 0,-96" class="label-container" transform="translate(-95.5, 96)"/><g class="label" style="" transform="translate(-60, -21)"><rect/><foreignObject width="120" height="42"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: nowrap; line-height: 1.5; max-width: 120px; text-align: center; width: 120px;"><span class="nodeLabel"><p>Sensei 선자문<br />정말 필요한가?</p></span></div></foreignObject></g></g><g class="node default" id="my-svg-flowchart-I-3" data-look="neo" transform="translate(623.3, 55.5)"><rect class="basic label-container" style="" x="-76" y="-43.5" width="152" height="87"/><g class="label" style="" transform="translate(-60, -31.5)"><rect/><foreignObject width="120" height="63"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 120px; text-align: center; width: 120px;"><span class="nodeLabel"><p>구현<br />Coverage 70% 달성</p></span></div></foreignObject></g></g><g class="node default" id="my-svg-flowchart-Z-5" data-look="neo" transform="translate(640.8, 182.5)"><g class="basic label-container outer-path"><path d="M-50 -43.5 C-17.9 -43.5, 14.2 -43.5, 50 -43.5 C50 -43.5, 50 -43.5, 50 -43.5 C51.1 -43.5, 52.2 -43.4, 52.8 -43.4 C53.5 -43.3, 54.2 -43.3, 55.6 -43.1 C56.5 -43, 57.4 -42.9, 58.3 -42.7 C59.2 -42.5, 60 -42.3, 61.1 -42.1 C62.1 -41.8, 63.1 -41.5, 63.7 -41.3 C64.3 -41.1, 65 -40.8, 66.4 -40.3 C67.1 -40, 67.8 -39.7, 68.9 -39.2 C69.5 -38.9, 70 -38.6, 71.4 -37.9 C72.1 -37.5, 72.8 -37.1, 73.8 -36.5 C74.3 -36.1, 74.9 -35.7, 76.1 -34.9 C76.9 -34.2, 77.7 -33.6, 78.2 -33.1 C78.9 -32.5, 79.7 -31.8, 80.3 -31.2 C81 -30.5, 81.8 -29.7, 82.2 -29.2 C82.6 -28.8, 83 -28.3, 84 -27.1 C84.5 -26.5, 85 -25.9, 85.7 -24.9 C86.2 -24.1, 86.8 -23.3, 87.2 -22.6 C87.5 -22, 87.8 -21.5, 88.6 -20.1 C88.9 -19.6, 89.1 -19.1, 89.8 -17.6 C90.1 -16.9, 90.4 -16.1, 90.9 -15 C91.1 -14.3, 91.3 -13.7, 91.7 -12.4 C91.9 -11.6, 92.2 -10.8, 92.4 -9.7 C92.7 -8.6, 92.9 -7.5, 93 -6.9 C93.1 -6.3, 93.1 -5.7, 93.3 -4.2 C93.4 -3.2, 93.5 -2.2, 93.5 -1.4 C93.5 -0.5, 93.5 0.5, 93.5 1.4 C93.5 2.2, 93.4 3.1, 93.3 4.2 C93.2 5.2, 93.1 6.1, 93 6.9 C92.9 7.5, 92.7 8.1, 92.4 9.7 C92.3 10.3, 92.1 10.8, 91.7 12.4 C91.4 13.2, 91.2 14.1, 90.9 15 C90.5 15.9, 90.1 16.8, 89.8 17.6 C89.5 18.3, 89.2 18.9, 88.6 20.1 C88.2 20.9, 87.8 21.6, 87.2 22.6 C86.9 23.1, 86.6 23.6, 85.7 24.9 C85.3 25.4, 85 25.9, 84 27.1 C83.5 27.7, 83 28.3, 82.2 29.2 C81.7 29.8, 81.2 30.3, 80.3 31.2 C79.5 32, 78.7 32.7, 78.2 33.1 C77.4 33.8, 76.6 34.4, 76.1 34.9 C75.2 35.4, 74.4 36, 73.8 36.5 C73.1 36.9, 72.3 37.3, 71.4 37.9 C70.7 38.2, 70.1 38.6, 68.9 39.2 C67.9 39.6, 67 40.1, 66.4 40.3 C65.4 40.7, 64.5 41, 63.7 41.3 C62.9 41.5, 62.1 41.8, 61.1 42.1 C60.4 42.2, 59.8 42.4, 58.3 42.7 C57.4 42.8, 56.5 43, 55.6 43.1 C54.6 43.2, 53.6 43.3, 52.8 43.4 C51.9 43.4, 51 43.5, 50 43.5 C50 43.5, 50 43.5, 50 43.5 C19.5 43.5, -11.1 43.5, -50 43.5 C-50.7 43.5, -51.4 43.5, -52.8 43.4 C-53.6 43.3, -54.5 43.3, -55.6 43.1 C-56.7 43, -57.7 42.8, -58.3 42.7 C-59.1 42.5, -59.8 42.4, -61.1 42.1 C-62 41.8, -63 41.5, -63.7 41.3 C-64.5 41, -65.2 40.7, -66.4 40.3 C-66.9 40.1, -67.5 39.8, -68.9 39.2 C-69.4 38.9, -70 38.6, -71.4 37.9 C-72.2 37.4, -72.9 37, -73.8 36.5 C-74.3 36.1, -74.8 35.7, -76.1 34.9 C-76.7 34.3, -77.3 33.8, -78.2 33.1 C-78.9 32.5, -79.7 31.8, -80.3 31.2 C-80.9 30.6, -81.6 29.9, -82.2 29.2 C-82.9 28.4, -83.7 27.6, -84 27.1 C-84.6 26.4, -85.1 25.8, -85.7 24.9 C-86.2 24.1, -86.8 23.2, -87.2 22.6 C-87.8 21.6, -88.3 20.6, -88.6 20.1 C-89 19.2, -89.4 18.4, -89.8 17.6 C-90.1 17, -90.3 16.3, -90.9 15 C-91.1 14.2, -91.4 13.4, -91.7 12.4 C-91.9 11.6, -92.2 10.7, -92.4 9.7 C-92.6 9, -92.7 8.4, -93 6.9 C-93.1 6.1, -93.2 5.3, -93.3 4.2 C-93.4 3.3, -93.4 2.5, -93.5 1.4 C-93.5 0.6, -93.5 -0.2, -93.5 -1.4 C-93.5 -2.3, -93.4 -3.1, -93.3 -4.2 C-93.2 -4.8, -93.2 -5.5, -93 -6.9 C-92.8 -7.6, -92.7 -8.3, -92.4 -9.7 C-92.2 -10.4, -92 -11.2, -91.7 -12.4 C-91.5 -13, -91.3 -13.5, -90.9 -15 C-90.5 -16, -90.1 -16.9, -89.8 -17.6 C-89.4 -18.4, -89 -19.3, -88.6 -20.1 C-88.3 -20.6, -88 -21.1, -87.2 -22.6 C-86.9 -23.1, -86.6 -23.6, -85.7 -24.9 C-85.3 -25.5, -84.9 -26, -84 -27.1 C-83.5 -27.8, -83 -28.4, -82.2 -29.2 C-81.6 -29.9, -80.9 -30.6, -80.3 -31.2 C-79.6 -31.9, -78.9 -32.5, -78.2 -33.1 C-77.4 -33.8, -76.5 -34.5, -76.1 -34.9 C-75.4 -35.3, -74.7 -35.8, -73.8 -36.5 C-73.2 -36.8, -72.6 -37.2, -71.4 -37.9 C-70.8 -38.2, -70.2 -38.5, -68.9 -39.2 C-68 -39.6, -67.2 -40, -66.4 -40.3 C-65.4 -40.7, -64.4 -41.1, -63.7 -41.3 C-63.1 -41.5, -62.5 -41.7, -61.1 -42.1 C-60.4 -42.2, -59.7 -42.4, -58.3 -42.7 C-57.6 -42.8, -56.9 -42.9, -55.6 -43.1 C-54.5 -43.2, -53.4 -43.4, -52.8 -43.4 C-51.9 -43.4, -51.1 -43.5, -50 -43.5 C-50 -43.5, -50 -43.5, -50 -43.5" stroke="none" stroke-width="0" fill="#FFFFFF" style=""/><path d="M-50 -43.5 C-28.8 -43.5, -7.6 -43.5, 50 -43.5 M-50 -43.5 C-22.3 -43.5, 5.4 -43.5, 50 -43.5 M50 -43.5 C50 -43.5, 50 -43.5, 50 -43.5 M50 -43.5 C50 -43.5, 50 -43.5, 50 -43.5 M50 -43.5 C51 -43.5, 51.9 -43.4, 52.8 -43.4 M50 -43.5 C51 -43.5, 51.9 -43.4, 52.8 -43.4 M52.8 -43.4 C53.8 -43.3, 54.8 -43.2, 55.6 -43.1 M52.8 -43.4 C53.6 -43.3, 54.4 -43.3, 55.6 -43.1 M55.6 -43.1 C56.7 -43, 57.8 -42.8, 58.3 -42.7 M55.6 -43.1 C56.4 -43, 57.2 -42.9, 58.3 -42.7 M58.3 -42.7 C58.9 -42.6, 59.5 -42.4, 61.1 -42.1 M58.3 -42.7 C59.2 -42.5, 60 -42.3, 61.1 -42.1 M61.1 -42.1 C62 -41.8, 62.9 -41.5, 63.7 -41.3 M61.1 -42.1 C62.1 -41.8, 63.2 -41.4, 63.7 -41.3 M63.7 -41.3 C64.7 -40.9, 65.7 -40.6, 66.4 -40.3 M63.7 -41.3 C64.6 -41, 65.4 -40.7, 66.4 -40.3 M66.4 -40.3 C66.9 -40.1, 67.4 -39.8, 68.9 -39.2 M66.4 -40.3 C67.3 -39.9, 68.1 -39.5, 68.9 -39.2 M68.9 -39.2 C69.5 -38.9, 70.2 -38.5, 71.4 -37.9 M68.9 -39.2 C69.7 -38.8, 70.5 -38.3, 71.4 -37.9 M71.4 -37.9 C71.9 -37.6, 72.4 -37.3, 73.8 -36.5 M71.4 -37.9 C72.2 -37.4, 73 -36.9, 73.8 -36.5 M73.8 -36.5 C74.4 -36, 75 -35.6, 76.1 -34.9 M73.8 -36.5 C74.3 -36.1, 74.8 -35.7, 76.1 -34.9 M76.1 -34.9 C76.5 -34.5, 76.9 -34.1, 78.2 -33.1 M76.1 -34.9 C76.7 -34.4, 77.3 -33.9, 78.2 -33.1 M78.2 -33.1 C79 -32.5, 79.7 -31.8, 80.3 -31.2 M78.2 -33.1 C78.8 -32.6, 79.3 -32.2, 80.3 -31.2 M80.3 -31.2 C80.8 -30.7, 81.4 -30.1, 82.2 -29.2 M80.3 -31.2 C81 -30.5, 81.7 -29.8, 82.2 -29.2 M82.2 -29.2 C82.8 -28.6, 83.3 -28, 84 -27.1 M82.2 -29.2 C82.7 -28.7, 83.1 -28.2, 84 -27.1 M84 -27.1 C84.6 -26.4, 85.1 -25.7, 85.7 -24.9 M84 -27.1 C84.6 -26.4, 85.1 -25.7, 85.7 -24.9 M85.7 -24.9 C86.2 -24.2, 86.6 -23.5, 87.2 -22.6 M85.7 -24.9 C86 -24.4, 86.3 -23.9, 87.2 -22.6 M87.2 -22.6 C87.6 -21.8, 88 -21.1, 88.6 -20.1 M87.2 -22.6 C87.5 -22, 87.9 -21.4, 88.6 -20.1 M88.6 -20.1 C88.9 -19.5, 89.2 -18.9, 89.8 -17.6 M88.6 -20.1 C88.9 -19.4, 89.3 -18.7, 89.8 -17.6 M89.8 -17.6 C90.2 -16.7, 90.5 -15.9, 90.9 -15 M89.8 -17.6 C90.1 -16.9, 90.4 -16.3, 90.9 -15 M90.9 -15 C91 -14.4, 91.2 -13.9, 91.7 -12.4 M90.9 -15 C91.1 -14.2, 91.4 -13.3, 91.7 -12.4 M91.7 -12.4 C91.9 -11.8, 92.1 -11.1, 92.4 -9.7 M91.7 -12.4 C91.9 -11.8, 92 -11.3, 92.4 -9.7 M92.4 -9.7 C92.6 -9.1, 92.7 -8.5, 93 -6.9 M92.4 -9.7 C92.6 -8.9, 92.7 -8.1, 93 -6.9 M93 -6.9 C93.1 -5.9, 93.3 -4.8, 93.3 -4.2 M93 -6.9 C93.1 -5.9, 93.3 -4.8, 93.3 -4.2 M93.3 -4.2 C93.4 -3.1, 93.5 -2.1, 93.5 -1.4 M93.3 -4.2 C93.4 -3.3, 93.4 -2.5, 93.5 -1.4 M93.5 -1.4 C93.5 -0.6, 93.5 0.1, 93.5 1.4 M93.5 -1.4 C93.5 -0.3, 93.5 0.8, 93.5 1.4 M93.5 1.4 C93.5 2.2, 93.4 3, 93.3 4.2 M93.5 1.4 C93.5 2.2, 93.4 3, 93.3 4.2 M93.3 4.2 C93.3 4.8, 93.2 5.4, 93 6.9 M93.3 4.2 C93.2 5.2, 93.1 6.2, 93 6.9 M93 6.9 C92.8 8, 92.6 9, 92.4 9.7 M93 6.9 C92.8 7.9, 92.6 8.8, 92.4 9.7 M92.4 9.7 C92.3 10.4, 92.1 11, 91.7 12.4 M92.4 9.7 C92.2 10.6, 92 11.5, 91.7 12.4 M91.7 12.4 C91.5 13, 91.3 13.7, 90.9 15 M91.7 12.4 C91.4 13.3, 91.2 14.1, 90.9 15 M90.9 15 C90.6 15.7, 90.3 16.3, 89.8 17.6 M90.9 15 C90.6 15.6, 90.4 16.1, 89.8 17.6 M89.8 17.6 C89.3 18.6, 88.9 19.6, 88.6 20.1 M89.8 17.6 C89.4 18.4, 89 19.2, 88.6 20.1 M88.6 20.1 C88.1 21, 87.6 21.9, 87.2 22.6 M88.6 20.1 C88.1 21, 87.6 22, 87.2 22.6 M87.2 22.6 C86.6 23.5, 86 24.4, 85.7 24.9 M87.2 22.6 C86.9 23, 86.6 23.5, 85.7 24.9 M85.7 24.9 C85.1 25.7, 84.5 26.5, 84 27.1 M85.7 24.9 C85.1 25.6, 84.6 26.4, 84 27.1 M84 27.1 C83.4 27.9, 82.7 28.7, 82.2 29.2 M84 27.1 C83.4 27.8, 82.8 28.5, 82.2 29.2 M82.2 29.2 C81.7 29.8, 81.2 30.3, 80.3 31.2 M82.2 29.2 C81.7 29.8, 81.1 30.4, 80.3 31.2 M80.3 31.2 C79.9 31.6, 79.4 32, 78.2 33.1 M80.3 31.2 C79.9 31.6, 79.4 32, 78.2 33.1 M78.2 33.1 C77.4 33.8, 76.6 34.4, 76.1 34.9 M78.2 33.1 C77.6 33.6, 77 34.1, 76.1 34.9 M76.1 34.9 C75.2 35.5, 74.3 36.1, 73.8 36.5 M76.1 34.9 C75.5 35.2, 74.9 35.6, 73.8 36.5 M73.8 36.5 C73.1 36.8, 72.5 37.2, 71.4 37.9 M73.8 36.5 C72.9 37, 72 37.5, 71.4 37.9 M71.4 37.9 C70.5 38.4, 69.6 38.8, 68.9 39.2 M71.4 37.9 C70.7 38.3, 70 38.6, 68.9 39.2 M68.9 39.2 C68.2 39.5, 67.5 39.8, 66.4 40.3 M68.9 39.2 C67.9 39.6, 66.9 40.1, 66.4 40.3 M66.4 40.3 C65.5 40.6, 64.6 41, 63.7 41.3 M66.4 40.3 C65.8 40.5, 65.2 40.7, 63.7 41.3 M63.7 41.3 C63 41.5, 62.3 41.7, 61.1 42.1 M63.7 41.3 C62.7 41.6, 61.7 41.9, 61.1 42.1 M61.1 42.1 C60.1 42.3, 59.2 42.5, 58.3 42.7 M61.1 42.1 C60.4 42.2, 59.7 42.4, 58.3 42.7 M58.3 42.7 C57.7 42.8, 57 42.9, 55.6 43.1 M58.3 42.7 C57.3 42.9, 56.2 43.1, 55.6 43.1 M55.6 43.1 C54.9 43.2, 54.3 43.3, 52.8 43.4 M55.6 43.1 C54.7 43.2, 53.9 43.3, 52.8 43.4 M52.8 43.4 C51.7 43.4, 50.6 43.5, 50 43.5 M52.8 43.4 C51.7 43.4, 50.7 43.5, 50 43.5 M50 43.5 C50 43.5, 50 43.5, 50 43.5 M50 43.5 C50 43.5, 50 43.5, 50 43.5 M50 43.5 C11.6 43.5, -26.8 43.5, -50 43.5 M50 43.5 C12.5 43.5, -25 43.5, -50 43.5 M-50 43.5 C-51.1 43.5, -52.2 43.4, -52.8 43.4 M-50 43.5 C-50.7 43.5, -51.3 43.5, -52.8 43.4 M-52.8 43.4 C-53.7 43.3, -54.6 43.2, -55.6 43.1 M-52.8 43.4 C-53.5 43.3, -54.3 43.3, -55.6 43.1 M-55.6 43.1 C-56.2 43, -56.8 42.9, -58.3 42.7 M-55.6 43.1 C-56.6 43, -57.6 42.8, -58.3 42.7 M-58.3 42.7 C-59.2 42.5, -60 42.3, -61.1 42.1 M-58.3 42.7 C-59.3 42.5, -60.3 42.3, -61.1 42.1 M-61.1 42.1 C-61.9 41.8, -62.8 41.6, -63.7 41.3 M-61.1 42.1 C-61.7 41.9, -62.3 41.7, -63.7 41.3 M-63.7 41.3 C-64.5 41, -65.2 40.7, -66.4 40.3 M-63.7 41.3 C-64.7 40.9, -65.6 40.6, -66.4 40.3 M-66.4 40.3 C-67.2 40, -68 39.6, -68.9 39.2 M-66.4 40.3 C-67.2 39.9, -68.1 39.6, -68.9 39.2 M-68.9 39.2 C-69.4 38.9, -70 38.6, -71.4 37.9 M-68.9 39.2 C-69.6 38.8, -70.4 38.4, -71.4 37.9 M-71.4 37.9 C-72.2 37.4, -73 36.9, -73.8 36.5 M-71.4 37.9 C-72.1 37.4, -72.9 37, -73.8 36.5 M-73.8 36.5 C-74.3 36.1, -74.8 35.7, -76.1 34.9 M-73.8 36.5 C-74.5 36, -75.1 35.5, -76.1 34.9 M-76.1 34.9 C-76.7 34.3, -77.3 33.8, -78.2 33.1 M-76.1 34.9 C-76.7 34.3, -77.4 33.8, -78.2 33.1 M-78.2 33.1 C-79 32.4, -79.9 31.6, -80.3 31.2 M-78.2 33.1 C-79 32.4, -79.8 31.7, -80.3 31.2 M-80.3 31.2 C-80.9 30.7, -81.4 30.1, -82.2 29.2 M-80.3 31.2 C-81 30.5, -81.8 29.7, -82.2 29.2 M-82.2 29.2 C-82.9 28.5, -83.5 27.7, -84 27.1 M-82.2 29.2 C-82.7 28.7, -83.2 28.2, -84 27.1 M-84 27.1 C-84.4 26.6, -84.8 26.2, -85.7 24.9 M-84 27.1 C-84.7 26.3, -85.3 25.4, -85.7 24.9 M-85.7 24.9 C-86.3 24, -86.9 23.1, -87.2 22.6 M-85.7 24.9 C-86.1 24.3, -86.4 23.8, -87.2 22.6 M-87.2 22.6 C-87.7 21.7, -88.2 20.9, -88.6 20.1 M-87.2 22.6 C-87.8 21.6, -88.3 20.7, -88.6 20.1 M-88.6 20.1 C-89 19.4, -89.3 18.6, -89.8 17.6 M-88.6 20.1 C-88.9 19.5, -89.2 18.8, -89.8 17.6 M-89.8 17.6 C-90.1 16.8, -90.5 16, -90.9 15 M-89.8 17.6 C-90.1 16.9, -90.4 16.1, -90.9 15 M-90.9 15 C-91.1 14.2, -91.4 13.4, -91.7 12.4 M-90.9 15 C-91.2 14, -91.6 12.9, -91.7 12.4 M-91.7 12.4 C-91.9 11.7, -92.1 11.1, -92.4 9.7 M-91.7 12.4 C-92 11.5, -92.2 10.6, -92.4 9.7 M-92.4 9.7 C-92.7 8.6, -92.9 7.5, -93 6.9 M-92.4 9.7 C-92.6 8.9, -92.7 8.1, -93 6.9 M-93 6.9 C-93.1 6.2, -93.2 5.5, -93.3 4.2 M-93 6.9 C-93.1 6.2, -93.2 5.4, -93.3 4.2 M-93.3 4.2 C-93.4 3.3, -93.4 2.4, -93.5 1.4 M-93.3 4.2 C-93.4 3.2, -93.5 2.2, -93.5 1.4 M-93.5 1.4 C-93.5 0.6, -93.5 -0.1, -93.5 -1.4 M-93.5 1.4 C-93.5 0.4, -93.5 -0.5, -93.5 -1.4 M-93.5 -1.4 C-93.4 -2.5, -93.4 -3.6, -93.3 -4.2 M-93.5 -1.4 C-93.4 -2.5, -93.4 -3.5, -93.3 -4.2 M-93.3 -4.2 C-93.2 -4.9, -93.2 -5.5, -93 -6.9 M-93.3 -4.2 C-93.2 -5.2, -93.1 -6.2, -93 -6.9 M-93 -6.9 C-92.8 -7.7, -92.7 -8.4, -92.4 -9.7 M-93 -6.9 C-92.8 -7.7, -92.7 -8.5, -92.4 -9.7 M-92.4 -9.7 C-92.2 -10.4, -92 -11.2, -91.7 -12.4 M-92.4 -9.7 C-92.2 -10.7, -91.9 -11.8, -91.7 -12.4 M-91.7 -12.4 C-91.5 -13, -91.3 -13.6, -90.9 -15 M-91.7 -12.4 C-91.5 -13.2, -91.2 -14, -90.9 -15 M-90.9 -15 C-90.5 -15.9, -90.1 -16.9, -89.8 -17.6 M-90.9 -15 C-90.6 -15.6, -90.4 -16.2, -89.8 -17.6 M-89.8 -17.6 C-89.5 -18.3, -89.1 -19.1, -88.6 -20.1 M-89.8 -17.6 C-89.5 -18.2, -89.2 -18.8, -88.6 -20.1 M-88.6 -20.1 C-88.3 -20.7, -88 -21.2, -87.2 -22.6 M-88.6 -20.1 C-88.1 -21.1, -87.5 -22.1, -87.2 -22.6 M-87.2 -22.6 C-86.9 -23.1, -86.5 -23.6, -85.7 -24.9 M-87.2 -22.6 C-86.8 -23.3, -86.3 -24, -85.7 -24.9 M-85.7 -24.9 C-85.1 -25.7, -84.4 -26.6, -84 -27.1 M-85.7 -24.9 C-85.3 -25.4, -85 -25.9, -84 -27.1 M-84 -27.1 C-83.6 -27.6, -83.2 -28.2, -82.2 -29.2 M-84 -27.1 C-83.5 -27.7, -83 -28.3, -82.2 -29.2 M-82.2 -29.2 C-81.6 -29.9, -80.9 -30.6, -80.3 -31.2 M-82.2 -29.2 C-81.6 -29.9, -80.9 -30.6, -80.3 -31.2 M-80.3 -31.2 C-79.8 -31.7, -79.2 -32.2, -78.2 -33.1 M-80.3 -31.2 C-79.8 -31.7, -79.3 -32.2, -78.2 -33.1 M-78.2 -33.1 C-77.8 -33.5, -77.3 -33.9, -76.1 -34.9 M-78.2 -33.1 C-77.4 -33.8, -76.5 -34.5, -76.1 -34.9 M-76.1 -34.9 C-75.4 -35.3, -74.7 -35.8, -73.8 -36.5 M-76.1 -34.9 C-75.3 -35.4, -74.5 -35.9, -73.8 -36.5 M-73.8 -36.5 C-73.2 -36.8, -72.6 -37.1, -71.4 -37.9 M-73.8 -36.5 C-73.3 -36.8, -72.8 -37.1, -71.4 -37.9 M-71.4 -37.9 C-70.6 -38.3, -69.8 -38.7, -68.9 -39.2 M-71.4 -37.9 C-70.5 -38.4, -69.6 -38.8, -68.9 -39.2 M-68.9 -39.2 C-68.4 -39.4, -67.8 -39.7, -66.4 -40.3 M-68.9 -39.2 C-68.1 -39.6, -67.2 -39.9, -66.4 -40.3 M-66.4 -40.3 C-65.5 -40.6, -64.6 -41, -63.7 -41.3 M-66.4 -40.3 C-65.8 -40.5, -65.2 -40.7, -63.7 -41.3 M-63.7 -41.3 C-62.7 -41.6, -61.6 -41.9, -61.1 -42.1 M-63.7 -41.3 C-63.1 -41.5, -62.4 -41.7, -61.1 -42.1 M-61.1 -42.1 C-60.1 -42.3, -59.2 -42.5, -58.3 -42.7 M-61.1 -42.1 C-60.2 -42.3, -59.3 -42.5, -58.3 -42.7 M-58.3 -42.7 C-57.4 -42.9, -56.5 -43, -55.6 -43.1 M-58.3 -42.7 C-57.6 -42.8, -56.9 -42.9, -55.6 -43.1 M-55.6 -43.1 C-54.7 -43.2, -53.9 -43.3, -52.8 -43.4 M-55.6 -43.1 C-54.6 -43.2, -53.7 -43.3, -52.8 -43.4 M-52.8 -43.4 C-51.9 -43.4, -51 -43.5, -50 -43.5 M-52.8 -43.4 C-52 -43.4, -51.2 -43.5, -50 -43.5 M-50 -43.5 C-50 -43.5, -50 -43.5, -50 -43.5 M-50 -43.5 C-50 -43.5, -50 -43.5, -50 -43.5" stroke="#292725" stroke-width="1.3" fill="none" stroke-dasharray="0 0" style=""/></g><g class="label" style="" transform="translate(-60, -31.5)"><rect/><foreignObject width="120" height="63"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 120px; text-align: center; width: 120px;"><span class="nodeLabel"><p>구현 0줄로 종결<br />L2 캐시 · Frontend 최적화</p></span></div></foreignObject></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#292725" stop-opacity="1"/><stop offset="100%" stop-color="#696866" stop-opacity="1"/></linearGradient></svg>
+</leo-diagram>
+<h2>돌아본 4개의 원칙</h2>
+<p>5스프린트를 돌아보면 네 가지 원칙이 반복해서 등장했습니다.</p>
+<h3>(i) 파일럿 → 확산이 가설 검증의 기본 단위</h3>
+<p>Sprint 103에서 github-worker 한정 파일럿, Sprint 104에서 전 서비스 확산. 단순해 보이지만 이 구조가 Sprint 103의 "checkout 미포함" 설계 결정과 "인프라 PR 실측 불가" 문제를 작은 범위에서 발견하게 해줬습니다. 전 서비스에 한 번에 적용했다면 같은 문제를 훨씬 큰 범위에서 마주쳤을 겁니다.</p>
+<p>파일럿을 고를 때는 "가장 단순한 서비스"를 먼저 선택하는 게 맞습니다. github-worker가 NestJS 없는 순수 Node.js 서비스라서 부작용이 최소화됐습니다. 파일럿 결과가 성공이면 확산하고, 실패하면 수정해서 재파일럿합니다. 스프린트 단위 분리가 이 사이클을 자연스럽게 강제했습니다.</p>
+<h3>(ii) 워크플로는 저장소 설정과 짝일 때만 작동</h3>
+<p>Sprint 102 auto-merge가 이걸 몸으로 배웠습니다. GitHub Actions 파일 하나로 "자동화 완성"이라고 생각하기 쉽지만, <code>allow_auto_merge: true</code>와 required status checks 없이는 워크플로가 실행되어도 auto-merge가 예약되지 않습니다.</p>
+<p>이 원칙은 CI 자동화 전반에 적용됩니다. Branch Protection 없는 required checks는 의미 없고, coverage-gate도 Branch Protection에 등록돼야 PR 머지를 실제로 차단합니다. "워크플로를 만들었다"는 것과 "자동화가 작동한다"는 것 사이에 항상 설정 레이어가 있습니다.</p>
+<h3>(iii) 인프라 PR은 자기 자신의 실측을 만들지 못한다</h3>
+<p>Sprint 103·104의 함정이었습니다. CI 파이프라인을 수정하는 PR은 그 파이프라인의 실측 데이터를 만들지 못합니다. path-filter가 서비스 코드 변경을 감지하지 못하면 서비스 잡 전체가 skip됩니다.</p>
+<p>이 구조적 공백의 해결책은 <code>rebuild_all=true workflow_dispatch</code>였습니다. 그리고 이것을 사용해야 하는 조건을 명문화한 것이 Sprint 105 [A]의 핵심 가치였습니다. 코드 변경 없이 런북 하나로 2스프린트에 걸쳐 누적된 측정 공백을 메웠습니다.</p>
+<h3>(iv) 선자문은 "구현 필요성 게이트"다 — 구현 0줄도 결론이 된다</h3>
+<leo-callout type="tip" title="Sprint 106의 진짜 성과"><p>3 트랙 중 2개가 "구현 0줄"로 종결됐습니다. 이것은 실패가 아닙니다. Sprint 106에서 Sensei 선자문 2회는 잘못된 방향에 진입하기 전에 멈추게 해줬습니다. L2 캐시 도입을 시도했다면 composite action + 파일럿 + 전 서비스 확산 + 실측의 과정을 거쳤을 것입니다. 그 모든 과정이 불필요했음을 사전에 확인한 것 자체가 투자 대비 최대 수익입니다.</p></leo-callout>
+<h2>끝나지 않은 이야기</h2>
+<p>5스프린트가 끝났지만, 한 가지 구조적 제약이 해소되지 않았습니다. <strong>AlgoSu의 모든 빌드 잡은 Docker 전용</strong>입니다. host-side에서 <code>npm run build</code>를 실행하는 잡이 단 하나도 없습니다.</p>
+<p>이 제약은 Sprint 106에서 L2 캐시([B])와 빌드 타이밍 측정([C]) 두 항목을 동시에 막았습니다. 두 이월 항목이 같은 근본 원인에서 기인한다는 발견은 Sprint 107 방향의 핵심 인풋입니다.</p>
+<p>Sprint 107 이후의 길:</p>
+<table><thead><tr><th>방안</th><th>설명</th><th>예상 효과</th></tr></thead><tbody><tr><td><strong>Blog host-side SSG 빌드</strong></td><td>CI에서 <code>out/</code> 빌드 on host → GHA cache → Docker는 COPY 전용</td><td>MISS 시 40~60% 단축</td></tr><tr><td><strong>Frontend host-side 빌드</strong></td><td><code>.next/standalone</code> on host → GHA cache → Docker COPY only</td><td>MISS 시 40~60% 단축</td></tr><tr><td><strong>서비스별 독립 coverage 게이트</strong></td><td><code>check-coverage.mjs</code> per-service threshold — path-filter 오해 구조 해소</td><td>가시성 향상</td></tr></tbody></table>
+<p>host-side 빌드 전환은 단순 최적화 PR이 아닙니다. Dockerfile과 ci.yml 양쪽을 동시에 수정해야 하는 아키텍처 의사결정입니다. 채널톡이 준비 단계를 S3로 분리한 것처럼, AlgoSu도 빌드 단계를 host-side로 분리하는 방향으로 나아가고 있습니다. 다만 그 결정을 섣불리 하지 않고, 현재 아키텍처의 한계를 먼저 명확히 이해하는 것이 이번 5스프린트의 진짜 기여입니다.</p>
+<p>5스프린트를 정리하면 이렇습니다.</p>
+<leo-metrics>
+  <leo-metric value="30" unit="→ 2" note="Sprint 102 — 그룹화 + auto-merge" label="Dependabot PR"></leo-metric>
+  <leo-metric value="-67줄" note="Sprint 103~104 — Composite action" label="CI 중복 코드"></leo-metric>
+  <leo-metric value="69.55" unit="→ 76.42%" note="Sprint 106 — 77개 테스트 추가" label="Frontend branches"></leo-metric>
+  <leo-metric value="2" unit="건" note="Sprint 106 — 선자문 기반 조기 종결" label="미구현 결정"></leo-metric>
+</leo-metrics>
+<p><a href="https://channel.io/ko/team/blog/articles/backend-ci-refactoring-73fca77d">채널톡 Backend CI Refactoring</a> 글을 다시 읽어보면, 그 글이 정답을 알려준 게 아니라 <strong>질문을 던진 것</strong>이었습니다. "AlgoSu 파이프라인은 왜 이렇게 오래 걸리지? 어떻게 개선할 수 있지?" 그 질문을 AlgoSu 맥락에서 번역해 걸어본 길이 Sprint 102~106이었습니다.</p>
+<p>레퍼런스는 방향을 가리켰고, 나머지는 직접 걸었습니다.</p>
+</body>
+</html>

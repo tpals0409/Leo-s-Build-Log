@@ -1,0 +1,20 @@
+{
+  "category": "engineering",
+  "project": "algosu",
+  "tags": [
+    "ci-cd",
+    "github-actions",
+    "ai-dev",
+    "refactoring"
+  ],
+  "publishedAt": "2026-04-21",
+  "thumbnail": "thumbnail.webp",
+  "ko": {
+    "title": "AlgoSu CI 리팩토링",
+    "summary": "채널톡 레퍼런스를 출발점으로 Auto-merge·Composite·Coverage·선자문까지 5스프린트 여정. 레퍼런스 글 한 편이 어떻게 실제 파이프라인 개편으로 이어졌는지, 그리고 구현 0줄로 끝난 두 스프린트가 왜 성과인지를 기록했다."
+  },
+  "en": {
+    "title": "AlgoSu CI Refactoring",
+    "summary": "Starting from a Channel.io blog post — auto-merge, composite actions, coverage gates, and pre-consultation across five sprints. A record of how one reference article turned into a real pipeline overhaul, and why two sprints that shipped zero lines of code were still wins."
+  }
+}

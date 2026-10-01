@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+body{font:var(--fw-body) var(--fs-body)/var(--lh-body) var(--font-sans);letter-spacing:var(--ls-body);color:var(--color-fg);max-width:var(--container-wrap);box-sizing:border-box;margin:0 auto;padding:0 24px 80px}
+h2{font:var(--fw-tile) var(--fs-tile)/var(--lh-tile) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-tile);margin:2.4em 0 .8em}
+h3{font:var(--fw-section) var(--fs-body)/var(--lh-body) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-body);margin:2em 0 .5em}
+p,ul,ol{margin:0 0 1em}
+strong{font-weight:var(--fw-section)}
+a{color:var(--color-link)}
+code{font-family:var(--font-mono);font-size:.9em;background:var(--color-fog);padding:0 4px}
+blockquote{margin:1.5em 0;padding-left:var(--space-cluster);border-left:2px solid var(--color-line);color:var(--color-secondary)}
+blockquote p{margin:0}
+</style>
+</head>
+<body>
+<h2>From Reading a Reference to Doing It Myself</h2>
+<p>The first time I read <a href="https://channel.io/ko/team/blog/articles/backend-ci-refactoring-73fca77d">Channel.io's Backend CI Refactoring post</a> — Channel.io being a Korean SaaS company — my immediate reaction was: "I could do this for AlgoSu." Their story of cutting a 36.6-minute CI run down to 15 minutes and 38 seconds. The method was concrete, the principles clear.</p>
+<p>But I couldn't follow it directly. AlgoSu is different from Channel.io. <strong>A solo developer running an AI agent orchestration setup</strong>, a Docker-only build pipeline, and an Oracle-dispatch workflow for handing off tasks to agents. I could borrow the underlying principles — but I still had to <strong>translate those principles into AlgoSu's context</strong>.</p>
+<p>This isn't a post introducing a finished CI architecture. It's a record of five sprints — Sprint 102 through 106 — of reading a reference, experimenting, and sometimes abandoning the plan. The focus is on two moments where a sprint closed with <strong>zero lines of implementation</strong>, and why those weren't failures but wins.</p>
+<leo-adr>
+  <leo-problem><p>There were plenty of great CI references, but none fit a pipeline run by one developer and AI agents as-is. 30 pending PRs, repeated setup steps, and a coverage check that blocked nothing had piled up.</p></leo-problem>
+  <leo-decision><p>Take only the principles from the reference and apply them myself over a 4-sprint roadmap, from auto-merge to a measurement protocol.</p></leo-decision>
+  <leo-result><p>Pending PRs now merge automatically, a composite action removed 67 duplicated lines, and the coverage gate sits at 70%. Two of the last three tracks closed with zero lines after a pre-consult confirmed they were already handled.</p></leo-result>
+</leo-adr>
+<h2>Why I Needed a Reference</h2>
+<p>An honest snapshot of where things stood at the start of Sprint 102:</p>
+<p><strong>Before — Three Problems:</strong></p>
+<ul><li>Dependabot-generated PRs piled up as manual squash-merge burden — <strong>30 open PRs</strong></li><li><code>setup-node + cache + npm ci</code> repeated 3–4 times per matrix node (zero DRY)</li><li>Coverage was being measured, but failing the threshold <strong>didn't block PRs</strong> (measured but not gated)</li></ul>
+<leo-metrics>
+  <leo-metric value="30" note="Generated weekly, piled up as manual squash-merge burden" label="Pending Dependabot PRs"></leo-metric>
+  <leo-metric value="3–4" unit="×" note="setup-node + cache + npm ci repeated across each job × service" label="Duplicate Setup Steps"></leo-metric>
+  <leo-metric value="None" note="Measured but didn&#x27;t block PR merges" label="Coverage Gate"></leo-metric>
+</leo-metrics>
+<p>These three problems looked independent, but they shared a common cause: <strong>the momentum of "good enough if it works right now."</strong> If CI passed, we deployed. Cleaning up repetitive code always got pushed to the next sprint.</p>
+<p>Three principles I borrowed from the Channel.io post:</p>
+<ol><li><strong>Small pilot → expand</strong> — Don't apply to all services at once. Validate on the simplest service first, then roll out.</li><li><strong>Workflow + repository settings go together</strong> — A GitHub Actions file alone is half the picture. Repository settings have to back it up.</li><li><strong>DRY is a result, not a goal</strong> — You don't build composites to eliminate duplication; a good abstraction naturally removes it.</li></ol>
+<p>There were also principles I deliberately <strong>didn't</strong> borrow. Channel.io's S3-polling prepare overlapping and dynamic queue test distribution would have been overengineering for AlgoSu. GHA artifacts were enough, and the test volume didn't justify the distribution overhead. Choosing what *not* to carry over is part of translating a reference.</p>
+<p>One more difference: AlgoSu runs on an Oracle-dispatch structure — Oracle assigns work to agents. I could apply the "pilot then expand" principle at the sprint level, but I also had to re-verify <strong>agent-to-role matching</strong> before each sprint kicked off. In Sprint 102, I initially assigned CI work to Gatekeeper, then had to rebalance to Architect. In an agent orchestration setup, validating role boundaries matters as much as writing the code.</p>
+<h2>The 4-Sprint Roadmap — The Full Picture</h2>
+<p>The roadmap I drafted after reading the Channel.io reference covered four sprints (Sprint 102–105). In practice, Sprint 106 was added to handle deferred items. Here's what each sprint aimed for and what it actually delivered:</p>
+<leo-steps>
+  <leo-step title="S102 · Operations Automation"><p>Dependabot grouping + Auto-merge + Branch Protection</p></leo-step>
+  <leo-step title="S103 · Composite Pilot"><p>setup-node-service action + github-worker pilot + Coverage Gate 60%</p></leo-step>
+  <leo-step title="S104 · Rollout"><p>Composite expanded to all Node services (67 lines deleted) + AI Coverage integration</p></leo-step>
+  <leo-step title="S105 · Measurement &amp; Protocol"><p>rebuild_all runbook + github-worker benchmarks + dynamic commitlint scope</p></leo-step>
+  <leo-step title="S106 · Deferred Items"><p>Coverage 70% achieved (real implementation) + L2 &amp; optimization stopped via pre-consultation</p></leo-step>
+</leo-steps>
+<p>Each sprint was self-contained, yet the lessons from one fed directly into the design of the next. Sprint 103's "infra PRs can't benchmark themselves" finding became Sprint 105's rebuild_all protocol. Sprint 105's pre-consultation pattern made Sprint 106's zero-line conclusion possible.</p>
+<h2>Sprint 102 — Auto-merge &amp; Branch Protection</h2>
+<p>The first problem was 30 open Dependabot PRs. Manually reviewing and merging weekly patch/minor updates had accumulated into a serious backlog.</p>
+<p>The solution had two steps: <strong>group dependabot.yml</strong> to reduce individual PR count, and <strong>auto-merge workflow</strong> to automatically merge patch/minor updates.</p>
+<h3>Dependabot Grouping</h3>
+<pre><code class="language-yaml"># .github/dependabot.yml (excerpt)
+updates:
+  - package-ecosystem: npm
+    directory: /services/gateway
+    schedule:
+      interval: weekly
+    groups:
+      gateway-minor-patch:
+        update-types:
+          - minor
+          - patch</code></pre>
+<p>I added <code>{service}-minor-patch</code> groups across all 8 ecosystems (5 Node services + Frontend + Blog + Python). Two Docker image updates were excluded from groups due to potential security impact.</p>
+<h3>Auto-merge Workflow</h3>
+<pre><code class="language-yaml"># .github/workflows/dependabot-automerge.yml (key excerpt)
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+
+      - name: Auto-merge patch and minor
+        if: |
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Skip major updates
+        if: steps.metadata.outputs.update-type == 'version-update:semver-major'
+        run: |
+          echo "Major update detected — skipping auto-merge."
+          exit 0</code></pre>
+<p>One important decision here: I chose <strong><code>pull_request_target</code></strong> instead of <code>pull_request</code> as the trigger. Dependabot PRs carry fork-like context and need <code>pull_request_target</code> to access secrets. To prevent code injection, I removed <code>actions/checkout</code> entirely — no step executing PR code means no injection path.</p>
+<p>Three layers of defense: job-level <code>if: github.actor == 'dependabot[bot]'</code>, step-level metadata type check, and complete removal of <code>actions/checkout</code>.</p>
+<h3>Repository Settings to Match</h3>
+<p>After creating the workflow, auto-merge still didn't work. The reason turned out to be repository settings.</p>
+<p>GitHub's auto-merge requires two preconditions:</p>
+<ol><li>Repository setting <code>allow_auto_merge: true</code></li><li>Branch Protection's required status checks must pass</li></ol>
+<p>Oracle applied the settings directly via the gh API.</p>
+<pre><code># Repository settings (applied via gh api)
+allow_auto_merge: true
+delete_branch_on_merge: true
+
+# main Branch Protection
+strict: true
+required_checks: ["Secret &amp; Env Scan", "Detect Changed Services"]
+allow_force_pushes: false
+allow_deletions: false
+required_conversation_resolution: true</code></pre>
+<p>Required checks were kept minimal for a reason. Jobs like <code>quality-nestjs</code> and <code>test-node</code> get skipped when no relevant services changed. Registering a skipped job as a required check means that PR can never merge when those jobs don't run. Only the always-running <code>Secret &amp; Env Scan</code> and <code>Detect Changed Services</code> were registered.</p>
+<p>Result: Dependabot pending PRs <strong>30 → 2</strong>. 28 were reorganized into 7 group PRs and queued for auto-merge. An unexpected bonus: Dependabot detected the grouping, automatically closed the existing individual PRs, and recreated them as group PRs. No manual closing needed.</p>
+<p>Sprint 102 PR #102 verification:</p>
+<table><thead><tr><th>Check</th><th>Result</th></tr></thead><tbody><tr><td>PR #102 full CI</td><td>✅ 26 success / 10 skipped / 0 failure</td></tr><tr><td>Auto-merge workflow</td><td>✅ 7/7 success (PR #104–#110)</td></tr><tr><td>Actual auto-merge confirmed</td><td>✅ PR #104 (github-worker 3 updates) — <code>app/github-actions</code> merger verified</td></tr><tr><td>Branch Protection in effect</td><td>✅ Direct push to main blocked, strict mode requires up-to-date base</td></tr></tbody></table>
+<leo-callout type="note" title="Key Lesson: Workflow ≠ Feature"><p>A workflow file alone gets you halfway. <code>allow_auto_merge: true</code> + required status checks must both be in place for it to actually work. "The code looks right — why isn't it working?" might be a repository settings issue. CI automation doesn't end with a single file.</p></leo-callout>
+<h2>Sprint 103–104 — Composite Action: Pilot to Rollout</h2>
+<p>The second problem was the repeated <code>setup-node + cache + npm ci</code> pattern. Three jobs — <code>quality-nestjs</code>, <code>audit-npm</code>, and <code>test-node</code> — each ran the same setup steps across a 5-service matrix.</p>
+<p>I applied the Channel.io principle of "validate on the smallest service first, then expand" at the sprint level. <strong>Sprint 103: github-worker pilot only. Sprint 104: full rollout.</strong></p>
+<h3>Sprint 103 — Composite Action Pilot</h3>
+<p>I chose github-worker as the pilot service for a clear reason: of the five Node services, it has the simplest structure (pure Node.js, no NestJS), so side effects from pattern changes could be verified in the smallest possible blast radius.</p>
+<pre><code class="language-yaml"># .github/actions/setup-node-service/action.yml
+name: 'Setup Node Service'
+description: 'setup-node + lockfile cache + conditional install for a single service'
+inputs:
+  service-path:
+    description: 'Relative path to the service directory'
+    required: true
+  node-version:
+    description: 'Node.js version'
+    default: '20'
+  install-command:
+    description: 'Install command to run'
+    default: 'npm ci'
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Cache node_modules
+      id: cache
+      uses: actions/cache@v5
+      with:
+        path: ${{ inputs.service-path }}/node_modules
+        key: node-${{ inputs.node-version }}-${{ hashFiles(format('{0}/package-lock.json', inputs.service-path)) }}
+        restore-keys: |
+          node-${{ inputs.node-version }}-
+
+    - name: Install dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: ${{ inputs.install-command }}
+      working-directory: ${{ inputs.service-path }}</code></pre>
+<p>One key design decision: <strong><code>actions/checkout</code> was deliberately excluded from the composite.</strong> Checkout is the same first step in every job and doesn't vary by service path. The composite extracts only what's service-specific — setup-node + cache + install.</p>
+<p>This kept the composite general-purpose. Each job can freely decide how to checkout (e.g., sparse-checkout), and the composite just uses whatever's already there. For the <code>audit-npm</code> job, I passed <code>install-command: 'npm ci --ignore-scripts'</code> to preserve the security scan policy.</p>
+<h3>Sprint 103 — Coverage Gate</h3>
+<p>Coverage was already being measured, but falling below the threshold didn't block PRs. I wrote <code>scripts/check-coverage.mjs</code> to close that gap.</p>
+<pre><code class="language-js">// scripts/check-coverage.mjs (core logic excerpt)
+import { readdirSync, readFileSync, existsSync } from 'fs';
+import { join } from 'path';
+
+function parseLcov(content) {
+  let lh = 0, lf = 0, brh = 0, brf = 0;
+  for (const line of content.split('\n')) {
+    if (line.startsWith('LH:')) lh += parseInt(line.slice(3));
+    else if (line.startsWith('LF:')) lf += parseInt(line.slice(3));
+    else if (line.startsWith('BRH:')) brh += parseInt(line.slice(4));
+    else if (line.startsWith('BRF:')) brf += parseInt(line.slice(4));
+  }
+  return { lh, lf, brh, brf };
+}
+
+// Guard for missing coverage directory
+if (!existsSync(coverageDir)) {
+  process.stdout.write('No coverage artifacts found. Skipping gate.\n');
+  process.exit(0);
+}
+
+// Recursive scan — no script changes needed when adding new services
+function findLcovFiles(dir) { /* ... */ }</code></pre>
+<p>Written with zero external npm dependencies — no supply chain risk, simple logic: recursively scan all <code>lcov.info</code> files → aggregate LH/LF/BRH/BRF → validate lines AND branches simultaneously → exit 1 if below threshold.</p>
+<p>Started with a global 60% threshold. Since individual service Jest/pytest thresholds (Node 92–100%, Python 98%, Frontend 83%) already far exceed 60%, the global gate was designed as a floor guard for newly added services.</p>
+<h3>Sprint 104 — Full Rollout</h3>
+<p>Sprint 104 was straightforward. Remove the <code>matrix.service != 'github-worker'</code> condition and route all services through the composite.</p>
+<pre><code class="language-yaml"># ci.yml (after rollout — this pattern applied to quality-nestjs / audit-npm / test-node)
+- name: Setup Node service
+  uses: ./.github/actions/setup-node-service
+  with:
+    service-path: services/${{ matrix.service }}
+    # For the audit-npm job:
+    # install-command: 'npm ci --ignore-scripts'</code></pre>
+<p>Removing the 3-step inline (Setup Node + Cache + Install) × 3 jobs = <strong>67 lines deleted from ci.yml</strong>, roughly a 25% reduction. A maintainability win you feel before you even measure performance.</p>
+<leo-callout type="warn" title="Pitfall: Infra PRs Can&#x27;t Benchmark Themselves"><p>Sprint 103 PR #111 and Sprint 104 PR #113 both modified only <code>.github/workflows/ci.yml</code>. Since <code>detect-changes</code> path-filter saw no changes in <code>services/github-worker/**</code>, all service jobs were skipped. The composite action was added, but there were zero runs where it actually executed. Post-sample count: 0 — benchmarking impossible. This structural gap was carried into Sprint 105.</p></leo-callout>
+<h2>Sprint 105 — Measurement Protocol &amp; commitlint Automation</h2>
+<p>Sprint 105 was the <strong>closing sprint</strong> of the four-sprint roadmap. Three tasks bundled together.</p>
+<h3>[A] rebuild_all Operational Protocol</h3>
+<p>The fix for the Sprint 103/104 pitfall — infra PRs can't benchmark themselves — was already in ci.yml: <code>workflow_dispatch.inputs.rebuild_all=true</code>. It had been there since Sprint 103, but there was no protocol for when, by whom, and how to use it.</p>
+<p>The fix required <strong>zero new code — just documenting the operational protocol</strong>. I created <code>docs/runbook/ci-rebuild-all.md</code> and added a checkbox to <code>.github/pull_request_template.md</code>.</p>
+<p>Three trigger conditions were formalized:</p>
+<ol><li>PRs that only change <code>.github/workflows/*.yml</code></li><li>PRs that change <code>.github/actions/**</code> composites</li><li>PRs that change CI utility scripts like <code>scripts/check-coverage.mjs</code></li></ol>
+<p>A runbook only matters if it's rehearsed right after it's written. The [A] runbook was actually used in the [B] benchmark run within two hours of being merged.</p>
+<h3>[B] github-worker Benchmark — Pre-Consultation Yields N=1</h3>
+<p>First came the question of how to run the benchmark. The original plan called for 5 post-samples. I ran it by Sensei first.</p>
+<p>Sensei's key finding: "Under the Welch-Satterthwaite formula, Pre n=4 locks degrees of freedom (df) at 4. Increasing Post n from 2 to 6 only improves MDE by 0.8s. The original N=5 plan is overengineering. N=1 is sufficient."</p>
+<p>That stopped unnecessary runner-minute spending before it happened. I added a dummy anchor comment to PR #117 (<code>6f42b0f</code>) to trigger <code>detect-changes</code>, collecting 2 natural runs (run 24702740418 · 24702828670) plus 1 synthetic <code>rebuild_all=true</code> run (run 24703075569) — Post n=3.</p>
+<p>Results:</p>
+<table><thead><tr><th>Job</th><th>Before (n=4)</th><th>After (n=3)</th><th>Delta</th></tr></thead><tbody><tr><td>Quality — github-worker</td><td>22.2s (σ 5.8s)</td><td>22.3s (σ 2.5s)</td><td>+0.1s (+0.4%)</td></tr><tr><td>Audit — github-worker</td><td>19.8s (σ 3.7s)</td><td>18.0s (σ 3.0s)</td><td>−1.8s (−8.9%)</td></tr><tr><td>Test GitHub Worker</td><td>19.2s (σ 1.9s)</td><td>20.0s (σ 1.0s)</td><td>+0.8s (+3.9%)</td></tr></tbody></table>
+<p>All three jobs within the ±10% practical threshold. Welch t-test: <code>|t_obs| &lt; 0.7</code> (t_crit=2.776). Composite action rollout had no statistically detectable effect on github-worker per-job runtimes.</p>
+<p>Pre-consultation saved <strong>75% of runner-minutes</strong>. For the first time, I felt that "approve plan → execute immediately" isn't always the optimal path.</p>
+<h3>[C] Dynamic commitlint scope-enum</h3>
+<p>During Sprint 103, CI had failed due to a scope error. <code>ci(actions)</code> and <code>ci(coverage)</code> — intuitively obvious scopes, but neither was in <code>commitlint.config.mjs</code>'s scope-enum, so the error only surfaced in the PR CI run. Without a local pre-commit hook, scope errors only show up after you push.</p>
+<p>Two problems solved at once: <strong>move validation earlier with husky</strong>, <strong>eliminate manual maintenance with dynamic scope-enum generation</strong>.</p>
+<p>I added husky at the root <code>package.json</code> and set up a commit-msg hook.</p>
+<pre><code class="language-json">// package.json (root — new file)
+{
+  "devDependencies": {
+    "@commitlint/cli": "^19.0.0",
+    "@commitlint/config-conventional": "^19.0.0",
+    "husky": "^9.0.0"
+  },
+  "scripts": {
+    "prepare": "husky"
+  }
+}</code></pre>
+<pre><code class="language-bash"># .husky/commit-msg
+npx --no -- commitlint --edit "$1"</code></pre>
+<p>Adding a root <code>package.json</code> doesn't affect existing CI jobs. Each job either specifies <code>working-directory</code> to a service directory or goes through a composite action. All CI jobs in PR #116 validated as SUCCESS.</p>
+<pre><code class="language-js">// commitlint.config.mjs
+import { readdirSync } from 'fs';
+
+// Auto-scan services/ — new services register automatically
+const dynamicScopes = readdirSync('./services', { withFileTypes: true })
+  .filter((d) =&gt; d.isDirectory())
+  .map((d) =&gt; d.name);
+
+const staticScopes = [
+  'ci', 'docs', 'blog', 'frontend', 'infra',
+  'deps', 'security', 'adr', 'e2e', 'runbook',
+];
+
+export default {
+  extends: ['@commitlint/config-conventional'],
+  rules: {
+    'scope-enum': [
+      2,
+      'always',
+      [...new Set([...dynamicScopes, ...staticScopes])].sort(),
+    ],
+  },
+};</code></pre>
+<p>Now adding a directory under <code>services/</code> automatically registers the scope. The recurring "remember to update scope-enum when adding a new directory" feedback loop was resolved structurally. <strong>Human-dependent feedback promoted to system automation.</strong></p>
+<h2>Sprint 106 — The "Zero-Line Implementation" Decision</h2>
+<p>Sprint 106 handled the three items deferred from Sprint 105. Ultimately, <strong>one track was actually implemented</strong>, while <strong>two were closed without any code changes</strong>.</p>
+<table><thead><tr><th>Track</th><th>Task</th><th>Result</th></tr></thead><tbody><tr><td>[A] Coverage 70%</td><td>Frontend branches 69.55% → 71%+ + global gate 70%</td><td>✅ Implemented (PR #121, #122)</td></tr><tr><td>[B] L2 Cache Layer</td><td>Target: 40% Docker build reduction</td><td>❌ Not introduced (pre-consultation halt)</td></tr><tr><td>[C] Frontend Build Optimization</td><td><code>swcMinify</code> · <code>optimizePackageImports</code> · <code>sourceMaps</code></td><td>❌ Not introduced (pre-consultation halt)</td></tr></tbody></table>
+<h3>[A] Coverage 70% — Frontend Branches Was the Single Bottleneck</h3>
+<p>To raise the global coverage gate from 60% to 70%, I first had to find the bottleneck. The weighted aggregate branches across all services was already around 82% — well above 70%. So why couldn't the gate be raised?</p>
+<p>Pre-consultation with Sensei revealed the structural reason. <code>check-coverage.mjs</code> only aggregates <code>lcov.info</code> for services detected by the path-filter. <strong>For frontend-only PRs, only frontend branches are aggregated.</strong> And frontend branches sat at 69.55%.</p>
+<p>The intuition that "all-service aggregate branches = 82%, global gate 70% → passes" was wrong. A frontend-only PR would aggregate at 69.55% and fail the 70% gate. In a path-filter-based CI design, the coverage gate needs to be explicit about *which lcov set it operates on* per PR scope.</p>
+<p>Fixing the bottleneck meant writing new tests to bring frontend branches up to 71%.</p>
+<p>Sensei's gap analysis:</p>
+<table><thead><tr><th>Target</th><th>Branches Hit Needed</th><th>Current</th><th>Gap</th></tr></thead><tbody><tr><td>71.0% (contractual target)</td><td>1,330</td><td>1,302</td><td>+28</td></tr><tr><td>72.0% (safety buffer)</td><td>1,348</td><td>1,302</td><td>+46</td></tr></tbody></table>
+<p>Achievable with ~120–190 LOC of new tests across three recommended files (<code>lib/feedback.ts</code>, <code>components/ui/CodeBlock.tsx</code>, <code>components/providers/EventTracker.tsx</code>).</p>
+<p>Actual result: 77 tests added (PR #121), frontend branches <strong>69.55% → 76.42%</strong> (+6.87pp, exceeding the 71% target by +5.42pp). A conservatively designed scenario.</p>
+<leo-metrics>
+  <leo-metric value="69.55" unit="%" note="1302 / 1872 branches hit" label="Frontend Branches (Before)"></leo-metric>
+  <leo-metric value="76.42" unit="%" note="+5.42pp beyond the 71% target" label="Frontend Branches (After)"></leo-metric>
+</leo-metrics>
+<p>PR #122 then changed the <code>ci.yml</code> coverage threshold from <code>60 → 70</code>. The sequencing guard was critical: <strong>PR #121 had to be merged and CI-green first</strong>, then #122. Merging #122 first would immediately cause any frontend-only PR to fail the coverage gate. Sensei's warning was written explicitly into the PR #122 body to enforce the sequencing.</p>
+<h3>[B] L2 Cache — Docker Buildkit Was Already L2</h3>
+<p>I followed the Sprint 105 pattern: consult Sensei before implementing.</p>
+<p>What Sensei found was striking. <code>docker/build-push-action</code> already had <code>--cache-from=type=gha,mode=max</code> set, and <code>mode=max</code> stores <strong>all intermediate layers</strong> from builder stages in GHA cache.</p>
+<pre><code># NestJS build layers — mode=max cache coverage
+Layer 1: FROM node:22-alpine AS builder         → cached
+Layer 2: COPY package*.json ./                  → HIT when package.json unchanged
+Layer 3: RUN npm ci                             → HIT when package.json unchanged
+Layer 4: COPY . .                               → MISS on source changes
+Layer 5: RUN npm run build   ← generates dist/  → re-runs on Layer 4 MISS</code></pre>
+<p><code>RUN npm run build</code> — the <code>dist/</code> generation step — was already being saved as a GHA cache layer. Adding an external GHA filesystem cache would have been <strong>100% redundant</strong>.</p>
+<p>An additional finding: <code>ci.yml L624–630</code> already had a <code>Frontend .next/cache</code> GHA cache step — and it was non-functional dead code. The <code>build-frontend</code> job does a Docker build only, with no host-side <code>npm run build</code>, so <code>.next/cache</code> is never generated on the host filesystem. Restoring it restores nothing; saving it saves an empty directory. A leftover artifact from before the Docker-only pipeline migration.</p>
+<p>The deeper finding: <strong>not a single build job ran <code>npm run build</code> on the host filesystem.</strong> All TypeScript/Next.js compilation happens inside Docker containers. GHA filesystem caching only applies to the host filesystem — so the current Docker-only architecture has no path to benefit from it at all.</p>
+<p>Conclusion: L2 cache not introduced. Zero code changes. The dead step (ci.yml L624–630) removed in a separate PR.</p>
+<h3>[C] Frontend Optimization — All Three Were Already Handled</h3>
+<p>I'd planned to apply three Next.js optimization options. Sensei verified each through direct <code>node_modules/</code> inspection:</p>
+<table><thead><tr><th>Option</th><th>Plan</th><th>Verified Result</th><th>Verdict</th></tr></thead><tbody><tr><td><code>swcMinify: true</code></td><td>Explicit setting</td><td>Completely removed from Next.js 15.5.15 <code>config-schema.js</code> (<code>z.strictObject</code> violation)</td><td><strong>HARD BLOCK</strong></td></tr><tr><td><code>optimizePackageImports</code></td><td>Add <code>@radix-ui/react-*</code>, <code>lucide-react</code></td><td>No wildcard support + <code>lucide-react</code> already in default list</td><td><strong>Excluded</strong></td></tr><tr><td><code>productionBrowserSourceMaps: false</code></td><td>Explicit setting</td><td>Default is already <code>false</code> in <code>config-schema.js</code></td><td><strong>Excluded</strong></td></tr></tbody></table>
+<p><code>swcMinify</code> was a valid option in Next.js 14.x when the plan was written. In 15.5.15 it was completely removed from the config schema — adding it breaks the build via <code>z.strictObject()</code> validation. When a library version advances after a plan is drafted, official docs alone aren't enough. Directly reading <code>node_modules/</code> source is the only reliable verification method.</p>
+<p>Conclusion: all three options inapplicable or already the default. Zero code changes.</p>
+<leo-callout type="note" title="Pre-Consultation Elevated from &#x27;How&#x27; to &#x27;Whether&#x27;"><p>In Sprint 105, pre-consultation was an <strong>optimization tool</strong> — reducing the post-sample count. In Sprint 106 [B] and [C], it became a <strong>necessity gate</strong> — confirming whether implementation was needed at all. If you write explicit stopping conditions into your plan ("if redundant, gain = 0 → stop"), the pre-consultation step has a clear decision criterion. Zero-line implementation is still a conclusion.</p></leo-callout>
+<leo-diagram title="Pre-consultation as an implementation gate" caption="Before building, ask whether it is really needed. If it is already handled, not building it is the conclusion">
+<svg id="my-svg" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 847.166px; background-color: transparent;" viewBox="4 4 847.2 255.8" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#my-svg{font-family:Gmarket Sans,Gmarket Sans TTF,-apple-system,Apple SD Gothic Neo,sans-serif;font-size:14px;fill:#292725;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#my-svg .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#my-svg .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#my-svg .error-icon{fill:#FFFFFF;}#my-svg .error-text{fill:#292725;stroke:#292725;}#my-svg .edge-thickness-normal{stroke-width:1px;}#my-svg .edge-thickness-thick{stroke-width:3.5px;}#my-svg .edge-pattern-solid{stroke-dasharray:0;}#my-svg .edge-thickness-invisible{stroke-width:0;fill:none;}#my-svg .edge-pattern-dashed{stroke-dasharray:3;}#my-svg .edge-pattern-dotted{stroke-dasharray:2;}#my-svg .marker{fill:#696866;stroke:#696866;}#my-svg .marker.cross{stroke:#696866;}#my-svg svg{font-family:Gmarket Sans,Gmarket Sans TTF,-apple-system,Apple SD Gothic Neo,sans-serif;font-size:14px;}#my-svg p{margin:0;}#my-svg .label{font-family:Gmarket Sans,Gmarket Sans TTF,-apple-system,Apple SD Gothic Neo,sans-serif;color:#292725;}#my-svg .cluster-label text{fill:#292725;}#my-svg .cluster-label span{color:#292725;}#my-svg .cluster-label span p{background-color:transparent;}#my-svg .label text,#my-svg span{fill:#292725;color:#292725;}#my-svg .node rect,#my-svg .node circle,#my-svg .node ellipse,#my-svg .node polygon,#my-svg .node path{fill:#FFFFFF;stroke:#292725;stroke-width:1px;}#my-svg .rough-node .label text,#my-svg .node .label text,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-anchor:middle;}#my-svg .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#my-svg .rough-node .label,#my-svg .node .label,#my-svg .image-shape .label,#my-svg .icon-shape .label{text-align:center;}#my-svg .node.clickable{cursor:pointer;}#my-svg .root .anchor path{fill:#696866!important;stroke-width:0;stroke:#696866;}#my-svg .arrowheadPath{fill:rgba(255, 255, 255, 0);}#my-svg .edgePaths .path{stroke:#696866;stroke-width:1px;}#my-svg .flowchart-link{stroke:#696866;fill:none;}#my-svg .edgeLabel{background-color:#FFFFFF;text-align:center;}#my-svg .edgeLabel p{background-color:#FFFFFF;}#my-svg .edgeLabel rect{opacity:0.5;background-color:#FFFFFF;fill:#FFFFFF;}#my-svg .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#my-svg .cluster rect{fill:#FFFFFF;stroke:#DFDFDE;stroke-width:1px;}#my-svg .cluster text{fill:#292725;}#my-svg .cluster span{color:#292725;}#my-svg .node .collapsed-indicator{fill:#DFDFDE;stroke:none;opacity:0.6;}#my-svg .node .collapsed-separator{stroke:#DFDFDE;stroke-width:0.75px;}#my-svg div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:Gmarket Sans,Gmarket Sans TTF,-apple-system,Apple SD Gothic Neo,sans-serif;font-size:12px;background:#FFFFFF;border:1px solid #DFDFDE;border-radius:2px;pointer-events:none;z-index:100;}#my-svg .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#292725;}#my-svg rect.text{fill:none;stroke-width:0;}#my-svg .icon-shape,#my-svg .image-shape{background-color:#FFFFFF;text-align:center;}#my-svg .icon-shape p,#my-svg .image-shape p{background-color:#FFFFFF;padding:2px;}#my-svg .icon-shape .label rect,#my-svg .image-shape .label rect{opacity:0.5;background-color:#FFFFFF;fill:#FFFFFF;}#my-svg .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#my-svg .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#my-svg .node .neo-node{stroke:#292725;}#my-svg [data-look="neo"].node rect,#my-svg [data-look="neo"].cluster rect,#my-svg [data-look="neo"].node polygon{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].swimlane.cluster rect{filter:none;}#my-svg [data-look="neo"].node path{stroke:url(#my-svg-gradient);stroke-width:1px;}#my-svg [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node .neo-line path{stroke:#292725;filter:none;}#my-svg [data-look="neo"].node circle{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].node circle .state-start{fill:#000000;}#my-svg [data-look="neo"].icon-shape .icon{fill:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg [data-look="neo"].icon-shape .icon-neo path{stroke:url(#my-svg-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#my-svg :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="my-svg_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="my-svg_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="my-svg_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edges edgePaths"><path d="M164,129L200,129" id="my-svg-L_P_S_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style="stroke-dasharray: 0 0 32 4; stroke-dashoffset: 0;;" data-edge="true" data-et="edge" data-id="L_P_S_0" data-points="W3sieCI6MTY0LCJ5IjoxMjl9LHsieCI6MjA0LCJ5IjoxMjl9XQ==" data-look="neo" marker-end="url(#my-svg_flowchart-v2-pointEnd-margin)"/><path d="M402.3,93.3L438,93.3L450.9,93.3Q458,93.3 458,86.3L458,67.3Q458,60.3 465.1,60.3L639,60.3" id="my-svg-L_S_I_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style="stroke-dasharray: 0 0 260.43743896484375 4; stroke-dashoffset: 0;;" data-edge="true" data-et="edge" data-id="L_S_I_0" data-points="W3sieCI6NDAyLjMzMzI2MzM5NzIxNjgsInkiOjkzLjMzMzMzMzMzMzMzMzM0fSx7IngiOjQzOCwieSI6OTMuMzMzMzMzMzMzMzMzMzR9LHsieCI6NDU4LCJ5Ijo5My4zMzMzMzMzMzMzMzMzNH0seyJ4Ijo0NTgsInkiOjYwLjI1MDAwMDAwMDAwMDAxNH0seyJ4Ijo2NDMuMDE1NjI1LCJ5Ijo2MC4yNTAwMDAwMDAwMDAwMTR9XQ==" data-look="neo" marker-end="url(#my-svg_flowchart-v2-pointEnd-margin)"/><path d="M402.3,164.7L438,164.7L450.9,164.7Q458,164.7 458,171.7L458,190.7Q458,197.8 465.1,197.8L639,197.8" id="my-svg-L_S_Z_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style="stroke-dasharray: 0 0 260.43743896484375 4; stroke-dashoffset: 0;;" data-edge="true" data-et="edge" data-id="L_S_Z_0" data-points="W3sieCI6NDAyLjMzMzI2MzM5NzIxNjgsInkiOjE2NC42NjY2NjY2NjY2NjY2OX0seyJ4Ijo0MzgsInkiOjE2NC42NjY2NjY2NjY2NjY2OX0seyJ4Ijo0NTgsInkiOjE2NC42NjY2NjY2NjY2NjY2OX0seyJ4Ijo0NTgsInkiOjE5Ny43NTAwMDAwMDAwMDAwM30seyJ4Ijo2NDMuMDE1NjI1LCJ5IjoxOTcuNzUwMDAwMDAwMDAwMDN9XQ==" data-look="neo" marker-end="url(#my-svg_flowchart-v2-pointEnd-margin)"/></g><g class="edgeLabels"><g class="edgeLabel" transform="translate(540.5, 59.8)"><g class="label" data-id="L_S_I_0" transform="translate(-29, -10.5)"><foreignObject width="57.9" height="21"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>needed</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(540.5, 197.3)"><g class="label" data-id="L_S_Z_0" transform="translate(-62.5, -10.5)"><foreignObject width="125" height="21"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>already handled</p></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default" id="my-svg-flowchart-P-0" data-look="neo" transform="translate(88, 129)"><rect class="basic label-container" style="" x="-76" y="-22.5" width="152" height="45"/><g class="label" style="" transform="translate(-60, -10.5)"><rect/><foreignObject width="120" height="21"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: nowrap; line-height: 1.5; max-width: 120px; text-align: center; width: 120px;"><span class="nodeLabel"><p>Planned work</p></span></div></foreignObject></g></g><g class="node default" id="my-svg-flowchart-S-1" data-look="neo" transform="translate(321, 129)"><polygon points="117,0 234,-117 117,-234 0,-117" class="label-container" transform="translate(-116.5, 117)"/><g class="label" style="" transform="translate(-60, -42)"><rect/><foreignObject width="120" height="84"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 120px; text-align: center; width: 120px;"><span class="nodeLabel"><p>Sensei pre-consult<br />is it really needed?</p></span></div></foreignObject></g></g><g class="node default" id="my-svg-flowchart-I-3" data-look="neo" transform="translate(719, 60.3)"><rect class="basic label-container" style="" x="-76" y="-43.5" width="152" height="87"/><g class="label" style="" transform="translate(-60, -31.5)"><rect/><foreignObject width="120" height="63"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 120px; text-align: center; width: 120px;"><span class="nodeLabel"><p>Implement<br />coverage to 70%</p></span></div></foreignObject></g></g><g class="node default" id="my-svg-flowchart-Z-5" data-look="neo" transform="translate(743.1, 197.8)"><g class="basic label-container outer-path"><path d="M-46.1 -54 C-24.9 -54, -3.7 -54, 46.1 -54 C46.1 -54, 46.1 -54, 46.1 -54 C47 -54, 47.9 -53.9, 49.6 -53.9 C50.9 -53.8, 52.2 -53.6, 53 -53.6 C54.2 -53.4, 55.3 -53.2, 56.4 -53 C57.2 -52.8, 57.9 -52.7, 59.8 -52.2 C61.1 -51.9, 62.3 -51.5, 63.1 -51.2 C64.3 -50.8, 65.5 -50.4, 66.4 -50.1 C67.3 -49.7, 68.1 -49.3, 69.5 -48.7 C70.4 -48.2, 71.3 -47.7, 72.6 -47.1 C73.3 -46.6, 74 -46.2, 75.6 -45.3 C76.2 -44.8, 76.8 -44.4, 78.4 -43.3 C79.4 -42.5, 80.4 -41.6, 81.1 -41.1 C81.7 -40.5, 82.4 -40, 83.7 -38.8 C84.5 -37.9, 85.3 -37.1, 86.1 -36.3 C86.7 -35.6, 87.3 -34.9, 88.3 -33.7 C89.1 -32.6, 89.9 -31.6, 90.4 -30.9 C91.1 -29.9, 91.7 -28.9, 92.3 -28 C92.9 -26.9, 93.5 -25.8, 94 -25 C94.3 -24.3, 94.6 -23.6, 95.5 -21.9 C95.9 -20.8, 96.4 -19.7, 96.8 -18.6 C97 -17.8, 97.3 -17, 97.9 -15.4 C98.2 -14.2, 98.5 -13.1, 98.7 -12 C98.9 -11.3, 99 -10.6, 99.4 -8.6 C99.5 -7.6, 99.7 -6.6, 99.9 -5.2 C99.9 -4.4, 100 -3.6, 100.1 -1.7 C100.1 -0.6, 100.1 0.5, 100.1 1.7 C100 2.5, 100 3.3, 99.9 5.2 C99.7 6.2, 99.6 7.3, 99.4 8.6 C99.2 9.7, 99 10.7, 98.7 12 C98.6 12.7, 98.4 13.5, 97.9 15.4 C97.5 16.4, 97.2 17.3, 96.8 18.6 C96.3 19.9, 95.8 21.1, 95.5 21.9 C95.1 22.7, 94.7 23.6, 94 25 C93.6 25.7, 93.1 26.5, 92.3 28 C91.7 29, 91 29.9, 90.4 30.9 C89.9 31.6, 89.4 32.3, 88.3 33.7 C87.5 34.7, 86.6 35.7, 86.1 36.3 C85.4 37, 84.7 37.7, 83.7 38.8 C82.9 39.5, 82.1 40.2, 81.1 41.1 C80.4 41.7, 79.7 42.2, 78.4 43.3 C77.5 43.9, 76.5 44.6, 75.6 45.3 C74.6 45.9, 73.6 46.4, 72.6 47.1 C71.4 47.7, 70.2 48.3, 69.5 48.7 C68.9 48.9, 68.3 49.2, 66.4 50.1 C65.1 50.5, 63.9 51, 63.1 51.2 C62.4 51.5, 61.7 51.7, 59.8 52.2 C58.6 52.5, 57.4 52.8, 56.4 53 C55.1 53.2, 53.9 53.4, 53 53.6 C52.3 53.6, 51.5 53.7, 49.6 53.9 C48.3 53.9, 47 54, 46.1 54 C46.1 54, 46.1 54, 46.1 54 C19.1 54, -7.9 54, -46.1 54 C-47 54, -47.8 53.9, -49.6 53.9 C-50.6 53.8, -51.6 53.7, -53 53.6 C-54.1 53.4, -55.3 53.2, -56.4 53 C-57.6 52.7, -58.8 52.5, -59.8 52.2 C-60.5 52, -61.2 51.8, -63.1 51.2 C-63.8 51, -64.5 50.7, -66.4 50.1 C-67.5 49.6, -68.5 49.1, -69.5 48.7 C-70.2 48.3, -70.9 48, -72.6 47.1 C-73.5 46.5, -74.4 46, -75.6 45.3 C-76.5 44.6, -77.4 44, -78.4 43.3 C-79.3 42.5, -80.2 41.8, -81.1 41.1 C-81.7 40.6, -82.3 40, -83.7 38.8 C-84.5 37.9, -85.4 37, -86.1 36.3 C-86.6 35.7, -87.1 35.1, -88.3 33.7 C-89.1 32.6, -89.9 31.6, -90.4 30.9 C-91 30, -91.6 29, -92.3 28 C-92.9 26.9, -93.5 25.8, -94 25 C-94.6 23.7, -95.2 22.5, -95.5 21.9 C-96 20.6, -96.5 19.3, -96.8 18.6 C-97 18, -97.2 17.3, -97.9 15.4 C-98.1 14.4, -98.4 13.4, -98.7 12 C-98.9 11.2, -99 10.5, -99.4 8.6 C-99.6 7.3, -99.7 6, -99.9 5.2 C-99.9 4, -100 2.9, -100.1 1.7 C-100.1 1, -100.1 0.3, -100.1 -1.7 C-100 -2.7, -100 -3.7, -99.9 -5.2 C-99.7 -6.2, -99.6 -7.2, -99.4 -8.6 C-99.2 -9.7, -99 -10.9, -98.7 -12 C-98.5 -12.9, -98.3 -13.8, -97.9 -15.4 C-97.6 -16.3, -97.2 -17.3, -96.8 -18.6 C-96.4 -19.6, -96 -20.6, -95.5 -21.9 C-95.1 -22.6, -94.8 -23.4, -94 -25 C-93.4 -26.1, -92.8 -27.1, -92.3 -28 C-91.7 -28.9, -91.1 -29.8, -90.4 -30.9 C-89.8 -31.7, -89.2 -32.5, -88.3 -33.7 C-87.4 -34.7, -86.5 -35.8, -86.1 -36.3 C-85.4 -37, -84.8 -37.6, -83.7 -38.8 C-82.9 -39.5, -82.2 -40.1, -81.1 -41.1 C-80.4 -41.7, -79.7 -42.2, -78.4 -43.3 C-77.3 -44, -76.2 -44.8, -75.6 -45.3 C-74.6 -45.8, -73.6 -46.4, -72.6 -47.1 C-71.5 -47.6, -70.5 -48.2, -69.5 -48.7 C-68.7 -49, -67.8 -49.4, -66.4 -50.1 C-65.2 -50.5, -64 -50.9, -63.1 -51.2 C-62.3 -51.5, -61.4 -51.8, -59.8 -52.2 C-58.7 -52.5, -57.7 -52.7, -56.4 -53 C-55.2 -53.2, -54 -53.4, -53 -53.6 C-51.8 -53.7, -50.7 -53.8, -49.6 -53.9 C-48.6 -53.9, -47.7 -53.9, -46.1 -54 C-46.1 -54, -46.1 -54, -46.1 -54" stroke="none" stroke-width="0" fill="#FFFFFF" style=""/><path d="M-46.1 -54 C-22.5 -54, 1.1 -54, 46.1 -54 M-46.1 -54 C-21.5 -54, 3.1 -54, 46.1 -54 M46.1 -54 C46.1 -54, 46.1 -54, 46.1 -54 M46.1 -54 C46.1 -54, 46.1 -54, 46.1 -54 M46.1 -54 C47.3 -54, 48.5 -53.9, 49.6 -53.9 M46.1 -54 C46.9 -54, 47.7 -53.9, 49.6 -53.9 M49.6 -53.9 C50.7 -53.8, 51.9 -53.7, 53 -53.6 M49.6 -53.9 C50.9 -53.8, 52.3 -53.6, 53 -53.6 M53 -53.6 C53.9 -53.4, 54.8 -53.3, 56.4 -53 M53 -53.6 C54.2 -53.4, 55.5 -53.2, 56.4 -53 M56.4 -53 C57.5 -52.7, 58.7 -52.5, 59.8 -52.2 M56.4 -53 C57.5 -52.8, 58.5 -52.5, 59.8 -52.2 M59.8 -52.2 C61 -51.9, 62.2 -51.5, 63.1 -51.2 M59.8 -52.2 C61.1 -51.9, 62.3 -51.5, 63.1 -51.2 M63.1 -51.2 C64 -50.9, 65 -50.6, 66.4 -50.1 M63.1 -51.2 C64.1 -50.9, 65 -50.5, 66.4 -50.1 M66.4 -50.1 C67.1 -49.7, 67.9 -49.4, 69.5 -48.7 M66.4 -50.1 C67.2 -49.7, 68 -49.3, 69.5 -48.7 M69.5 -48.7 C70.6 -48.1, 71.8 -47.5, 72.6 -47.1 M69.5 -48.7 C70.2 -48.3, 70.8 -48, 72.6 -47.1 M72.6 -47.1 C73.7 -46.4, 74.7 -45.8, 75.6 -45.3 M72.6 -47.1 C73.6 -46.5, 74.5 -45.9, 75.6 -45.3 M75.6 -45.3 C76.2 -44.8, 76.8 -44.4, 78.4 -43.3 M75.6 -45.3 C76.5 -44.6, 77.5 -43.9, 78.4 -43.3 M78.4 -43.3 C79.1 -42.8, 79.7 -42.2, 81.1 -41.1 M78.4 -43.3 C79 -42.8, 79.7 -42.3, 81.1 -41.1 M81.1 -41.1 C81.9 -40.4, 82.7 -39.7, 83.7 -38.8 M81.1 -41.1 C81.9 -40.4, 82.7 -39.7, 83.7 -38.8 M83.7 -38.8 C84.5 -37.9, 85.3 -37.1, 86.1 -36.3 M83.7 -38.8 C84.5 -37.9, 85.3 -37.1, 86.1 -36.3 M86.1 -36.3 C86.8 -35.4, 87.5 -34.6, 88.3 -33.7 M86.1 -36.3 C86.6 -35.7, 87.2 -35, 88.3 -33.7 M88.3 -33.7 C88.8 -33, 89.3 -32.3, 90.4 -30.9 M88.3 -33.7 C88.8 -33, 89.3 -32.4, 90.4 -30.9 M90.4 -30.9 C90.9 -30.1, 91.5 -29.2, 92.3 -28 M90.4 -30.9 C90.9 -30.1, 91.4 -29.4, 92.3 -28 M92.3 -28 C92.6 -27.4, 93 -26.7, 94 -25 M92.3 -28 C92.7 -27.2, 93.2 -26.4, 94 -25 M94 -25 C94.4 -24.2, 94.7 -23.4, 95.5 -21.9 M94 -25 C94.5 -23.9, 95.1 -22.7, 95.5 -21.9 M95.5 -21.9 C95.8 -21.1, 96.1 -20.3, 96.8 -18.6 M95.5 -21.9 C95.8 -21.1, 96.1 -20.3, 96.8 -18.6 M96.8 -18.6 C97.1 -17.6, 97.5 -16.5, 97.9 -15.4 M96.8 -18.6 C97.1 -17.8, 97.4 -16.9, 97.9 -15.4 M97.9 -15.4 C98.1 -14.7, 98.2 -14, 98.7 -12 M97.9 -15.4 C98.2 -14.1, 98.5 -12.9, 98.7 -12 M98.7 -12 C98.9 -11.3, 99 -10.5, 99.4 -8.6 M98.7 -12 C99 -10.7, 99.3 -9.4, 99.4 -8.6 M99.4 -8.6 C99.5 -7.6, 99.7 -6.7, 99.9 -5.2 M99.4 -8.6 C99.6 -7.5, 99.7 -6.4, 99.9 -5.2 M99.9 -5.2 C99.9 -4.1, 100 -3, 100.1 -1.7 M99.9 -5.2 C99.9 -4.2, 100 -3.3, 100.1 -1.7 M100.1 -1.7 C100.1 -0.4, 100.1 1, 100.1 1.7 M100.1 -1.7 C100.1 -0.7, 100.1 0.4, 100.1 1.7 M100.1 1.7 C100 2.9, 99.9 4, 99.9 5.2 M100.1 1.7 C100 2.8, 99.9 3.9, 99.9 5.2 M99.9 5.2 C99.7 6.5, 99.5 7.9, 99.4 8.6 M99.9 5.2 C99.7 6.5, 99.5 7.9, 99.4 8.6 M99.4 8.6 C99.2 9.5, 99.1 10.3, 98.7 12 M99.4 8.6 C99.2 9.8, 98.9 11.1, 98.7 12 M98.7 12 C98.6 12.7, 98.4 13.4, 97.9 15.4 M98.7 12 C98.5 12.9, 98.3 13.8, 97.9 15.4 M97.9 15.4 C97.4 16.6, 97 17.9, 96.8 18.6 M97.9 15.4 C97.5 16.6, 97.1 17.8, 96.8 18.6 M96.8 18.6 C96.3 19.9, 95.8 21.1, 95.5 21.9 M96.8 18.6 C96.3 19.8, 95.9 20.9, 95.5 21.9 M95.5 21.9 C95.2 22.5, 94.8 23.2, 94 25 M95.5 21.9 C95.1 22.6, 94.8 23.3, 94 25 M94 25 C93.6 25.7, 93.2 26.3, 92.3 28 M94 25 C93.3 26.1, 92.7 27.2, 92.3 28 M92.3 28 C91.7 28.8, 91.2 29.7, 90.4 30.9 M92.3 28 C91.5 29.2, 90.8 30.3, 90.4 30.9 M90.4 30.9 C89.7 31.9, 88.9 32.9, 88.3 33.7 M90.4 30.9 C89.7 31.8, 89.1 32.6, 88.3 33.7 M88.3 33.7 C87.9 34.2, 87.4 34.7, 86.1 36.3 M88.3 33.7 C87.8 34.3, 87.2 35, 86.1 36.3 M86.1 36.3 C85.2 37.2, 84.4 38.1, 83.7 38.8 M86.1 36.3 C85.6 36.8, 85 37.4, 83.7 38.8 M83.7 38.8 C83 39.4, 82.4 40, 81.1 41.1 M83.7 38.8 C83.1 39.3, 82.5 39.8, 81.1 41.1 M81.1 41.1 C80.2 41.8, 79.3 42.6, 78.4 43.3 M81.1 41.1 C80.3 41.8, 79.4 42.5, 78.4 43.3 M78.4 43.3 C77.3 44, 76.3 44.7, 75.6 45.3 M78.4 43.3 C77.6 43.9, 76.8 44.4, 75.6 45.3 M75.6 45.3 C74.8 45.7, 74.1 46.1, 72.6 47.1 M75.6 45.3 C74.6 45.9, 73.6 46.5, 72.6 47.1 M72.6 47.1 C71.5 47.6, 70.3 48.2, 69.5 48.7 M72.6 47.1 C71.9 47.4, 71.3 47.7, 69.5 48.7 M69.5 48.7 C68.4 49.2, 67.2 49.7, 66.4 50.1 M69.5 48.7 C68.6 49.1, 67.6 49.5, 66.4 50.1 M66.4 50.1 C65.2 50.5, 64.1 50.9, 63.1 51.2 M66.4 50.1 C65.6 50.3, 64.8 50.6, 63.1 51.2 M63.1 51.2 C61.8 51.6, 60.6 52, 59.8 52.2 M63.1 51.2 C62.4 51.5, 61.7 51.7, 59.8 52.2 M59.8 52.2 C58.7 52.5, 57.7 52.7, 56.4 53 M59.8 52.2 C58.9 52.4, 58 52.6, 56.4 53 M56.4 53 C55.2 53.2, 54 53.4, 53 53.6 M56.4 53 C55.2 53.2, 53.9 53.4, 53 53.6 M53 53.6 C51.9 53.7, 50.8 53.8, 49.6 53.9 M53 53.6 C52.2 53.6, 51.4 53.7, 49.6 53.9 M49.6 53.9 C48.3 53.9, 47 54, 46.1 54 M49.6 53.9 C48.7 53.9, 47.9 53.9, 46.1 54 M46.1 54 C46.1 54, 46.1 54, 46.1 54 M46.1 54 C46.1 54, 46.1 54, 46.1 54 M46.1 54 C26 54, 5.9 54, -46.1 54 M46.1 54 C12 54, -22 54, -46.1 54 M-46.1 54 C-46.9 54, -47.7 53.9, -49.6 53.9 M-46.1 54 C-46.8 54, -47.6 54, -49.6 53.9 M-49.6 53.9 C-50.7 53.8, -51.9 53.7, -53 53.6 M-49.6 53.9 C-50.8 53.8, -52.1 53.6, -53 53.6 M-53 53.6 C-53.9 53.4, -54.8 53.3, -56.4 53 M-53 53.6 C-54.3 53.3, -55.6 53.1, -56.4 53 M-56.4 53 C-57.2 52.8, -57.9 52.7, -59.8 52.2 M-56.4 53 C-57.3 52.8, -58.2 52.6, -59.8 52.2 M-59.8 52.2 C-60.7 52, -61.5 51.7, -63.1 51.2 M-59.8 52.2 C-60.6 52, -61.4 51.8, -63.1 51.2 M-63.1 51.2 C-64 50.9, -64.9 50.6, -66.4 50.1 M-63.1 51.2 C-64.2 50.9, -65.2 50.5, -66.4 50.1 M-66.4 50.1 C-67.1 49.7, -67.7 49.4, -69.5 48.7 M-66.4 50.1 C-67.6 49.5, -68.7 49, -69.5 48.7 M-69.5 48.7 C-70.6 48.1, -71.7 47.5, -72.6 47.1 M-69.5 48.7 C-70.4 48.2, -71.2 47.8, -72.6 47.1 M-72.6 47.1 C-73.5 46.5, -74.3 46, -75.6 45.3 M-72.6 47.1 C-73.7 46.4, -74.8 45.7, -75.6 45.3 M-75.6 45.3 C-76.5 44.6, -77.4 44, -78.4 43.3 M-75.6 45.3 C-76.3 44.8, -77 44.3, -78.4 43.3 M-78.4 43.3 C-79 42.8, -79.7 42.2, -81.1 41.1 M-78.4 43.3 C-79.3 42.5, -80.3 41.8, -81.1 41.1 M-81.1 41.1 C-81.8 40.5, -82.6 39.8, -83.7 38.8 M-81.1 41.1 C-81.8 40.5, -82.4 39.9, -83.7 38.8 M-83.7 38.8 C-84.4 38, -85.1 37.3, -86.1 36.3 M-83.7 38.8 C-84.4 38, -85.1 37.3, -86.1 36.3 M-86.1 36.3 C-86.8 35.4, -87.6 34.6, -88.3 33.7 M-86.1 36.3 C-86.7 35.6, -87.3 34.8, -88.3 33.7 M-88.3 33.7 C-89 32.7, -89.7 31.8, -90.4 30.9 M-88.3 33.7 C-89.1 32.6, -89.9 31.6, -90.4 30.9 M-90.4 30.9 C-91.1 29.8, -91.9 28.6, -92.3 28 M-90.4 30.9 C-90.8 30.2, -91.2 29.6, -92.3 28 M-92.3 28 C-92.7 27.2, -93.2 26.4, -94 25 M-92.3 28 C-92.7 27.2, -93.2 26.4, -94 25 M-94 25 C-94.5 23.9, -95.1 22.7, -95.5 21.9 M-94 25 C-94.5 24, -95 22.9, -95.5 21.9 M-95.5 21.9 C-95.8 21, -96.2 20.1, -96.8 18.6 M-95.5 21.9 C-95.9 20.9, -96.3 19.9, -96.8 18.6 M-96.8 18.6 C-97.2 17.5, -97.5 16.4, -97.9 15.4 M-96.8 18.6 C-97 17.8, -97.3 17, -97.9 15.4 M-97.9 15.4 C-98.2 14.3, -98.4 13.2, -98.7 12 M-97.9 15.4 C-98.2 14.1, -98.5 12.9, -98.7 12 M-98.7 12 C-99 10.8, -99.2 9.6, -99.4 8.6 M-98.7 12 C-98.9 11.2, -99.1 10.4, -99.4 8.6 M-99.4 8.6 C-99.5 7.8, -99.6 7.1, -99.9 5.2 M-99.4 8.6 C-99.6 7.4, -99.7 6.2, -99.9 5.2 M-99.9 5.2 C-99.9 4.1, -100 3.1, -100.1 1.7 M-99.9 5.2 C-99.9 4.4, -100 3.7, -100.1 1.7 M-100.1 1.7 C-100.1 0.7, -100.1 -0.4, -100.1 -1.7 M-100.1 1.7 C-100.1 0.9, -100.1 0.2, -100.1 -1.7 M-100.1 -1.7 C-100 -2.6, -100 -3.5, -99.9 -5.2 M-100.1 -1.7 C-100 -2.9, -99.9 -4.1, -99.9 -5.2 M-99.9 -5.2 C-99.7 -6.2, -99.6 -7.2, -99.4 -8.6 M-99.9 -5.2 C-99.7 -6.1, -99.6 -7, -99.4 -8.6 M-99.4 -8.6 C-99.2 -9.8, -98.9 -11.1, -98.7 -12 M-99.4 -8.6 C-99.2 -9.8, -98.9 -11, -98.7 -12 M-98.7 -12 C-98.5 -12.9, -98.3 -13.8, -97.9 -15.4 M-98.7 -12 C-98.4 -13.3, -98.1 -14.6, -97.9 -15.4 M-97.9 -15.4 C-97.5 -16.5, -97.1 -17.7, -96.8 -18.6 M-97.9 -15.4 C-97.5 -16.5, -97.1 -17.7, -96.8 -18.6 M-96.8 -18.6 C-96.3 -19.9, -95.8 -21.2, -95.5 -21.9 M-96.8 -18.6 C-96.4 -19.6, -96 -20.6, -95.5 -21.9 M-95.5 -21.9 C-94.9 -23.1, -94.3 -24.3, -94 -25 M-95.5 -21.9 C-95 -22.8, -94.6 -23.7, -94 -25 M-94 -25 C-93.4 -26, -92.8 -27, -92.3 -28 M-94 -25 C-93.5 -25.9, -92.9 -26.8, -92.3 -28 M-92.3 -28 C-91.6 -29, -91 -29.9, -90.4 -30.9 M-92.3 -28 C-91.7 -28.9, -91.1 -29.8, -90.4 -30.9 M-90.4 -30.9 C-89.9 -31.6, -89.3 -32.3, -88.3 -33.7 M-90.4 -30.9 C-89.9 -31.6, -89.4 -32.3, -88.3 -33.7 M-88.3 -33.7 C-87.8 -34.3, -87.2 -35, -86.1 -36.3 M-88.3 -33.7 C-87.6 -34.5, -86.9 -35.3, -86.1 -36.3 M-86.1 -36.3 C-85.5 -36.9, -84.9 -37.5, -83.7 -38.8 M-86.1 -36.3 C-85.4 -37, -84.7 -37.7, -83.7 -38.8 M-83.7 -38.8 C-83.1 -39.3, -82.6 -39.8, -81.1 -41.1 M-83.7 -38.8 C-82.8 -39.5, -82 -40.3, -81.1 -41.1 M-81.1 -41.1 C-80.1 -41.9, -79.1 -42.7, -78.4 -43.3 M-81.1 -41.1 C-80.4 -41.7, -79.7 -42.3, -78.4 -43.3 M-78.4 -43.3 C-77.3 -44, -76.3 -44.8, -75.6 -45.3 M-78.4 -43.3 C-77.8 -43.7, -77.1 -44.2, -75.6 -45.3 M-75.6 -45.3 C-74.5 -45.9, -73.5 -46.5, -72.6 -47.1 M-75.6 -45.3 C-74.4 -45.9, -73.3 -46.6, -72.6 -47.1 M-72.6 -47.1 C-71.8 -47.5, -71 -47.9, -69.5 -48.7 M-72.6 -47.1 C-71.5 -47.6, -70.4 -48.2, -69.5 -48.7 M-69.5 -48.7 C-68.3 -49.2, -67 -49.8, -66.4 -50.1 M-69.5 -48.7 C-68.6 -49.1, -67.6 -49.5, -66.4 -50.1 M-66.4 -50.1 C-65.4 -50.4, -64.4 -50.8, -63.1 -51.2 M-66.4 -50.1 C-65.2 -50.5, -64 -50.9, -63.1 -51.2 M-63.1 -51.2 C-62.1 -51.6, -61 -51.9, -59.8 -52.2 M-63.1 -51.2 C-62.2 -51.5, -61.3 -51.8, -59.8 -52.2 M-59.8 -52.2 C-58.5 -52.5, -57.1 -52.8, -56.4 -53 M-59.8 -52.2 C-59 -52.4, -58.2 -52.6, -56.4 -53 M-56.4 -53 C-55.3 -53.2, -54.1 -53.4, -53 -53.6 M-56.4 -53 C-55.7 -53.1, -55 -53.2, -53 -53.6 M-53 -53.6 C-51.7 -53.7, -50.3 -53.8, -49.6 -53.9 M-53 -53.6 C-52.3 -53.6, -51.6 -53.7, -49.6 -53.9 M-49.6 -53.9 C-48.5 -53.9, -47.5 -54, -46.1 -54 M-49.6 -53.9 C-48.7 -53.9, -47.9 -53.9, -46.1 -54 M-46.1 -54 C-46.1 -54, -46.1 -54, -46.1 -54 M-46.1 -54 C-46.1 -54, -46.1 -54, -46.1 -54" stroke="#292725" stroke-width="1.3" fill="none" stroke-dasharray="0 0" style=""/></g><g class="label" style="" transform="translate(-60, -42)"><rect/><foreignObject width="120" height="84"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 120px; text-align: center; width: 120px;"><span class="nodeLabel"><p>Closed with zero lines<br />L2 cache · frontend tuning</p></span></div></foreignObject></g></g></g></g></g><defs><filter id="my-svg-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="my-svg-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="my-svg-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#292725" stop-opacity="1"/><stop offset="100%" stop-color="#696866" stop-opacity="1"/></linearGradient></svg>
+</leo-diagram>
+<h2>Four Principles in Hindsight</h2>
+<p>Looking back across five sprints, four principles kept showing up.</p>
+<h3>(i) Pilot → Expand Is the Basic Unit of Hypothesis Testing</h3>
+<p>Sprint 103: github-worker pilot only. Sprint 104: full service rollout. Straightforward in hindsight, but this structure was what surfaced the "checkout excluded" design decision and the "infra PR can't benchmark itself" problem within a small blast radius. Applying it to all services at once would have meant encountering the same problems at a much larger scale.</p>
+<p>When picking a pilot, "simplest service first" is the right call. github-worker being pure Node.js without NestJS minimized side effects. If the pilot succeeds, expand. If it fails, fix and re-pilot. Sprint-level separation naturally enforced this cycle.</p>
+<h3>(ii) A Workflow Only Works When Paired with Repository Settings</h3>
+<p>Sprint 102's auto-merge taught me this the hard way. It's easy to think "the workflow file is done — automation complete." But without <code>allow_auto_merge: true</code> and required status checks, the workflow can execute without auto-merge ever being scheduled.</p>
+<p>This principle applies across CI automation. Required checks without Branch Protection mean nothing; a coverage gate only blocks PR merges when registered in Branch Protection. Between "I built a workflow" and "automation works" there's always a settings layer.</p>
+<h3>(iii) Infra PRs Can't Benchmark Themselves</h3>
+<p>The Sprint 103/104 pitfall. A PR that modifies the CI pipeline can't generate benchmark data for that pipeline. If the path-filter doesn't detect service code changes, all service jobs are skipped.</p>
+<p>The fix for this structural gap was <code>rebuild_all=true workflow_dispatch</code>. Formalizing when to use it was the core value of Sprint 105 [A]. A single runbook, zero code changes, closed a measurement gap that had accumulated over two sprints.</p>
+<h3>(iv) Pre-Consultation Is a "Necessity Gate" — Zero-Line Implementation Is Still a Conclusion</h3>
+<leo-callout type="tip" title="The Real Win of Sprint 106"><p>Two of three tracks closed with zero lines of code. That's not a failure. Sensei pre-consultation in Sprint 106 stopped two wrong turns before they happened. If we'd proceeded with the L2 cache, we would have gone through composite action + pilot + full rollout + benchmarking — all of it unnecessary. Confirming upfront that all of that was unnecessary is the highest return on investment possible.</p></leo-callout>
+<h2>The Story Isn't Over</h2>
+<p>Five sprints are done, but one structural constraint remains unresolved. <strong>Every build job in AlgoSu is Docker-only.</strong> Not a single job runs <code>npm run build</code> on the host filesystem.</p>
+<p>This constraint simultaneously blocked both L2 cache ([B]) and build timing measurement ([C]) in Sprint 106. Finding that both deferred items share the same root cause is the key input for Sprint 107's direction.</p>
+<p>The path forward:</p>
+<table><thead><tr><th>Approach</th><th>Description</th><th>Expected Gain</th></tr></thead><tbody><tr><td><strong>Blog host-side SSG build</strong></td><td>CI builds <code>out/</code> on host → GHA cache → Docker does COPY only</td><td>40–60% reduction on MISS</td></tr><tr><td><strong>Frontend host-side build</strong></td><td><code>.next/standalone</code> on host → GHA cache → Docker COPY only</td><td>40–60% reduction on MISS</td></tr><tr><td><strong>Per-service independent coverage gate</strong></td><td><code>check-coverage.mjs</code> per-service threshold — resolves path-filter misunderstanding</td><td>Better visibility</td></tr></tbody></table>
+<p>The host-side build migration isn't a simple optimization PR. It's an architectural decision that requires simultaneous changes to both Dockerfile and ci.yml. Just as Channel.io separated the prepare phase into S3, AlgoSu is moving toward separating the build phase to the host side. But rather than rushing that decision, clearly understanding the current architecture's limits is the real contribution of these five sprints.</p>
+<p>Five sprints in summary:</p>
+<leo-metrics>
+  <leo-metric value="30" unit="→ 2" note="Sprint 102 — grouping + auto-merge" label="Dependabot PRs"></leo-metric>
+  <leo-metric value="−67 lines" note="Sprint 103–104 — Composite action" label="CI Duplicate Code"></leo-metric>
+  <leo-metric value="69.55" unit="→ 76.42%" note="Sprint 106 — 77 tests added" label="Frontend Branches"></leo-metric>
+  <leo-metric value="2" note="Sprint 106 — stopped via pre-consultation" label="Zero-Line Decisions"></leo-metric>
+</leo-metrics>
+<p>Reading <a href="https://channel.io/ko/team/blog/articles/backend-ci-refactoring-73fca77d">Channel.io's Backend CI Refactoring post</a> again, I realize it didn't give me answers — <strong>it gave me questions.</strong> "Why does the AlgoSu pipeline take so long? What can be improved?" Translating those questions into AlgoSu's context and walking the path — that was Sprint 102 through 106.</p>
+<p>The reference pointed the direction. The rest, I walked myself.</p>
+</body>
+</html>

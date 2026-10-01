@@ -1,0 +1,4 @@
+flowchart LR
+  P[계획한 작업] --> S{Sensei 선자문<br/>정말 필요한가?}
+  S -->|필요| I[구현<br/>Coverage 70% 달성]
+  S -->|이미 처리됨| Z([구현 0줄로 종결<br/>L2 캐시 · Frontend 최적화])

@@ -9,6 +9,13 @@ export function tokenOk(token: string | undefined | null, expected = process.env
 
 export function isAdmin(req: Request): boolean {
   const bearer = req.headers.get('authorization')?.replace(/^Bearer /, '');
+  if (tokenOk(bearer)) return true;
+
   const cookie = req.headers.get('cookie')?.match(/(?:^|;\s*)admin_token=([^;]+)/)?.[1];
-  return tokenOk(bearer) || tokenOk(cookie && decodeURIComponent(cookie));
+  if (!cookie) return false;
+  try {
+    return tokenOk(decodeURIComponent(cookie));
+  } catch {
+    return false;
+  }
 }

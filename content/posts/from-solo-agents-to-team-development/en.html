@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><style>
+body{font:var(--fw-body) var(--fs-body)/var(--lh-body) var(--font-sans);letter-spacing:var(--ls-body);color:var(--color-fg);max-width:var(--container-wrap);box-sizing:border-box;margin:0 auto;padding:0 24px 80px}
+h2{font:var(--fw-tile) var(--fs-tile)/var(--lh-tile) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-tile);margin:2.4em 0 .8em}
+h3{font:var(--fw-section) var(--fs-body)/var(--lh-body) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-body);margin:2em 0 .5em}
+p,ul,ol{margin:0 0 1em}
+strong{font-weight:var(--fw-section)}
+a{color:var(--color-link)}
+code{font-family:var(--font-mono);font-size:.9em;background:var(--color-fog);padding:0 4px}
+blockquote{margin:1.5em 0;padding-left:var(--space-cluster);border-left:2px solid var(--color-line);color:var(--color-secondary)}
+blockquote p{margin:0}
+</style></head><body>
+<p>While other teams were starting development, we were still breaking down the structure of our project. We were agreeing on conventions, assigning responsibility, and writing those decisions down. As a team joke, we called it “brain syncing.”</p>
+<p>PinLog is a place-journaling service: save a place with the reasons and experiences behind it, then find it again using natural language. I was responsible for infrastructure and DevOps. I also brought in the AI agent practices I had developed while building AlgoSu on my own.</p>
+<p>Having used those practices before, sharing them might sound straightforward. But a team first has to agree on its direction, uncover assumptions people have not voiced, and decide who is responsible for what.</p>
+<h2>On my own, the decision was mine</h2>
+<p>In AlgoSu, I could change any part of the project. Even when I delegated work to AI agents, I decided what to build, how far a change should reach, and whether to accept the result.</p>
+<p>That did not make development easy. It did make decision-making simpler. A change spanning several areas still needed only my decision. <a href="/en/posts/agent-orchestration-solo-dev">My experience defining agent roles and shared rules in AlgoSu</a> rested on that condition.</p>
+<leo-compare>
+<leo-side label="AlgoSu · Solo project"><ul><li>Authority to modify every area</li><li>One person decides direction and scope</li><li>Agents receive the standards I define</li></ul></leo-side>
+<leo-side label="PinLog · Team project"><ul><li>Agree on ownership and responsibilities</li><li>Reconcile different directions</li><li>Share agreed standards and how to use them</li></ul></leo-side>
+</leo-compare>
+<p>In PinLog, identifying work was not enough. I also had to coordinate how it fit with other people's work and who would take it on. A condition I had barely noticed in solo development became much more visible.</p>
+<h2>Aligning our thinking before dividing the work</h2>
+<p>The difficult part was getting the ideas out of everyone's heads and working through them together. We had to reconcile what each person wanted and make tacit knowledge explicit.</p>
+<p>Before implementation, we spent time breaking down the structure and agreeing on conventions and responsibilities. This was not a matter of handing over a plan I had decided alone. We were defining the standards we would use together.</p>
+<p>We documented what we agreed on, so it would not remain something we understood only during the discussion. We could return to it while developing.</p>
+<leo-pipeline>
+<leo-stage title="Surface ideas">Share directions and assumptions</leo-stage>
+<leo-stage title="Agree on standards">Define structure, conventions, and ownership</leo-stage>
+<leo-stage title="Document decisions">Keep agreements available for reference</leo-stage>
+<leo-stage title="Use them together">Give teammates and agents development context</leo-stage>
+</leo-pipeline>
+<p>This flow is a retrospective summary of the experience, not a formal methodology we adopted. We did the coordination we needed and recorded the outcome.</p>
+<h2>Fewer questions about what we had already agreed</h2>
+<p>I noticed the benefit of documentation during development. In earlier team projects, we often asked one another to clarify decisions we had already made.</p>
+<blockquote><p>“What did we decide to do here?”</p></blockquote>
+<p>In PinLog, that question became noticeably less frequent. Checking an agreement did not always require asking someone else. The documentation we had written while defining structure, conventions, and responsibilities was useful at that point.</p>
+<p>While other teams were beginning implementation, we had been creating a reference for our own development work. The clearest sign of its value was hearing that familiar question less often.</p>
+<h2>Making AlgoSu's practices work for a team</h2>
+<p>I applied what I had learned in AlgoSu to let AI agents use these documents as development context. I shared the approach with my teammates, and we were able to use it together.</p>
+<p>What went into the documents was different, though. On my own, I could record the structure and standards I had decided. In a team, we first had to align our thinking. Passing something to an agent does not resolve a decision the people involved have not yet agreed on.</p>
+<p>The AlgoSu experience helped. But I could not simply carry over the convenience of being the only decision-maker. I could not assume teammates knew what I knew, or change every area based on my judgment alone.</p>
+<leo-callout type="note" title="What I learned"><p>Using AI agents as a team required agreeing on how the people would work together, not just on the instructions to give the agents.</p></leo-callout>
+<p>As a solo developer, I had focused on dividing work and verifying results. PinLog made me consider how to coordinate direction and responsibility with other people as well.</p>
+<p>What stays with me is not the name of a new tool, but the decline in questions about decisions we had already made. Bringing a practice from solo development into a team took more than explaining how to use it. We first had to make the standards in our heads explicit enough to share.</p>
+</body></html>

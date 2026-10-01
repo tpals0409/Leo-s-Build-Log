@@ -1,0 +1,20 @@
+{
+  "category": "retrospective",
+  "project": "pinlog",
+  "tags": [
+    "AI Agent",
+    "협업",
+    "문서화"
+  ],
+  "publishedAt": "2026-10-01T20:35:00+09:00",
+  "featured": false,
+  "published": true,
+  "ko": {
+    "title": "혼자 쓰던 AI Agent를 팀으로 가져가며",
+    "summary": "알고수에서 익힌 AI Agent 활용법을 핀로그 팀에 적용했습니다. 그 전에 필요했던 건 서로의 생각을 꺼내고, 구조와 규약, 책임을 함께 정하는 일이었습니다."
+  },
+  "en": {
+    "title": "Bringing Solo AI Agent Practices into a Team",
+    "summary": "Applying AlgoSu’s AI agent practices to PinLog started with aligning people: making assumptions explicit and agreeing on structure, conventions, and ownership."
+  }
+}

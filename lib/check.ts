@@ -1,6 +1,17 @@
 import assert from 'node:assert';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import { htmlToText } from './text.ts';
 import { tokenOk } from './auth.ts';
+import {
+  MAX_UPLOAD_REQUEST_SIZE,
+  readUpload,
+  safeUploadName,
+  saveUpload,
+  uploadExtension,
+  validUploadContentLength,
+} from './uploads.ts';
 import { toShadowHtml } from './postHtml.ts';
 import { parsePostInput } from './postInput.ts';
 
@@ -9,6 +20,65 @@ assert.equal(tokenOk('abc', 'abc'), true);
 assert.equal(tokenOk('abd', 'abc'), false);
 assert.equal(tokenOk('abc', undefined), false);
 assert.equal(tokenOk('', 'abc'), false);
+
+assert.equal(uploadExtension('photo.JPG', 'image/jpeg', 1), '.jpg');
+assert.equal(uploadExtension('photo.jpg', 'image/png', 1), null);
+assert.equal(uploadExtension('photo.svg', 'image/svg+xml', 1), null);
+assert.equal(uploadExtension('photo.png', 'image/png', 10 * 1024 * 1024 + 1), null);
+assert.equal(validUploadContentLength(null), false);
+assert.equal(validUploadContentLength(''), false);
+assert.equal(validUploadContentLength('not-a-number'), false);
+assert.equal(validUploadContentLength('-1'), false);
+assert.equal(validUploadContentLength(String(MAX_UPLOAD_REQUEST_SIZE)), true);
+assert.equal(validUploadContentLength(String(MAX_UPLOAD_REQUEST_SIZE + 1)), false);
+assert.equal(safeUploadName('123e4567-e89b-42d3-a456-426614174000.webp'), true);
+assert.equal(safeUploadName('../secret.webp'), false);
+assert.equal(safeUploadName('not-a-uuid.webp'), false);
+
+const uploadTmp = await mkdtemp(path.join(os.tmpdir(), 'blog-upload-check-'));
+try {
+  const saved = await saveUpload(
+    new File([new Uint8Array([0xff, 0xd8, 0xff])], 'photo.jpg', { type: 'image/jpeg' }),
+    uploadTmp,
+    () => '123e4567-e89b-42d3-a456-426614174000',
+  );
+  assert.equal(saved.url, '/uploads/123e4567-e89b-42d3-a456-426614174000.jpg');
+  assert.deepEqual(await readFile(path.join(uploadTmp, saved.name)), Buffer.from([0xff, 0xd8, 0xff]));
+  const loaded = await readUpload(saved.name, uploadTmp);
+  assert.equal(loaded.type, 'image/jpeg');
+  assert.deepEqual(loaded.data, Buffer.from([0xff, 0xd8, 0xff]));
+  await assert.rejects(() => readUpload('../secret.jpg', uploadTmp));
+
+  const imageSignatures = [
+    { name: 'valid.jpg', type: 'image/jpeg', bytes: [0xff, 0xd8, 0xff] },
+    { name: 'valid.png', type: 'image/png', bytes: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a] },
+    { name: 'valid.gif', type: 'image/gif', bytes: [...Buffer.from('GIF89a')] },
+    { name: 'valid.webp', type: 'image/webp', bytes: [...Buffer.from('RIFF0000WEBP')] },
+    { name: 'valid.avif', type: 'image/avif', bytes: [0, 0, 0, 16, ...Buffer.from('ftypavif'), 0, 0, 0, 0] },
+  ];
+  for (const [index, image] of imageSignatures.entries()) {
+    await saveUpload(
+      new File([new Uint8Array(image.bytes)], image.name, { type: image.type }),
+      uploadTmp,
+      () => `123e4567-e89b-42d3-a456-${String(index + 1).padStart(12, '0')}`,
+    );
+  }
+  const spoofRejections = await Promise.all(imageSignatures.map(async (image, index) => {
+    try {
+      await saveUpload(
+        new File([new Uint8Array([0x6e, 0x6f, 0x70, 0x65])], image.name, { type: image.type }),
+        uploadTmp,
+        () => `123e4567-e89b-42d3-a456-${String(index + 101).padStart(12, '0')}`,
+      );
+      return false;
+    } catch {
+      return true;
+    }
+  }));
+  assert.deepEqual(spoofRejections, [true, true, true, true, true], 'spoofed image bytes rejected before write');
+} finally {
+  await rm(uploadTmp, { recursive: true, force: true });
+}
 
 const doc = `<!doctype html><html><head><title>t</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif">

@@ -13,8 +13,8 @@ export default function Header({ locale }: { locale: Locale }) {
   ];
   return (
     <header className="sticky top-0 z-10 border-b border-line/60 bg-surface/85 backdrop-blur-xl backdrop-saturate-180">
-      <Container className="flex h-15 items-center gap-8">
-        <Link href={`/${locale}`} className="link-hover t-title2 font-medium">{SITE.name}</Link>
+      <Container className="flex h-15 items-center gap-4 sm:gap-8">
+        <Link href={`/${locale}`} className="link-hover shrink-0 whitespace-nowrap t-body font-medium sm:t-title2">{SITE.name[locale]}</Link>
         <nav className="mx-auto hidden gap-10 t-body-sm font-medium lg:flex">
           {nav.map((n) => <Link key={n.href} href={n.href} className="link-hover">{n.label}</Link>)}
         </nav>
@@ -23,7 +23,7 @@ export default function Header({ locale }: { locale: Locale }) {
             <circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" />
           </svg>
           <input name="q" placeholder={t.search.placeholder} aria-label={t.search.placeholder}
-            className="h-[34px] w-36 rounded-pill bg-fog pl-[34px] pr-3.5 t-caption sm:w-45" />
+            className="h-[34px] w-28 rounded-pill bg-fog pl-[34px] pr-3.5 t-caption sm:w-45" />
         </form>
         <LocaleSwitch locale={locale} />
       </Container>

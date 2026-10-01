@@ -7,7 +7,7 @@ export default function Footer({ locale }: { locale: Locale }) {
   return (
     <footer className="mt-20 border-t border-line bg-fog">
       <Container className="flex flex-wrap items-center justify-between gap-4 py-8 t-body-sm text-muted">
-        <span>© {new Date().getFullYear()} {SITE.name}</span>
+        <span>© {new Date().getFullYear()} {SITE.name[locale]}</span>
         <nav aria-label={DICT[locale].footer.contact} className="flex gap-6">
           {contacts.map((c) => <a key={c.label} href={c.href} className="link-hover">{c.label}</a>)}
         </nav>

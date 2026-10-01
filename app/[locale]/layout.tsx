@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const locale = await localeOf(params);
   return {
     metadataBase: new URL(SITE_URL),
-    title: { default: SITE.name, template: `%s — ${SITE.name}` },
+    title: { default: SITE.name[locale], template: `%s — ${SITE.name[locale]}` },
     alternates: alternates(locale, ''),
   };
 }

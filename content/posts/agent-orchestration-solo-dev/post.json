@@ -1,0 +1,23 @@
+{
+  "category": "ai-agent",
+  "project": "algosu",
+  "tags": [
+    "AI agents",
+    "orchestration",
+    "solo development",
+    "Claude Code",
+    "MSA"
+  ],
+  "thumbnail": null,
+  "featured": true,
+  "published": true,
+  "publishedAt": "2026-10-01T05:53:23.764Z",
+  "ko": {
+    "title": "1인 개발에서 12개 AI 에이전트를 오케스트레이션한 방법",
+    "summary": "6개 마이크로서비스를 혼자 개발하며 12개 역할의 AI 에이전트를 운영한 경험. Oracle 단일 창구, 공통 규칙의 단일 관리, 사람에게 판단을 넘기는 경계를 정리했어요."
+  },
+  "en": {
+    "title": "How I Orchestrated 12 AI Agents as a Solo Developer",
+    "summary": "I built a six-service platform on my own and operated twelve role-based AI agents. Here’s how a single Oracle interface, shared rules, and human escalation boundaries made the workflow manageable."
+  }
+}

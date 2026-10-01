@@ -20,6 +20,7 @@
   --radius-pill: 980px;  /* 버튼, 검색창 */
   --radius-card: 10px;   /* 카드 썸네일, 입력창 */
   --radius-panel: 18px;  /* 히어로 이미지 */
+  --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1); /* lib/motion.ts EASE와 같은 곡선 → ease-standard */
 }
 
 /* 타이포 스케일 — 글자 크기는 이것만 쓴다 (text-[NNpx] 금지).

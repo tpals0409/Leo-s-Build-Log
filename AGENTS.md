@@ -38,6 +38,7 @@ Next.js 16 (App Router) + PostgreSQL + Tailwind v4, Podman으로 자체 호스�
 - 글자: `t-display` `t-headline` `t-title1` `t-title2` `t-title3` `t-body-lg` `t-body` `t-body-sm` `t-caption` `t-label`
   - `t-*`는 크기·행간만. 굵기는 항상 `font-light|font-medium|font-bold`로 따로 붙인다 (`t-label`만 완성형).
 - 둥글기: `rounded-pill`(버튼·검색창) `rounded-card`(썸네일·입력창) `rounded-panel`(큰 이미지)
+- 곡선: `ease-standard` (CSS) = `EASE` (`lib/motion.ts`)
 - 폭: `max-w-wrap` (1120px, `Container`가 처리)
 - 폰트: Gmarket Sans 하나 (300/500/700). 라이트 모드만.
 
@@ -48,11 +49,21 @@ Next.js 16 (App Router) + PostgreSQL + Tailwind v4, Podman으로 자체 호스�
 
 새 값이 정말 필요하면 컴포넌트에 박지 말고 `globals.css`에 토큰을 추가한 뒤 쓴다.
 
+### 움직임 (Motion)
+기조는 **은은하게** — 짧고 작은 움직임, 내용이 주인공. 라이브러리는 Motion(`motion`).
+- Motion props는 `lib/motion.ts` 프리셋만 쓴다(`{...reveal(i)}`, `{...pageEnter}`). `initial={{…}}` 같은 인라인 값 금지(`check:design`이 막음).
+  새 움직임이 필요하면 `lib/motion.ts`에 프리셋을 추가한다.
+- 서버 컴포넌트에서는 `motion/react-client`를 쓴다(그 요소만 클라이언트로 동작). 컴포넌트 전체를 `'use client'`로 바꾸지 않는다.
+- 스크롤 등장(`ui/Reveal`)은 카드·섹션에만. **글 본문과 페이지 맨 위 제목에는 쓰지 않는다**(JS 전엔 투명해서 검색·가독성 손해).
+- 페이지 전환은 들어오는 효과만(`app/[locale]/template.tsx`). 나가는 효과는 Next 내부 API가 필요해서 하지 않는다.
+- 호버·클릭은 CSS(`transition-transform duration-200 ease-standard`, `motion-reduce:transform-none`). JS 불필요.
+- 동작 줄이기 설정은 `MotionProvider`(Motion)와 `motion-reduce:`(CSS)로 존중한다.
+
 ### 컴포넌트
 있는 것부터 쓴다. 새로 만들기 전에 `components/ui`, `components`를 확인.
 - `ui/Button`, `ui/ButtonLink` — `variant: primary|outline`, `size: lg(44px)|sm(36px)`
-- `ui/Container` `ui/Eyebrow` `ui/SectionHeader` `ui/Thumb`
-- `Header` `Footer` `LocaleSwitch` `FeaturedHero` `PostCard(size: md|sm)` `PostGrid(cols: 3|4)` `ProjectCard` `ProjectGrid` `PostBody`
+- `ui/Container` `ui/Eyebrow` `ui/SectionHeader` `ui/Thumb` `ui/Reveal`
+- `Header` `Footer` `LocaleSwitch` `FeaturedHero` `PostCard(size: md|sm)` `PostGrid(cols: 3|4)` `ProjectCard` `ProjectGrid` `PostBody` `DemoAutoHeight` `ReadingProgress` `MotionProvider`
 - 도메인 컴포넌트는 `locale` prop을 받아 링크(`/${locale}/…`)와 문구를 만든다.
 
 variant/size는 객체 맵(`const VARIANT = {...}`)으로 정의한다 (Button, PostCard 참고). 클래스 조합 라이브러리 추가 금지.
@@ -60,8 +71,11 @@ variant/size는 객체 맵(`const VARIANT = {...}`)으로 정의한다 (Button, 
 ### 글 본문
 글은 자체 스타일이 든 완성 HTML이고, `PostBody`가 서버에서 Shadow DOM으로 렌더한다(`lib/postHtml.ts`).
 본문이 페이지 HTML에 들어가 검색엔진이 읽고, 글 CSS는 shadow root에 격리된다. 블로그 토큰 규칙은 글 HTML에 적용되지 않는다.
-- 글의 `<script>`, `on*=` 속성, `javascript:` 링크는 제거된다(블로그 권한으로 실행되기 때문). 인터랙티브 글은 지원하지 않는다.
-- 글 CSS의 `html`/`body`/`:root` 셀렉터는 `:host`로 바뀐다.
+- **움직이는 부분(차트·토글·예제 등)은 반드시 `<template data-demo>`로 감싼다.** 그 안은 스크립트·외부 라이브러리(CDN)를 쓸 수 있는
+  완성 HTML이고, 격리된 iframe(`sandbox`, same-origin 없음)으로 실행된다. 높이는 자동으로 맞고, `data-height`(초기 높이, 기본 320)·`data-title`(접근성 이름)을 줄 수 있다.
+  데모 안 내용은 검색되지 않으니 설명 문장은 데모 바깥 본문에 쓴다.
+- 데모 **바깥**의 `<script>`, `on*=` 속성, `javascript:` 링크는 제거된다(블로그 권한으로 실행되기 때문).
+- 글 CSS의 `html`/`:root` 셀렉터는 `:host`로, `body` 셀렉터는 본문을 감싼 `.post-root`로 바뀐다.
 
 ## 검증
 - `npm run check:design` — 위 금지 규칙 검사. UI를 고친 뒤 반드시 통과시킬 것.

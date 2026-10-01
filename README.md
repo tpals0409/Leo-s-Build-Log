@@ -31,6 +31,8 @@ curl -X POST localhost:3000/api/posts -H "Authorization: Bearer $ADMIN_TOKEN" \
        "en":{"title":"First post","summary":"Summary","html":"<!doctype html><html><body><h1>Hello</h1></body></html>"}}'
 ```
 
-글 HTML은 상세 페이지에서 서버가 Shadow DOM으로 렌더한다(SEO용으로 본문이 HTML에 포함, 글 CSS는 격리). `<script>`와 이벤트 속성은 제거된다.
+글 HTML은 상세 페이지에서 서버가 Shadow DOM으로 렌더한다(SEO용으로 본문이 HTML에 포함, 글 CSS는 격리).
+움직이는 부분은 `<template data-demo data-height="400" data-title="…">완성 HTML</template>`로 감싸면 격리된 iframe에서 스크립트·CDN 라이브러리와 함께 실행된다.
+그 밖의 `<script>`와 이벤트 속성은 제거된다.
 주소: `/ko/...`, `/en/...` (`/`는 `/ko`로). 홈: 대표 글(featured) 1 / 최신 글 3 / 프로젝트 4.
 DB 구조(`db/schema.sql`)를 바꾸면 테이블을 지우고 다시 만든다 — 마이그레이션 도구 없음.

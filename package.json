@@ -10,6 +10,7 @@
     "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
   },
   "dependencies": {
+    "motion": "^13.4.6",
     "next": "^16.3.8",
     "postgres": "^3.4.9",
     "react": "^19.3.0",

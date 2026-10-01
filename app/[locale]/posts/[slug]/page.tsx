@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import PostBody from '@/components/PostBody';
+import ReadingProgress from '@/components/ReadingProgress';
 import Container from '@/components/ui/Container';
 import Eyebrow from '@/components/ui/Eyebrow';
 import { getPost } from '@/lib/db';
@@ -28,6 +29,7 @@ export default async function PostPage({ params }: Props) {
 
   return (
     <article>
+      <ReadingProgress />
       <Container className="pb-8 pt-14 text-center">
         <Eyebrow>{DICT[locale].category[post.category]}</Eyebrow>
         <h1 className="mb-4 mt-3 t-headline font-bold">{post.title}</h1>

@@ -5,8 +5,10 @@ import Thumb from './ui/Thumb';
 
 export default function ProjectCard({ project, locale }: { project: Project; locale: Locale }) {
   return (
-    <Link href={`/${locale}/projects/${project.slug}`} className="group flex flex-col gap-1.5">
-      <Thumb src={project.image} className="mb-3 aspect-5/2 rounded-card transition-opacity group-hover:opacity-90" />
+    <Link href={`/${locale}/projects/${project.slug}`} className="group flex flex-col gap-1.5 transition-transform duration-200 ease-standard active:scale-99 motion-reduce:transform-none">
+      <div className="mb-3 overflow-hidden rounded-card">
+        <Thumb src={project.image} className="aspect-5/2 transition-transform duration-500 ease-standard group-hover:scale-103 motion-reduce:transform-none" />
+      </div>
       <h3 className="t-body font-medium">{project.name}</h3>
       <p className="t-body-sm text-muted">{project.summary[locale]}</p>
     </Link>

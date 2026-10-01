@@ -12,5 +12,6 @@ check '임의 글자/색/둥글기 값 → t-*, 색·radius 토큰' '(text|leadi
 check 'Tailwind 기본 팔레트 → 색 토큰' "(bg|text|border|ring|fill|stroke|outline|from|via|to|divide|placeholder)-($P)([^a-z]|$)"
 check 'Tailwind 기본 글자크기 → t-*' 'text-(xs|sm|base|lg|[0-9]?xl)([^a-z-]|$)'
 check 'hex 색상 → 색 토큰' '#[0-9a-fA-F]{3,8}([^0-9a-zA-Z]|$)'
+check 'Motion 인라인 값 → lib/motion.ts 프리셋 (예: {...reveal(i)})' '(initial|animate|exit|whileInView|whileHover|whileTap|viewport|transition)=\{\{'
 [ $fail = 0 ] && echo 'design check ok'
 exit $fail

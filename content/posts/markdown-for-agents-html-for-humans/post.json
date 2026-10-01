@@ -1,0 +1,21 @@
+{
+  "category": "retrospective",
+  "project": "algosu",
+  "tags": [
+    "agentic-system",
+    "adr",
+    "context-engineering",
+    "documentation",
+    "llm"
+  ],
+  "publishedAt": "2026-05-22",
+  "thumbnail": "thumbnail.webp",
+  "ko": {
+    "title": "토큰 비용을 더 쓰기로 했다 — 사람을 위한 ADR 뷰 만들기",
+    "summary": "Agent를 위한 Markdown ADR과 사람을 위한 HTML ADR을 분리하면서 배운 것."
+  },
+  "en": {
+    "title": "I Chose to Spend More Tokens — Building an ADR View for Humans",
+    "summary": "What I learned by separating Markdown ADRs for agents from HTML ADRs for humans."
+  }
+}

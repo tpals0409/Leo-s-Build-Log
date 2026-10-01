@@ -8,8 +8,10 @@ cp .env.example .env   # 값 바꾸기
 podman machine start   # macOS에서 처음 한 번
 podman compose up -d --build
 ```
-로컬 개발: `podman compose up -d db` 후 `.env.local`에 `DATABASE_URL`, `ADMIN_TOKEN` 넣고 `npm run dev`.
-관리자: `/admin` (토큰 로그인 → 발행/Featured 토글, 삭제).
+로컬 개발: `podman compose up -d db` 후 `.env.local`에 `DATABASE_URL`, `ADMIN_TOKEN`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ADMIN_EMAIL` 넣고 `npm run dev`.
+관리자: `/admin` (Google 로그인, `ADMIN_EMAIL` 계정만 → 발행/Featured 토글, 삭제). 세션은 30일, `ADMIN_TOKEN`을 바꾸면 모든 세션이 끊긴다.
+
+Google OAuth 설정: Google Cloud Console → API 및 서비스 → 사용자 인증 정보 → OAuth 클라이언트 ID(웹 애플리케이션). 승인된 리디렉션 URI에 `<SITE_URL>/api/auth/google/callback`을 환경마다 등록 (예: `https://www.leosbuildlog.com/api/auth/google/callback`, `http://localhost:3000/api/auth/google/callback`).
 
 ## 글 올리기 API (AI용)
 모든 쓰기 요청은 `Authorization: Bearer $ADMIN_TOKEN`.
@@ -65,7 +67,7 @@ podman compose exec -T app sh -c 'rm -rf /app/uploads/* && tar -C /app -xzf -' <
 main에 푸시되면 CI가 검사를 통과한 뒤 `ghcr.io/tpals0409/leo-s-build-log:main-<git sha>` (linux/arm64)를 올린다. `latest` 태그는 없다.
 매니페스트(aether-gitops 등)가 맞춰야 할 것:
 - **포트** 3000, **probe** `GET /api/health` (DB를 안 봐서 DB 장애로 재시작되지 않음)
-- **env**: `DATABASE_URL`, `ADMIN_TOKEN`, `SITE_URL`(https 도메인). `ADMIN_TOKEN`·DB 비밀번호는 SealedSecret 등으로
+- **env**: `DATABASE_URL`, `ADMIN_TOKEN`, `SITE_URL`(https 도메인), `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ADMIN_EMAIL`. `ADMIN_TOKEN`·`GOOGLE_CLIENT_SECRET`·DB 비밀번호는 SealedSecret 등으로
 - **업로드**: `/app/uploads`에 PVC. 컨테이너는 `node`(uid 1000)로 돌므로 `securityContext.fsGroup: 1000`
   — ReadWriteOnce PVC면 **replicas 1** (여러 개 띄우려면 RWX 또는 오브젝트 스토리지로 바꿔야 함)
 - **Postgres**: 별도로. 추후 챗봇(pgvector)을 생각하면 `pgvector/pgvector` 이미지. 스키마는 앱이 첫 쿼리 때 만든다

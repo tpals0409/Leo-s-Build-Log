@@ -3,7 +3,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { htmlToText } from './text.ts';
-import { isAdmin, tokenOk } from './auth.ts';
+import { googleClaimsOk, isAdmin, makeSession, sessionOk, tokenOk } from './auth.ts';
 import {
   MAX_UPLOAD_REQUEST_SIZE,
   readUpload,
@@ -25,7 +25,21 @@ assert.equal(tokenOk('abc', 'abc'), true);
 assert.equal(tokenOk('abd', 'abc'), false);
 assert.equal(tokenOk('abc', undefined), false);
 assert.equal(tokenOk('', 'abc'), false);
-assert.equal(isAdmin(new Request('http://localhost', { headers: { cookie: 'admin_token=%' } })), false);
+assert.equal(isAdmin(new Request('http://localhost', { headers: { cookie: 'admin_session=%' } })), false);
+{
+  const t0 = Date.parse('2026-01-01T00:00:00Z'), s = makeSession(t0, 'k');
+  assert.equal(sessionOk(s, t0, 'k'), true);
+  assert.equal(sessionOk(s, t0, 'other'), false); // 토큰 바꾸면 세션 무효
+  assert.equal(sessionOk(s, t0 + 31 * 864e5, 'k'), false); // 만료
+  assert.equal(sessionOk(`${Number(s.split('.')[0]) + 999}.${s.split('.')[1]}`, t0, 'k'), false); // 만료시각 조작
+  const c = { iss: 'https://accounts.google.com', aud: 'cid', exp: t0 / 1000 + 60, email: 'Me@Gmail.com', email_verified: true };
+  assert.equal(googleClaimsOk(c, 'cid', 'me@gmail.com', t0), true);
+  assert.equal(googleClaimsOk({ ...c, email: 'x@gmail.com' }, 'cid', 'me@gmail.com', t0), false);
+  assert.equal(googleClaimsOk({ ...c, email_verified: false }, 'cid', 'me@gmail.com', t0), false);
+  assert.equal(googleClaimsOk({ ...c, aud: 'other' }, 'cid', 'me@gmail.com', t0), false);
+  assert.equal(googleClaimsOk({ ...c, exp: t0 / 1000 - 1 }, 'cid', 'me@gmail.com', t0), false);
+  assert.equal(googleClaimsOk(c, 'cid', undefined, t0), false);
+}
 
 assert.equal(uploadExtension('photo.JPG', 'image/jpeg', 1), '.jpg');
 assert.equal(uploadExtension('photo.jpg', 'image/png', 1), null);

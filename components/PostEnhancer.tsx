@@ -7,6 +7,14 @@ import { useEffect } from 'react';
 //  - 데모 iframe: 보내온 높이로 맞춤 (lib/postHtml.ts REPORT_HEIGHT)
 export default function PostEnhancer() {
   useEffect(() => {
+    // <template shadowrootmode>는 처음 받은 HTML을 파싱할 때만 shadow root가 된다. 클라이언트 이동(Link)에선 React가
+    // innerHTML로 넣어 템플릿으로 남으므로(본문이 안 보임) 여기서 직접 붙인다.
+    for (const h of document.querySelectorAll('[data-post-body]')) {
+      const tpl = h.querySelector<HTMLTemplateElement>(':scope > template[shadowrootmode]');
+      if (!tpl) continue;
+      (h.shadowRoot ?? h.attachShadow({ mode: 'open' })).replaceChildren(tpl.content.cloneNode(true));
+      tpl.remove();
+    }
     const roots = [...document.querySelectorAll('[data-post-body]')].flatMap((h) => (h.shadowRoot ? [h.shadowRoot] : []));
     const ko = document.documentElement.lang === 'ko';
     const cleanups: (() => void)[] = [];

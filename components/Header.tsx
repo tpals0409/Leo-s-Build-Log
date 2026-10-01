@@ -5,10 +5,10 @@ const NAV = ['Product', 'Technology', 'People', 'Our Planet', 'Culture'];
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-10 border-b border-black/5 bg-white/85 backdrop-blur-xl backdrop-saturate-180">
+    <header className="sticky top-0 z-10 border-b border-line/60 bg-surface/85 backdrop-blur-xl backdrop-saturate-180">
       <Container className="flex h-15 items-center gap-8">
-        <Link href="/" className="text-2xl font-medium">Blog</Link>
-        <nav className="mx-auto hidden gap-10 text-sm font-medium lg:flex">
+        <Link href="/" className="t-title2 font-medium">Blog</Link>
+        <nav className="mx-auto hidden gap-10 t-body-sm font-medium lg:flex">
           {NAV.map((c) => (
             <Link key={c} href={`/search?category=${encodeURIComponent(c)}`} className="hover:text-link">{c}</Link>
           ))}
@@ -18,7 +18,7 @@ export default function Header() {
             <circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" />
           </svg>
           <input name="q" placeholder="블로그 검색" aria-label="블로그 검색"
-            className="h-[34px] w-36 rounded-pill bg-fog pl-[34px] pr-3.5 text-[13px] sm:w-45" />
+            className="h-[34px] w-36 rounded-pill bg-fog pl-[34px] pr-3.5 t-caption sm:w-45" />
         </form>
       </Container>
     </header>

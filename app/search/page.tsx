@@ -11,7 +11,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
   return (
     <Container className="pb-20">
-      <h1 className="pb-8 pt-12 text-[32px]/10 font-bold">{title}</h1>
+      <h1 className="pb-8 pt-12 t-title1 font-bold">{title}</h1>
       {posts.length ? <PostGrid posts={posts} /> : <p className="py-30 text-center text-muted">결과가 없습니다.</p>}
     </Container>
   );

@@ -23,7 +23,7 @@ export default function AdminClient({ posts }: { posts: Row[] | null }) {
         call('/api/login', { method: 'POST', body: JSON.stringify({ token: new FormData(e.currentTarget).get('token') }) });
       }}>
         <input name="token" type="password" placeholder="ADMIN_TOKEN" aria-label="관리자 토큰" autoComplete="current-password"
-          className="h-11 rounded-xl border border-line px-3.5" />
+          className="h-11 rounded-card border border-line px-3.5" />
         <Button>로그인</Button>
         {err && <p className="text-muted">{err}</p>}
       </form>
@@ -36,7 +36,7 @@ export default function AdminClient({ posts }: { posts: Row[] | null }) {
   return (
     <>
       {err && <p className="text-muted">{err}</p>}
-      <table className="w-full border-collapse text-[15px] [&_td]:border-b [&_td]:border-line [&_td]:px-2 [&_td]:py-3 [&_th]:border-b [&_th]:border-line [&_th]:px-2 [&_th]:py-3 [&_th]:text-left [&_th]:text-xs [&_th]:font-medium [&_th]:text-muted">
+      <table className="w-full border-collapse t-body-sm [&_td]:border-b [&_td]:border-line [&_td]:px-2 [&_td]:py-3 [&_th]:border-b [&_th]:border-line [&_th]:px-2 [&_th]:py-3 [&_th]:text-left [&_th]:t-label [&_th]:text-muted">
         <thead><tr><th>제목</th><th>카테고리</th><th>작성일</th><th>발행</th><th>Featured</th><th /></tr></thead>
         <tbody>
           {posts.map((p) => (

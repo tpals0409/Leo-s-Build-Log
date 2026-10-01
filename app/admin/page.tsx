@@ -11,7 +11,7 @@ export default async function AdminPage() {
   const posts = tokenOk(token) ? await listAll() : null;
   return (
     <Container className="pb-20">
-      <h1 className="pb-8 pt-12 text-[32px]/10 font-bold">관리자</h1>
+      <h1 className="pb-8 pt-12 t-title1 font-bold">관리자</h1>
       <AdminClient posts={posts?.map((p) => ({ ...p, created_at: p.created_at.toISOString() })) ?? null} />
     </Container>
   );

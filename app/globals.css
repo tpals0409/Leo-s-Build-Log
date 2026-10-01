@@ -17,12 +17,27 @@
   --color-line: #e5e5ea;
   --font-sans: 'Gmarket Sans', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;
   --container-wrap: 1120px;
-  --radius-pill: 980px;
+  --radius-pill: 980px;  /* 버튼, 검색창 */
+  --radius-card: 10px;   /* 카드 썸네일, 입력창 */
+  --radius-panel: 18px;  /* 히어로 이미지 */
 }
+
+/* 타이포 스케일 — 글자 크기는 이것만 쓴다 (text-[NNpx] 금지).
+   t-*는 크기/행간만 정한다. 굵기는 항상 font-light|medium|bold로 따로 (t-label만 완성형). */
+@utility t-display  { font-size: 48px; line-height: 60px; letter-spacing: -0.28px; } /* 홈 히어로 */
+@utility t-headline { font-size: 40px; line-height: 48px; letter-spacing: -0.28px; } /* 글 제목, 모바일 히어로 */
+@utility t-title1   { font-size: 32px; line-height: 40px; } /* 페이지 제목 */
+@utility t-title2   { font-size: 24px; line-height: 32px; } /* 섹션 제목 */
+@utility t-title3   { font-size: 22px; line-height: 30px; } /* 카드 제목 */
+@utility t-body-lg  { font-size: 19px; line-height: 30px; } /* 리드 문단 */
+@utility t-body     { font-size: 17px; line-height: 25px; } /* 본문, 버튼 */
+@utility t-body-sm  { font-size: 15px; line-height: 22px; } /* 요약, 표 */
+@utility t-caption  { font-size: 13px; line-height: 18px; } /* 날짜, 검색창 */
+@utility t-label    { font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: .4px; text-transform: uppercase; } /* 카테고리 */
 
 @layer base {
   body {
-    @apply bg-surface text-fg font-sans font-light text-[17px]/[25px] tracking-[-0.374px] antialiased break-keep overflow-x-clip;
+    @apply bg-surface text-fg font-sans font-light t-body tracking-[-0.374px] antialiased break-keep overflow-x-clip;
   }
   :focus-visible { @apply outline-2 outline-offset-2 outline-primary; }
 }

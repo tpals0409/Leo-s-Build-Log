@@ -21,7 +21,7 @@ export default async function PostPage({ params }: Props) {
     <article>
       <Container className="pb-8 pt-14 text-center">
         <Eyebrow>{post.category}</Eyebrow>
-        <h1 className="mb-4 mt-3 text-[40px]/12 font-bold">{post.title}</h1>
+        <h1 className="mb-4 mt-3 t-headline font-bold">{post.title}</h1>
         <time dateTime={post.created_at.toISOString()} className="text-muted">{fmtDate(post.created_at)}</time>
       </Container>
       <PostFrame html={post.html} title={post.title} />

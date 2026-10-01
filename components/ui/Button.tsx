@@ -6,8 +6,8 @@ const VARIANT = {
   outline: 'border border-link text-link',
 };
 const SIZE = {
-  lg: 'h-11 px-[21px] text-[17px]',
-  sm: 'h-9 px-[15px] text-sm',
+  lg: 'h-11 px-[21px] t-body',
+  sm: 'h-9 px-[15px] t-body-sm',
 };
 
 type Props = { variant?: keyof typeof VARIANT; size?: keyof typeof SIZE; className?: string };

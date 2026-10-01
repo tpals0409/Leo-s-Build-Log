@@ -5,7 +5,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "check": "node --experimental-strip-types lib/check.ts"
+    "check": "node --experimental-strip-types lib/check.ts",
+    "check:design": "sh scripts/check-design.sh",
+    "prepare": "git config core.hooksPath .githooks"
   },
   "dependencies": {
     "next": "^16.3.8",

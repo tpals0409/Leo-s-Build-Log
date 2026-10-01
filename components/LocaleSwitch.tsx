@@ -7,5 +7,5 @@ import { DICT, type Locale } from '@/lib/i18n';
 export default function LocaleSwitch({ locale }: { locale: Locale }) {
   const other: Locale = locale === 'ko' ? 'en' : 'ko';
   const path = usePathname().replace(/^\/(ko|en)(?=\/|$)/, `/${other}`);
-  return <Link href={path} hrefLang={other} className="t-body-sm font-medium hover:text-link">{DICT[locale].switchTo}</Link>;
+  return <Link href={path} hrefLang={other} className="link-hover t-body-sm font-medium">{DICT[locale].switchTo}</Link>;
 }

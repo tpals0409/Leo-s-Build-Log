@@ -56,13 +56,18 @@ Next.js 16 (App Router) + PostgreSQL + Tailwind v4, Podman으로 자체 호스�
 - 서버 컴포넌트에서는 `motion/react-client`를 쓴다(그 요소만 클라이언트로 동작). 컴포넌트 전체를 `'use client'`로 바꾸지 않는다.
 - 스크롤 등장(`ui/Reveal`)은 카드·섹션에만. **글 본문과 페이지 맨 위 제목에는 쓰지 않는다**(JS 전엔 투명해서 검색·가독성 손해).
 - 페이지 전환은 들어오는 효과만(`app/[locale]/template.tsx`). 나가는 효과는 Next 내부 API가 필요해서 하지 않는다.
-- 호버·클릭은 CSS(`transition-transform duration-200 ease-standard`, `motion-reduce:transform-none`). JS 불필요.
+- 호버·클릭은 CSS 유틸리티(`app/globals.css`)로만. DESIGN.md엔 호버가 없어서 이건 우리 확장이다.
+  - `press` — 버튼·탭: 호버 시 살짝 확대, 누르면 살짝 축소 (`Button`은 이미 적용)
+  - `link-hover` — 텍스트 링크: 파랑(`link`)으로 부드럽게
+  - `arrow` — 링크 끝 →: `<Arrow />` 컴포넌트 + 부모에 `group`. 호버 시 오른쪽으로 3px
+  - `press-card` — 카드: 누를 때만 살짝. 썸네일 확대는 카드 안에서 `group-hover:` (`PostCard`, `ProjectCard`)
+  - `hover:…`/`active:…`를 직접 쓰지 않는다(`check:design`이 막음). 동작 줄이기는 유틸리티가 처리한다.
 - 동작 줄이기 설정은 `MotionProvider`(Motion)와 `motion-reduce:`(CSS)로 존중한다.
 
 ### 컴포넌트
 있는 것부터 쓴다. 새로 만들기 전에 `components/ui`, `components`를 확인.
 - `ui/Button`, `ui/ButtonLink` — `variant: primary|outline`, `size: lg(44px)|sm(36px)`
-- `ui/Container` `ui/Eyebrow` `ui/SectionHeader` `ui/Thumb` `ui/Reveal`
+- `ui/Container` `ui/Eyebrow` `ui/SectionHeader` `ui/Thumb` `ui/Reveal` `ui/Arrow`
 - `Header` `Footer` `LocaleSwitch` `FeaturedHero` `PostCard(size: md|sm)` `PostGrid(cols: 3|4)` `ProjectCard` `ProjectGrid` `PostBody` `DemoAutoHeight` `ReadingProgress` `MotionProvider`
 - 도메인 컴포넌트는 `locale` prop을 받아 링크(`/${locale}/…`)와 문구를 만든다.
 

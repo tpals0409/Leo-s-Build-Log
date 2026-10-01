@@ -13,5 +13,6 @@ check 'Tailwind 기본 팔레트 → 색 토큰' "(bg|text|border|ring|fill|stro
 check 'Tailwind 기본 글자크기 → t-*' 'text-(xs|sm|base|lg|[0-9]?xl)([^a-z-]|$)'
 check 'hex 색상 → 색 토큰' '#[0-9a-fA-F]{3,8}([^0-9a-zA-Z]|$)'
 check 'Motion 인라인 값 → lib/motion.ts 프리셋 (예: {...reveal(i)})' '(initial|animate|exit|whileInView|whileHover|whileTap|viewport|transition)=\{\{'
+check '직접 hover:/active: → press(버튼·탭) / link-hover(텍스트 링크) / arrow(→)' '(^|["{ `])(hover|active):'
 [ $fail = 0 ] && echo 'design check ok'
 exit $fail

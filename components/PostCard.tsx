@@ -13,7 +13,7 @@ const SIZE = {
 export default function PostCard({ post, locale, size = 'md' }: { post: P; locale: Locale; size?: keyof typeof SIZE }) {
   const s = SIZE[size];
   return (
-    <Link href={`/${locale}/posts/${post.slug}`} className="group flex flex-col gap-1.5 transition-transform duration-200 ease-standard active:scale-99 motion-reduce:transform-none">
+    <Link href={`/${locale}/posts/${post.slug}`} className="group press-card flex flex-col gap-1.5">
       <div className="mb-3 overflow-hidden rounded-card">
         <Thumb src={post.thumbnail} className={`transition-transform duration-500 ease-standard group-hover:scale-103 motion-reduce:transform-none ${s.thumb}`} />
       </div>

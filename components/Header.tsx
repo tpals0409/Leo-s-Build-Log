@@ -14,9 +14,9 @@ export default function Header({ locale }: { locale: Locale }) {
   return (
     <header className="sticky top-0 z-10 border-b border-line/60 bg-surface/85 backdrop-blur-xl backdrop-saturate-180">
       <Container className="flex h-15 items-center gap-8">
-        <Link href={`/${locale}`} className="t-title2 font-medium">{SITE.name}</Link>
+        <Link href={`/${locale}`} className="link-hover t-title2 font-medium">{SITE.name}</Link>
         <nav className="mx-auto hidden gap-10 t-body-sm font-medium lg:flex">
-          {nav.map((n) => <Link key={n.href} href={n.href} className="hover:text-link">{n.label}</Link>)}
+          {nav.map((n) => <Link key={n.href} href={n.href} className="link-hover">{n.label}</Link>)}
         </nav>
         <form action={`/${locale}/search`} role="search" className="relative ml-auto lg:ml-0">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden className="absolute left-3 top-2.5 text-muted">
@@ -29,7 +29,7 @@ export default function Header({ locale }: { locale: Locale }) {
       </Container>
       {/* 좁은 화면: 메뉴를 한 줄로 */}
       <Container className="flex gap-6 pb-3 t-body-sm font-medium lg:hidden">
-        {nav.map((n) => <Link key={n.href} href={n.href}>{n.label}</Link>)}
+        {nav.map((n) => <Link key={n.href} href={n.href} className="link-hover">{n.label}</Link>)}
       </Container>
     </header>
   );

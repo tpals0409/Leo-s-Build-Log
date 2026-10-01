@@ -36,6 +36,32 @@
 @utility t-caption  { font-size: 13px; line-height: 18px; } /* 날짜, 검색창 */
 @utility t-label    { font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: .4px; text-transform: uppercase; } /* 카테고리 */
 
+/* 상호작용 — 누를 수 있는 것은 이 셋 중 하나를 쓴다 (AGENTS.md). DESIGN.md엔 호버가 없어 이건 우리 확장.
+   press: 버튼·탭 (호버 살짝 확대, 누르면 살짝 축소) / link-hover: 텍스트 링크 (파랑으로 부드럽게)
+   arrow: 링크 안의 → (부모에 group, 호버 시 오른쪽으로) */
+@utility press {
+  transition: scale 0.2s var(--ease-standard);
+  &:hover { scale: 1.03; }
+  &:active { scale: 0.97; }
+  @media (prefers-reduced-motion: reduce) { transition: none; &:hover, &:active { scale: none; } }
+}
+/* 카드: 커지지 않고 누를 때만 아주 살짝 (썸네일 확대는 카드 안 group-hover) */
+@utility press-card {
+  transition: scale 0.2s var(--ease-standard);
+  &:active { scale: 0.99; }
+  @media (prefers-reduced-motion: reduce) { transition: none; &:active { scale: none; } }
+}
+@utility link-hover {
+  transition: color 0.2s var(--ease-standard);
+  &:hover { color: var(--color-link); }
+}
+@utility arrow {
+  display: inline-block;
+  transition: translate 0.2s var(--ease-standard);
+  :where(.group):hover & { translate: 3px 0; }
+  @media (prefers-reduced-motion: reduce) { transition: none; :where(.group):hover & { translate: none; } }
+}
+
 @layer base {
   body {
     @apply bg-surface text-fg font-sans font-light t-body tracking-[-0.374px] antialiased break-keep overflow-x-clip;

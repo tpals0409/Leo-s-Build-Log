@@ -34,11 +34,14 @@ const LINK = /<link\b[^>]*rel\s*=\s*["']?stylesheet[^>]*>/gi;
 // @font-face는 shadow root 안에서 무시되므로 폰트 CSS(@font-face만 담김)는 문서 쪽에 둔다
 const isFontCss = (tag: string) => /fonts\.googleapis\.com|cdn\.jsdelivr\.net\/.*font/i.test(tag);
 
-const cache = new Map<string, string>(); // ponytail: 프로세스 메모리 캐시(최대 200개). 글이 아주 많아지면 LRU/외부 캐시로
+// ponytail: 프로세스 메모리 캐시(최대 200개). 글이 아주 많아지면 LRU/외부 캐시로.
+// 개발 중엔 끈다 — 렌더 코드를 고쳐도 같은 글 HTML이면 예전 결과가 나와서 확인을 망친다.
+const cache = new Map<string, string>();
+const useCache = process.env.NODE_ENV === 'production';
 
 export async function toShadowHtml(doc: string, locale: Locale): Promise<string> {
   const key = `${locale}\u0000${doc}`;
-  const hit = cache.get(key);
+  const hit = useCache && cache.get(key);
   if (hit) return hit;
 
   const head = doc.match(/<head\b[^>]*>([\s\S]*?)<\/head\s*>/i)?.[1] ?? '';

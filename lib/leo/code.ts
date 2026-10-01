@@ -3,19 +3,20 @@ import { createHighlighter, type Highlighter, type ThemeRegistration } from 'shi
 import { esc, lineSet } from './util.ts';
 
 // 테마: DESIGN.md "강조색 하나" — 키워드만 강조색(brand 계열), 나머지는 charcoal~muted 무채색.
-// 각 색은 code 배경(cream #F6EBDD) 위 대비 4.5:1 이상.
+// 각 색은 code 배경(fog #F5F5F7) 위 대비 4.5:1 이상.
 const THEME: ThemeRegistration = {
   name: 'leo',
   type: 'light',
-  colors: { 'editor.background': '#F6EBDD', 'editor.foreground': '#292725' },
+  colors: { 'editor.background': '#F5F5F7', 'editor.foreground': '#292725' },
   tokenColors: [
-    { scope: ['comment', 'punctuation.definition.comment'], settings: { foreground: '#696866', fontStyle: 'italic' } }, // muted 4.7
-    { scope: ['keyword', 'storage', 'storage.type', 'storage.modifier', 'keyword.operator.new', 'keyword.control', 'entity.name.tag'], settings: { foreground: '#9B5124' } }, // 강조 5.0
-    { scope: ['string', 'string.quoted', 'string.template', 'entity.other.attribute-name', 'constant.numeric', 'constant.language'], settings: { foreground: '#494745' } }, // secondary 7.9
+    { scope: ['comment', 'punctuation.definition.comment'], settings: { foreground: '#696866', fontStyle: 'italic' } }, // muted 5.1
+    { scope: ['keyword', 'storage', 'storage.type', 'storage.modifier', 'keyword.operator.new', 'keyword.control', 'entity.name.tag'], settings: { foreground: '#9B5124' } }, // 강조 5.4
+    { scope: ['string', 'string.quoted', 'string.template', 'entity.other.attribute-name', 'constant.numeric', 'constant.language'], settings: { foreground: '#494746' } }, // secondary 8.5
   ],
 };
 
-const g = globalThis as unknown as { leoShiki?: Promise<Highlighter> };
+// 운영에선 프로세스 전체에서 하나(globalThis). 개발 중엔 모듈이 다시 로드될 때 새로 만든다 — 테마를 고치면 바로 보이게
+const g = (process.env.NODE_ENV === 'production' ? globalThis : {}) as { leoShiki?: Promise<Highlighter> };
 const highlighter = () => (g.leoShiki ??= createHighlighter({ themes: [THEME], langs: [] }));
 
 export async function renderCode(code: string, attrs: { lang?: string; file?: string; highlight?: string }): Promise<string> {

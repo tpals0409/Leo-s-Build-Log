@@ -19,20 +19,20 @@
   --color-sage: #819477;       /* Sage Green — 서브 포인트 */
   --color-steel: #71829B;      /* Slate Blue — 기술적인 서브 */
   --color-charcoal: #292725;   /* Charcoal — 본문/제목 */
-  --color-paper: #FFFEFC;      /* 팔레트 밖: 거의 중립인 흰색 (따뜻함 아주 약간) — 페이지 배경 */
+  --color-paper: #FFFFFF;      /* 팔레트 밖: 흰색 — 페이지 배경 */
 
   /* 역할 (대비는 paper 배경 기준, WCAG AA 4.5:1 이상) */
   --color-surface: var(--color-paper);      /* 페이지 배경 */
-  --color-fg: var(--color-charcoal);        /* 본문·제목 14.7:1 */
-  --color-secondary: #494745;               /* 리드 문단 — charcoal 85% on paper, 9.2:1 */
-  --color-muted: #696866;                   /* 요약·날짜 — charcoal 70% on paper, 5.5:1 */
-  --color-label: var(--color-lion);         /* 카테고리 라벨 5.0:1 */
-  --color-link: var(--color-cocoa);         /* 링크 10.1:1 */
+  --color-fg: var(--color-charcoal);        /* 본문·제목 14.9:1 */
+  --color-secondary: #494746;               /* 리드 문단 — charcoal 85% on paper, 9.2:1 */
+  --color-muted: #696866;                   /* 요약·날짜 — charcoal 70% on paper, 5.6:1 */
+  --color-label: var(--color-lion);         /* 카테고리 라벨 5.1:1 */
+  --color-link: var(--color-cocoa);         /* 링크 10.3:1 */
   --color-primary: var(--color-brand);      /* 채운 버튼 */
   --color-primary-hover: var(--color-brand-deep);
   --color-on-primary: var(--color-charcoal); /* 오렌지 위 글자 — 흰색은 2.5:1이라 불가, 차콜 6.0:1 */
-  --color-fog: var(--color-cream);          /* 입력창·태그·탭·빈 썸네일 (면) */
-  --color-line: var(--color-sand);          /* 구분선 */
+  --color-fog: #F5F5F7;                     /* DESIGN.md Fog Canvas — 입력창·태그·탭·빈 썸네일·코드 바탕 */
+  --color-line: #DFDFDE;                    /* 구분선 — DESIGN.md에 값 없음 → charcoal 15% on paper로 만든 중립 회색 */
   --color-highlight: var(--color-butter);   /* 텍스트 선택 */
 
   --font-sans: 'Gmarket Sans', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;
@@ -61,6 +61,13 @@
 @utility t-body { font-size: var(--fs-body); line-height: var(--lh-body); font-weight: var(--fw-body); letter-spacing: var(--ls-body); } /* 본문·버튼·리드 */
 @utility t-body-sm { font-size: var(--fs-body-sm); line-height: var(--lh-body-sm); font-weight: var(--fw-body-sm); letter-spacing: var(--ls-body-sm); } /* 요약·메뉴·표 */
 @utility t-caption { font-size: var(--fs-caption); line-height: var(--lh-caption); font-weight: var(--fw-caption); letter-spacing: var(--ls-caption); } /* 날짜·라벨·작은 글 */
+
+/* 터치 영역: 보이는 모양·배치는 그대로 두고 누르는 영역만 44×44px 이상으로 (Apple HIG 44pt, WCAG 2.5.8).
+   DESIGN.md 주요 과업 "다른 기기·입력 방식에서도 같은 인터페이스"를 위한 것 — 장식 아님. 작은 링크·버튼에 붙인다. */
+@utility tap {
+  position: relative;
+  &::after { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%); }
+}
 
 /* 호버: DESIGN.md는 호버 모습을 정하지 않았고 "추측하지 말 것"이라 한다. 유일한 예외는 팔레트가 지정한 버튼 호버(Brand → Deep Orange). */
 @utility primary-hover {

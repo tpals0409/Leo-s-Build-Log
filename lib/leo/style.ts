@@ -15,8 +15,17 @@ export const LEO_CSS = `
 .leo-error{${role('body-sm')};color:var(--color-brand-deep);border:1px dashed currentColor;padding:8px 15px}
 .leo-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
-/* 그림·차트 — 테두리 없이, 제목과 설명만 */
-.leo-figure,.leo-chart{position:relative}
+/* 그림·차트 — 테두리 없이, 제목과 설명만. 자기 폭에 반응한다(컨테이너 쿼리) */
+.leo-figure,.leo-chart{position:relative;container-type:inline-size}
+.leo-chart .leo-chart__svg--narrow{display:none}
+@container (max-width:520px){
+  /* 차트: 좁은 칸용으로 따로 그린 SVG (글자가 6px로 줄지 않게) */
+  .leo-chart .leo-chart__svg--wide{display:none}
+  .leo-chart .leo-chart__svg--narrow{display:block}
+  /* 다이어그램: 원래 크기로, 넘치면 가로 스크롤 */
+  .leo-figure__art{overflow-x:auto}
+  .leo-figure__art svg{min-width:var(--w,auto)}
+}
 .leo-figure__title{margin:0 0 ${gap};${role('body')}}
 .leo-figure__art svg,.leo-figure__art img{display:block;max-width:100%;height:auto;margin:0 auto}
 .leo-figure figcaption{margin-top:8px;${role('caption')};color:var(--color-muted)}
@@ -28,16 +37,16 @@ export const LEO_CSS = `
 .leo-mark{cursor:default}
 .leo-line{fill:none;stroke-width:2;stroke-linejoin:round}
 .leo-dot{stroke:var(--color-surface);stroke-width:2}
-/* 계열 색: 첫 계열만 강조색, 나머지는 무채색 단계 */
+/* 계열 색: 첫 계열만 강조색, 나머지는 회색 단계 */
 .leo-s0{fill:var(--color-brand);stroke:var(--color-brand)}.leo-s1{fill:var(--color-charcoal);stroke:var(--color-charcoal)}
-.leo-s2{fill:var(--color-muted);stroke:var(--color-muted)}.leo-s3{fill:var(--color-sand);stroke:var(--color-sand)}
-.leo-s4{fill:var(--color-secondary);stroke:var(--color-secondary)}.leo-s5{fill:var(--color-cream);stroke:var(--color-cream)}
+.leo-s2{fill:var(--color-muted);stroke:var(--color-muted)}.leo-s3{fill:var(--color-line);stroke:var(--color-line)}
+.leo-s4{fill:var(--color-secondary);stroke:var(--color-secondary)}.leo-s5{fill:var(--color-fog);stroke:var(--color-fog)}
 .leo-line.leo-s0,.leo-line.leo-s1,.leo-line.leo-s2,.leo-line.leo-s3,.leo-line.leo-s4,.leo-line.leo-s5{fill:none}
 .leo-legend{display:flex;flex-wrap:wrap;gap:${gap};margin:8px 0 0;padding:0;list-style:none;${role('caption')};color:var(--color-secondary)}
 .leo-legend li{display:flex;align-items:center;gap:8px}
 .leo-swatch{width:10px;height:10px;border-radius:50%;display:inline-block}
 .leo-swatch.leo-s0{background:var(--color-brand)}.leo-swatch.leo-s1{background:var(--color-charcoal)}.leo-swatch.leo-s2{background:var(--color-muted)}
-.leo-swatch.leo-s3{background:var(--color-sand)}.leo-swatch.leo-s4{background:var(--color-secondary)}.leo-swatch.leo-s5{background:var(--color-cream)}
+.leo-swatch.leo-s3{background:var(--color-line)}.leo-swatch.leo-s4{background:var(--color-secondary)}.leo-swatch.leo-s5{background:var(--color-fog)}
 .leo-tooltip{position:absolute;pointer-events:none;z-index:2;padding:8px 15px;background:var(--color-charcoal);color:var(--color-paper);
   ${role('caption')};white-space:nowrap;transform:translate(-50%,calc(-100% - 8px))}
 
@@ -105,14 +114,15 @@ export const LEO_CSS = `
 .leo-code .leo-add{background:color-mix(in srgb,var(--color-sage) 22%,transparent)}
 .leo-code .leo-del{background:color-mix(in srgb,var(--color-brand) 16%,transparent)}
 .leo-copy{position:absolute;right:0;top:0;padding:0;border:0;background:none;${role('caption')};color:var(--color-link);cursor:pointer}
+.leo-copy::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)} /* 터치 영역 44px */
 
 /* 파일 트리 — 상자 없이 고정폭 글자만 */
 .leo-tree{margin:2em 0;font:var(--fw-body) var(--fs-body-sm)/var(--lh-body) var(--font-mono);overflow-x:auto}
 .leo-tree__line,.leo-tree__note{color:var(--color-muted)}.leo-tree__file{color:var(--color-secondary)}
 
 /* 터미널 — 어두운 면 하나로 구분 */
-.leo-term{background:var(--color-charcoal);color:var(--color-sand)}
-.leo-term figcaption{padding:8px ${gap};${role('caption')};color:var(--color-sand);border-bottom:1px solid color-mix(in srgb,var(--color-sand) 20%,transparent)}
+.leo-term{background:var(--color-charcoal);color:var(--color-line)}
+.leo-term figcaption{padding:8px ${gap};${role('caption')};color:var(--color-line);border-bottom:1px solid color-mix(in srgb,var(--color-line) 20%,transparent)}
 .leo-term pre{padding:${gap}}
-.leo-term__prompt{color:var(--color-butter)}.leo-term__cmd{color:var(--color-cream)}.leo-term__out{color:var(--color-sand)}
+.leo-term__prompt{color:var(--color-butter)}.leo-term__cmd{color:var(--color-paper)}.leo-term__out{color:var(--color-line)}
 `;

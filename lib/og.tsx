@@ -6,7 +6,7 @@ import { SITE } from './site';
 
 // 링크 미리보기(OG) 이미지 1200×630. 이미지 렌더러(Satori)는 CSS 변수·webp를 못 읽어서
 // 색은 app/globals.css 토큰 값을 그대로 옮겨 적고, 로고는 png를 쓴다. 토큰을 바꾸면 여기도 맞출 것.
-const C = { fg: '#292725', label: '#9A6038', surface: '#FFFEFC', line: '#E7D1B5' }; // charcoal, lion, paper, sand
+const C = { fg: '#292725', label: '#9A6038', surface: '#FFFFFF', line: '#DFDFDE' }; // charcoal, lion, paper, line
 export const OG_SIZE = { width: 1200, height: 630 };
 
 const pub = (f: string) => readFile(path.join(process.cwd(), 'public', f));

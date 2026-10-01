@@ -57,8 +57,12 @@ export const SPECS: Spec[] = [
     <path d="M100 40h28M228 40h28" stroke="#696866" stroke-width="1.5"/>
   </svg>
 </leo-diagram>`,
-    render: (a, inner) =>
-      `<figure class="leo-figure">${opt(a('title'), (t) => `<p class="leo-figure__title">${t}</p>`)}<div class="leo-figure__art">${inner}</div>${opt(a('caption'), (c) => `<figcaption>${c}</figcaption>`)}</figure>`,
+    render: (a, inner) => {
+      // SVG 원래 폭 → 좁은 칸에서 줄이지 않고 이 폭으로 그려 가로 스크롤 (style.ts). 너무 넓으면 960에서 자름
+      const w = Number(inner.match(/<svg\b[^>]*\bviewBox="[\d.-]+[\s,]+[\d.-]+[\s,]+([\d.]+)/i)?.[1]);
+      const art = w ? ` style="--w:${Math.min(Math.round(w), 960)}px"` : '';
+      return `<figure class="leo-figure">${opt(a('title'), (t) => `<p class="leo-figure__title">${t}</p>`)}<div class="leo-figure__art"${art}>${inner}</div>${opt(a('caption'), (c) => `<figcaption>${c}</figcaption>`)}</figure>`;
+    },
   },
   {
     tag: 'leo-chart',

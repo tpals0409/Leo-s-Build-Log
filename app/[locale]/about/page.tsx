@@ -24,7 +24,7 @@ export default async function AboutPage({ params }: Props) {
       <h2 className="mb-4 mt-16 t-tile">{t.contact}</h2>
       <ul className="flex flex-col gap-2">
         {SITE.contacts.filter((c) => c.href).map((c) => (
-          <li key={c.label}><a href={c.href} className="text-link">{c.label}</a></li>
+          <li key={c.label}><a href={c.href} className="tap text-link">{c.label}</a></li>
         ))}
       </ul>
     </Container>

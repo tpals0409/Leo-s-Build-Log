@@ -26,7 +26,6 @@ export function parseChart(text: string, type: string): { data?: Data; errors: s
   return errors.length ? { errors } : { data: d, errors };
 }
 
-const W = 640;
 // SVG 글자 폭 대략 추정 (한글·전각 ≈ 13px, 그 외 ≈ 7px @13px) → 칸을 넘으면 … 로 자른다 (전체 이름은 툴팁·표에)
 const fit = (label: string, max: number) => {
   let w = 0, out = '';
@@ -55,11 +54,15 @@ export function renderChart(text: string, attrs: { type: string; title?: string;
     `data-label="${esc(label)}"${multi ? ` data-series="${esc(data.series[s].name)}"` : ''} data-value="${esc(fmt(v))}"`;
   const max = niceMax(Math.max(...data.series.flatMap((s) => s.values)));
   const ticks = [0, 0.25, 0.5, 0.75, 1].map((t) => t * max);
+
+  // 같은 차트를 두 폭으로 그린다: 넓은 화면(640)·좁은 화면(340). SVG는 폭에 맞춰 통째로 줄어들어서
+  // 640짜리를 휴대폰에 맞추면 12px 글자가 6px이 된다 — 좁은 칸에선 340짜리를 보여준다(style.ts 컨테이너 쿼리).
+  const draw = (W: number, narrow: boolean) => {
   let svg = '';
   let H = 300;
 
   if (attrs.type === 'bar' || attrs.type === 'line') {
-    const m = { t: 16, r: 16, b: 40, l: 56 };
+    const m = narrow ? { t: 16, r: 8, b: 36, l: 40 } : { t: 16, r: 16, b: 40, l: 56 };
     const pw = W - m.l - m.r, ph = H - m.t - m.b;
     const y = (v: number) => m.t + ph - (v / max) * ph;
     svg += ticks.map((t) => `<line class="leo-grid" x1="${m.l}" x2="${W - m.r}" y1="${y(t)}" y2="${y(t)}"/><text class="leo-axis" x="${m.l - 8}" y="${y(t) + 4}" text-anchor="end">${esc(nf.format(t))}</text>`).join('');
@@ -84,7 +87,7 @@ export function renderChart(text: string, attrs: { type: string; title?: string;
       });
     }
   } else if (attrs.type === 'hbar') {
-    const rowH = 14 + data.series.length * 18, m = { t: 8, r: 72, b: 8, l: 140 };
+    const rowH = 14 + data.series.length * 18, m = narrow ? { t: 8, r: 56, b: 8, l: 96 } : { t: 8, r: 72, b: 8, l: 140 };
     H = m.t + m.b + data.labels.length * rowH;
     const pw = W - m.l - m.r;
     const x = (v: number) => (v / max) * pw;
@@ -100,8 +103,10 @@ export function renderChart(text: string, attrs: { type: string; title?: string;
   } else {
     // donut
     const vals = data.series[0].values, total = vals.reduce((a, b) => a + b, 0) || 1;
-    const cx = 150, cy = 150, R = 120, r = 72;
-    H = 300;
+    // 좁은 화면: 도넛 위, 범례 아래 / 넓은 화면: 도넛 왼쪽, 범례 오른쪽
+    const cx = narrow ? W / 2 : 150, cy = narrow ? 120 : 150, R = narrow ? 104 : 120, r = narrow ? 62 : 72;
+    const lx = narrow ? 8 : 320, ly0 = narrow ? 262 : 70;
+    H = narrow ? ly0 + data.labels.length * 28 : 300;
     let a0 = -Math.PI / 2;
     const pt = (rad: number, a: number) => `${cx + rad * Math.cos(a)},${cy + rad * Math.sin(a)}`;
     vals.forEach((v, i) => {
@@ -115,10 +120,12 @@ export function renderChart(text: string, attrs: { type: string; title?: string;
     });
     svg += `<text class="leo-donut-total" x="${cx}" y="${cy + 8}" text-anchor="middle">${esc(fmt(total))}</text>`;
     data.labels.forEach((label, i) => {
-      const ly = 70 + i * 30;
-      svg += `<rect class="leo-s${i % 6}" x="320" y="${ly - 11}" width="14" height="14"/><text class="leo-axis leo-axis--label" x="344" y="${ly}">${esc(fit(label, 150))}</text><text class="leo-value" x="${W - 16}" y="${ly}" text-anchor="end">${esc(fmt(vals[i]))} · ${nf.format(Math.round((vals[i] / total) * 1000) / 10)}%</text>`;
+      const ly = ly0 + i * (narrow ? 28 : 30);
+      svg += `<rect class="leo-s${i % 6}" x="${lx}" y="${ly - 11}" width="14" height="14"/><text class="leo-axis leo-axis--label" x="${lx + 24}" y="${ly}">${esc(fit(label, narrow ? W - lx - 130 : 150))}</text><text class="leo-value" x="${W - 16}" y="${ly}" text-anchor="end">${esc(fmt(vals[i]))} · ${nf.format(Math.round((vals[i] / total) * 1000) / 10)}%</text>`;
     });
   }
+  return `<svg class="leo-chart__svg leo-chart__svg--${narrow ? 'narrow' : 'wide'}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(attrs.title ?? 'chart')}">${svg}</svg>`;
+  };
 
   const title = attrs.title ? `<p class="leo-figure__title">${esc(attrs.title)}</p>` : '';
   const legend = multi && attrs.type !== 'donut'
@@ -128,5 +135,5 @@ export function renderChart(text: string, attrs: { type: string; title?: string;
   const table = `<table class="leo-sr-only"><thead><tr><th></th>${data.series.map((s) => `<th>${esc(s.name)}</th>`).join('')}</tr></thead><tbody>${data.labels
     .map((l, i) => `<tr><th>${esc(l)}</th>${data.series.map((s) => `<td>${esc(fmt(s.values[i]))}</td>`).join('')}</tr>`)
     .join('')}</tbody></table>`;
-  return `<figure class="leo-chart leo-chart--${attrs.type}" data-chart>${title}<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(attrs.title ?? 'chart')}">${svg}</svg>${legend}${table}</figure>`;
+  return `<figure class="leo-chart leo-chart--${attrs.type}" data-chart>${title}${draw(640, false)}${draw(340, true)}${legend}${table}</figure>`;
 }

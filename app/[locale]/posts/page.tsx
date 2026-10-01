@@ -29,7 +29,7 @@ export default async function PostsPage({ params, searchParams }: Props) {
         {tabs.map((tab) => (
           <Link key={tab.key} href={`/${locale}/posts${tab.key ? `?category=${tab.key}` : ''}`}
             aria-current={tab.key === active ? 'page' : undefined}
-            className="rounded-pill bg-fog px-4 py-1.5 t-body-sm aria-[current=page]:bg-fg aria-[current=page]:text-surface">
+            className="tap inline-flex h-9 items-center rounded-pill bg-fog px-[15px] t-body-sm aria-[current=page]:bg-fg aria-[current=page]:text-surface">
             {tab.label}
           </Link>
         ))}

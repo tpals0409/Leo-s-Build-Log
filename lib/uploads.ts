@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -51,21 +51,27 @@ function hasImageSignature(data: Buffer, ext: string): boolean {
 export async function saveUpload(
   file: File,
   dir = UPLOAD_DIR,
-  makeId: () => string = randomUUID,
+  // 기본 이름 = 내용 해시 → 같은 이미지를 다시 올리면 같은 주소 (git 글 동기화가 매번 올려도 쌓이지 않음)
+  makeId: (data: Buffer) => string = (data) => createHash('sha256').update(data).digest('hex').slice(0, 32),
 ): Promise<{ name: string; url: string }> {
   const ext = uploadExtension(file.name, file.type, file.size);
   if (!ext) throw new Error('invalid image');
   const data = Buffer.from(await file.arrayBuffer());
   if (!hasImageSignature(data, ext)) throw new Error('invalid image signature');
-  const name = `${makeId()}${ext}`;
+  const name = `${makeId(data)}${ext}`;
   if (!safeUploadName(name)) throw new Error('invalid generated filename');
   await mkdir(dir, { recursive: true });
-  await writeFile(path.join(/*turbopackIgnore: true*/ dir, name), data, { flag: 'wx', mode: 0o600 });
+  try {
+    await writeFile(path.join(/*turbopackIgnore: true*/ dir, name), data, { flag: 'wx', mode: 0o600 });
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e; // 같은 해시 = 같은 내용, 이미 있음
+  }
   return { name, url: `/uploads/${name}` };
 }
 
 export function safeUploadName(name: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(?:jpg|png|webp|gif|avif)$/.test(name);
+  // 예전 업로드(uuid) 또는 내용 해시 32자
+  return /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|[0-9a-f]{32})\.(?:jpg|png|webp|gif|avif)$/.test(name);
 }
 
 export async function readUpload(name: string, dir = UPLOAD_DIR): Promise<{ data: Buffer; type: string }> {

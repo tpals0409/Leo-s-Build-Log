@@ -4,8 +4,12 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { LOCALES } from './i18n.ts';
 import { parsePostInput } from './postInput.ts';
+import { MIME } from './uploads.ts';
 
 export const CONTENT_DIR = 'content/posts';
+
+// thumbnail이 파일 이름(예: "thumbnail.png")이면 글 폴더의 파일 → 동기화 때 업로드해서 /uploads 주소로 바꾼다
+export const localFile = (v: unknown) => typeof v === 'string' && v !== '' && !/^(\/|https?:)/.test(v);
 
 export function readPostDir(dir: string) {
   const meta = JSON.parse(readFileSync(path.join(dir, 'post.json'), 'utf8'));
@@ -33,6 +37,8 @@ export function loadContent(root = CONTENT_DIR) {
     const parsed = parsePostInput(body);
     if (!parsed.ok) errors.push(...parsed.errors.map((e) => `${dir}: ${e}`));
     else if (!body.publishedAt) errors.push(`${dir}: publishedAt 필수 (예: 2026-10-01)`);
+    else if (localFile(body.thumbnail) && (path.basename(body.thumbnail) !== body.thumbnail || !MIME[path.extname(body.thumbnail).toLowerCase()] || !existsSync(path.join(dir, body.thumbnail))))
+      errors.push(`${dir}: thumbnail "${body.thumbnail}" — 글 폴더 안의 jpg/png/webp/gif/avif 파일이어야 함`);
     else posts.push(body);
   }
   return { posts, errors };

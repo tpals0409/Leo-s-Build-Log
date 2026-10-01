@@ -69,6 +69,12 @@ try {
   assert.equal(loaded.type, 'image/jpeg');
   assert.deepEqual(loaded.data, Buffer.from([0xff, 0xd8, 0xff]));
   await assert.rejects(() => readUpload('../secret.jpg', uploadTmp));
+  // 기본 이름은 내용 해시: 같은 이미지를 두 번 올려도 같은 주소, 오류 없음
+  const png = () => new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1])], 'a.png', { type: 'image/png' });
+  const h1 = await saveUpload(png(), uploadTmp), h2 = await saveUpload(png(), uploadTmp);
+  assert.equal(h1.url, h2.url);
+  assert.match(h1.name, /^[0-9a-f]{32}\.png$/);
+  assert.equal(safeUploadName(h1.name), true);
 
   const imageSignatures = [
     { name: 'valid.jpg', type: 'image/jpeg', bytes: [0xff, 0xd8, 0xff] },

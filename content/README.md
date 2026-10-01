@@ -23,7 +23,7 @@ content/posts/<slug>/
 }
 ```
 - 필수: `category`(`ai-agent` | `engineering` | `retrospective`), `publishedAt`, `ko.title`, `en.title`
-- 선택: `project`(`algosu` | `finch` | `janus` | `pinlog`), `tags`, `thumbnail`(업로드 URL), `featured`(홈 대표 글, 최신 1편), `published`(기본 true), `summary`
+- 선택: `project`(`algosu` | `finch` | `janus` | `pinlog`), `tags`, `thumbnail`(글 폴더의 이미지 파일 이름, 예: `"thumbnail.png"` — 반영 때 업로드됨), `featured`(홈 대표 글, 최신 1편), `published`(기본 true), `summary`
 - `publishedAt`: `2023-07-15`(서울 자정) 또는 `2023-07-15T09:00:00+09:00`. 미래 날짜 불가
 - 본문 작성 규칙: [docs/post-components.md](../docs/post-components.md) — 시각화는 `<leo-*>` 태그
 

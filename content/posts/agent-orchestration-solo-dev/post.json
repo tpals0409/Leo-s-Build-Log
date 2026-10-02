@@ -9,7 +9,7 @@
   ],
   "publishedAt": "2026-04-09T09:00:00+09:00",
   "thumbnail": "thumbnail.webp",
-  "featured": true,
+  "featured": false,
   "ko": {
     "title": "1인 개발에서 12개 AI 에이전트를 오케스트레이션한 방법",
     "summary": "혼자서 마이크로서비스(MSA) 플랫폼을 만들며 AI 에이전트 12명을 팀원으로 키운 실전 기록"

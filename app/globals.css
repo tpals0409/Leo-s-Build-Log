@@ -142,3 +142,10 @@
   :focus-visible { @apply outline-2 outline-offset-2 outline-link; }
   ::selection { background: var(--color-highlight); color: var(--color-fg); }
 }
+
+/* 대표 글 슬라이드 — 사용자 지정(2026-10-02). 5초마다 겹친 슬라이드끼리 교차 페이드 (components/FeaturedHero.tsx, 보이는 것에 data-on) */
+@utility slide-fade {
+  transition: opacity var(--duration-reveal) var(--ease-standard);
+  &:not([data-on]) { opacity: 0; }
+  @media (prefers-reduced-motion: reduce) { transition: none; }
+}

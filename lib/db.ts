@@ -31,11 +31,12 @@ const fromLocale = (locale: Locale) => sql`posts p join post_translations t on t
 
 export async function getHome(locale: Locale) {
   await ready();
-  const [featured] = await sql<PostCard[]>`
+  // 대표 글은 최신 5편까지 슬라이드 — 더 오래된 featured는 최신 글 목록으로 돌아간다
+  const featured = await sql<PostCard[]>`
     select ${cardCols} from ${fromLocale(locale)} where p.published and p.featured
-    order by p.created_at desc limit 1`;
+    order by p.created_at desc limit 5`;
   const latest = await sql<PostCard[]>`
-    select ${cardCols} from ${fromLocale(locale)} where p.published and p.id <> ${featured?.id ?? 0}
+    select ${cardCols} from ${fromLocale(locale)} where p.published and not (p.id = any(${featured.map((p) => p.id)}::int[]))
     order by p.created_at desc limit 3`;
   return { featured, latest };
 }

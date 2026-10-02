@@ -93,7 +93,7 @@ DESIGN.md보다 우선하는 사용자 지정은 넷뿐: **레오 팔레트**(�
   `--fs-*`·`--lh-*`·`--fw-*`·`--ls-*`(역할별) `--radius-*` `--space-cluster` `--color-*` `--font-sans|mono`
 - 폭: `max-w-wrap` (1120px, `Container`). 라이트 모드만.
 - 로고: 사용자가 준 로고 시트(2026-10-02)에서 잘라 배경을 지운 것. 헤더는 가로 로고 이미지 `public/logo-ko|en.webp`(언어별),
-  고양이만 `public/logo.png|webp`(글 OG 카드·404), 기본 OG는 `public/og-lockup-ko|en.png`, 파비콘 `app/icon.png`(난간 고양이, 투명),
+  고양이만 `public/logo.png|webp`(글 OG 카드·404), 기본 OG는 `public/og-lockup-ko|en.png`, 파비콘 `app/icon.png`(꼬리 뺀 얼굴·앞발·난간, 투명 — 작은 탭에서도 크게),
   `app/apple-icon.png`(주황 `brand` 바탕 + 고양이). 로고를 글자(Gmarket Sans)로 다시 그리지 말 것.
 
 ### 금지 (`npm run check:design`이 검사)

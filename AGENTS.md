@@ -36,7 +36,7 @@ Next.js 16 (App Router) + PostgreSQL + Tailwind v4, Podman으로 자체 호스�
 - 404: 언어 안의 `notFound()`는 `app/[locale]/not-found.tsx`(레이아웃 안, 주소로 언어 판단), 어떤 route에도 안 맞는 주소는
   `app/global-not-found.tsx`(Next 실험 기능, 한/영 함께). layout에서는 `notFound()`를 던지지 말 것 — 잡을 경계가 없어 Next 기본 404가 뜬다
   (`layoutLocale`이 ko로 대체하고, 페이지의 `localeOf`가 던진다).
-- 링크 미리보기 이미지: `app/[locale]/opengraph-image.tsx`(기본: 로고+블로그 이름)를 모든 페이지가 물려받고, 글·프로젝트는 각 폴더의 `opengraph-image.tsx`가 제목 카드를 만든다.
+- 링크 미리보기 이미지: `app/[locale]/opengraph-image.tsx`(기본: 로고 시트의 큰 로고)를 모든 페이지가 물려받고, 글·프로젝트는 각 폴더의 `opengraph-image.tsx`가 제목 카드를 만든다.
   그리는 코드는 `lib/og.tsx` 하나 — 색은 `globals.css` 토큰 값을 옮겨 적은 것이라 토큰을 바꾸면 여기도 맞춘다.
 
 ## 디자인 시스템 (반드시 지킬 것)
@@ -76,7 +76,7 @@ DESIGN.md보다 우선하는 사용자 지정은 넷뿐: **레오 팔레트**(�
   |---|---|---|---|
   | `t-display` | Display Hero | 56/60 · 700 · -0.28px | 홈 히어로 |
   | `t-section` | Section | 40/44 · 700 | 페이지·섹션·글 제목, 모바일 히어로 |
-  | `t-tile` | Tile Heading | 28/32 · 500 · 0.196px | 카드 제목, 로고(데스크톱), 대표 글 슬라이드 제목(모바일) |
+  | `t-tile` | Tile Heading | 28/32 · 500 · 0.196px | 카드 제목, 대표 글 슬라이드 제목(모바일) |
   | `t-body` | Body | 17/25 · 500 · -0.374px | 본문·버튼·리드 |
   | `t-body-sm` | Body Small | 14/18 · 500 · -0.224px | 요약·메뉴·표·작은 버튼 |
   | `t-caption` | Caption | 12/16 · 500 · -0.12px | 날짜·카테고리·보조 |
@@ -92,7 +92,9 @@ DESIGN.md보다 우선하는 사용자 지정은 넷뿐: **레오 팔레트**(�
 - **모든 토큰은 CSS 변수로도 있다** (`@theme static`). 문자열 CSS(글 컴포넌트 `lib/leo/style.ts` 등)는 var()로:
   `--fs-*`·`--lh-*`·`--fw-*`·`--ls-*`(역할별) `--radius-*` `--space-cluster` `--color-*` `--font-sans|mono`
 - 폭: `max-w-wrap` (1120px, `Container`). 라이트 모드만.
-- 로고: `public/logo.webp`(헤더), `public/logo.png`(OG), `app/icon.png`·`app/apple-icon.png`. 배경 투명(apple-icon만 paper).
+- 로고: 사용자가 준 로고 시트(2026-10-02)에서 잘라 배경을 지운 것. 헤더는 가로 로고 이미지 `public/logo-ko|en.webp`(언어별),
+  고양이만 `public/logo.png|webp`(글 OG 카드·404), 기본 OG는 `public/og-lockup-ko|en.png`, 파비콘 `app/icon.png`(난간 고양이, 투명),
+  `app/apple-icon.png`(주황 `brand` 바탕 + 고양이). 로고를 글자(Gmarket Sans)로 다시 그리지 말 것.
 
 ### 금지 (`npm run check:design`이 검사)
 - 임의 글자/색/둥글기 값(`text-[17px]`, `rounded-[10px]`, `text-[#fff]`), Tailwind 기본 글자크기·팔레트, hex 색

@@ -12,13 +12,17 @@ export const OG_SIZE = { width: 1200, height: 630 };
 const pub = (f: string) => readFile(path.join(process.cwd(), 'public', f));
 
 async function assets() {
-  const [medium, bold, logo] = await Promise.all([
+  const [medium, bold, logo, ko, en] = await Promise.all([
     pub('fonts/GmarketSansTTFMedium.ttf'),
     pub('fonts/GmarketSansTTFBold.ttf'),
     pub('logo.png'),
+    pub('og-lockup-ko.png'),
+    pub('og-lockup-en.png'),
   ]);
+  const uri = (b: Buffer) => `data:image/png;base64,${b.toString('base64')}`;
   return {
-    logo: `data:image/png;base64,${logo.toString('base64')}`,
+    logo: uri(logo),
+    lockup: { ko: uri(ko), en: uri(en) },
     fonts: [
       { name: 'Gmarket Sans', data: medium, weight: 500 as const },
       { name: 'Gmarket Sans', data: bold, weight: 700 as const },
@@ -26,9 +30,9 @@ async function assets() {
   };
 }
 
-// title 없으면 사이트 기본 카드(로고 + 블로그 이름), 있으면 글 카드(라벨 + 제목 + 하단 로고·이름)
+// title 없으면 사이트 기본 카드(로고 시트의 큰 로고 — ko는 세로, en은 가로 레터링), 있으면 글 카드(라벨 + 제목 + 하단 로고·이름)
 export async function renderOg({ locale, title, label }: { locale: Locale; title?: string; label?: string }) {
-  const { logo, fonts } = await assets();
+  const { logo, lockup, fonts } = await assets();
   const name = SITE.name[locale];
 
   const body = title ? (
@@ -43,9 +47,8 @@ export async function renderOg({ locale, title, label }: { locale: Locale; title
       </div>
     </div>
   ) : (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', gap: 24 }}>
-      <img src={logo} width={300} height={300} />
-      <div style={{ fontSize: 72, fontWeight: 700, color: C.fg, letterSpacing: -1 }}>{name}</div>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+      {locale === 'ko' ? <img src={lockup.ko} width={668} height={460} /> : <img src={lockup.en} width={960} height={219} />}
     </div>
   );
 

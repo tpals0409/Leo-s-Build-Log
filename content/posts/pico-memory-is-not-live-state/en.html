@@ -15,12 +15,12 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="About PinLog"><p>PinLog is a place-journaling service: you save places along with why they mattered, and find them again in natural language. It was a team project, and I handled infrastructure and DevOps. This post is about how Pico, the AI used in PinLog's operations, remembered and read operational information.</p></leo-callout>
+<leo-callout type="note" title="About PinLog"><p>PinLog is a place-journaling service: you save places along with why they mattered, and find them again in natural language. It was a team project, and I handled infrastructure and DevOps. This post is about how Pico, an AI agent that ran on the AI agent tool Hermes and helped operate PinLog's infrastructure, remembered and read operational information.</p></leo-callout>
 <p>As the infrastructure owner for PinLog, I worked with information that carried different time horizons. The branch that Argo CD, our deployment tool, deploys from is configuration. Whether a Pod (the unit Kubernetes runs) was Ready is a state observed at one particular moment.</p>
 <p>Pico, our operational AI, needed both kinds of knowledge. But they could not be trusted in the same way. Reading yesterday's healthy status as today's can lead to a wrong operational decision, even when the record itself is accurate.</p>
 <leo-adr>
   <leo-problem><p>Pico's operational knowledge mixed structures verified in configuration with states observed at particular moments. Reading a record of past health as the current state could lead to a wrong operational decision.</p></leo-problem>
-  <leo-decision><p>Observations and implementation contracts were read separately, and source evidence (Raw), knowledge history (events), and query data (current) were given distinct roles. The Pico knowledge tool stayed read-only, while ingestion and mutation happened separately in the operating workspace.</p></leo-decision>
+  <leo-decision><p>Observations and implementation contracts were read separately, and source evidence (Raw), knowledge history (events), and query data (current) were given distinct roles. The Pico knowledge tool stayed read-only, while ingestion and mutation happened in a separate repository.</p></leo-decision>
   <leo-result><p>The principle that remained: use memory to find what to inspect, and verify facts needed for current decisions in the actual system. Read-only access still leaves room to misread historical material.</p></leo-result>
 </leo-adr>
 <h2>Contracts and observations have different lifetimes</h2>
@@ -28,19 +28,19 @@ blockquote p{margin:0}
 <leo-compare><leo-side label="Observation"><p>The monitoring workloads (the services running for monitoring) were Ready.</p><p>This describes their state then. Knowing their health now requires another query.</p></leo-side><leo-side label="Implementation contract"><p>Argo CD reconciles deployments against main.</p><p>This describes the operating structure. Later configuration changes still need checking.</p></leo-side></leo-compare>
 <p>A contract is not timeless either. It is simply a different kind of information from health data that can change from moment to moment. When reading a search result, the first question was not whether it sounded plausible. It was what it described, and as of when.</p>
 <h2>Source, history, and query data served different purposes</h2>
-<p>Pico's memory lived in Pico Graph. At the time, Pico Graph was not a human-facing Wiki UI. It was an internal knowledge store that Pico searched by source and relationship. Its data had distinct roles.</p>
+<p>Pico's memory lived in Pico Graph. Pico Graph was not a wiki for people to read. It was an internal knowledge store that Pico searched by source and relationship. Its data had distinct roles.</p>
 <leo-pipeline><leo-stage title="Immutable Raw">Captured source evidence</leo-stage><leo-stage title="events">Append-only canonical knowledge history</leo-stage><leo-stage title="current">A rebuildable query view derived from history</leo-stage></leo-pipeline>
 <p>This diagram summarizes the roles of the data. It does not imply real-time synchronization with the running server.</p>
 <p><code>store/events.jsonl</code> held the canonical knowledge history, while <code>store/current.jsonl</code> was a rebuildable query view. The word "current" should not be confused with the current operating state. Even an up-to-date query view can contain old observations.</p>
 <p>Keeping sources separate from query results gives a route back to the evidence behind an explanation. But having a source and still being valid today are different things. Source and time had to be read together.</p>
 <h2>Retrieval and mutation had separate permissions</h2>
-<p>At the time, the Pico knowledge tool exposed to the AI agent Hermes was read-only. Ingestion and mutation were explicit operations in the operating workspace.</p>
+<p>Pico's knowledge tool, opened up for use in Hermes, could only read. Collecting and changing knowledge were explicit steps done in a separate repository.</p>
 <p>So finding an operational fact was not the same operation as changing canonical knowledge. A guess made while composing an answer could not rewrite the operating record directly through the retrieval tool.</p>
 <p>Read-only access did not make every answer accurate, though. Misreading historical material or dropping its date was still possible. Separating write permissions was no substitute for accuracy.</p>
 <h2>Moving from “was healthy” to “is healthy”</h2>
 <p>Take the question, “Is monitoring healthy now?” A past Ready observation is evidence about the moment it was recorded. Using it as-is to answer a question about now skips a necessary check.</p>
 <leo-steps><leo-step title="Identify the time horizon"><p>Distinguish a question about historical structure from one about current state.</p></leo-step><leo-step title="Use memory to identify what to inspect"><p>Use recorded structure and evidence to narrow down the systems and fields to query.</p></leo-step><leo-step title="Verify current decisions at the source"><p>Inspect the actual host, Kubernetes, GitHub, or other source system. If inspection is unavailable, disclose that only historical evidence is available.</p></leo-step></leo-steps>
-<p>These steps describe a principle for using the record. They do not claim that every question at the time automatically triggered live inspection. Operational knowledge was better used to guide current checks than to replace them.</p>
+<p>These three steps are the rule I set for using memory. Not every question automatically triggered a live check. Operational knowledge was better used to guide current checks than to replace them.</p>
 <h2>Memory does not replace the server</h2>
 <p>Looking back at the record, what mattered was the role of each piece of information, not how much was stored. Raw preserved evidence, history recorded how knowledge changed, and query data supported retrieval. Answers about the current state still had to come from the actual system.</p>
 <p>Giving an AI memory helps it recover past context. But that memory does not replace the server as it is now. <strong>Use memory to find what to inspect, then verify the facts the current decision needs.</strong> That is the principle I want to keep from Pico's operational knowledge.</p>

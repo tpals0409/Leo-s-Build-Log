@@ -10,11 +10,11 @@
   "publishedAt": "2026-06-10T10:00:00+09:00",
   "thumbnail": "thumbnail.webp",
   "ko": {
-    "title": "기능을 안전하게 지우는 법 — 블로그의 관계 그래프와 검색을 걷어내며",
+    "title": "기능을 안전하게 지우는 법 — 알고수 블로그의 관계 그래프와 검색을 걷어내며",
     "summary": "기능을 지우는 건 추가하는 것보다 무섭습니다. 무엇이 따라 깨질지 모르니까요. 알고수의 블로그에서 결정 기록(ADR)을 보여주던 관계 그래프와 검색 기능을 지우며 배운 것은, 안전하게 지우는 데도 방법이 있다는 것이었습니다."
   },
   "en": {
-    "title": "How to Remove Features Safely — Taking Out a Blog’s Relation Graph and Search",
+    "title": "How to Remove Features Safely — Taking Out the AlgoSu Blog’s Relation Graph and Search",
     "summary": "Deleting a feature is scarier than adding one. You never know what else might break. Removing the decision-record (ADR) relationship graph and search from AlgoSu's blog taught me that safe deletion is a craft with its own method."
   }
 }

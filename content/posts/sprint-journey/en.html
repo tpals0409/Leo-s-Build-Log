@@ -15,10 +15,10 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="About AlgoSu"><p>AlgoSu is an algorithm study platform I built on my own. It automates problem assignment, code submission, and AI code review, and I developed it together with twelve AI agents, each with its own role.</p></leo-callout>
+<leo-callout type="note" title="About AlgoSu"><p>AlgoSu is an algorithm study platform I built on my own. It automates problem assignment, code submission, and AI code review, and I developed it together with twelve AI agents, each with its own role. I decided what to build and reviewed the results; the agents split the implementation among themselves.</p></leo-callout>
 <h2>After the 67th Sprint</h2>
 <p>It started with curiosity about multi-agent systems. "If several AI agents worked together, could I build a whole service on my own?" That one question started a project that, 67 sprints (short work cycles) later, had become a platform.</p>
-<ul><li><strong>67</strong> sprints</li><li><strong>2,432</strong> test cases, <strong>99.51%</strong> branch coverage (user &amp; auth service)</li><li><strong>6</strong> microservices + <strong>1</strong> frontend</li><li><strong>34</strong> API endpoints in the user &amp; auth service (Identity)</li><li><strong>12</strong> AI agents</li></ul>
+<ul><li><strong>67</strong> sprints</li><li><strong>2,432</strong> tests across the codebase, with <strong>99.51%</strong> branch coverage in the user &amp; auth service</li><li><strong>6</strong> microservices + <strong>1</strong> frontend</li><li><strong>34</strong> API endpoints in the user &amp; auth service (Identity)</li><li><strong>12</strong> AI agents</li></ul>
 <p>The numbers look clean. Behind them is a loop of decisions, mistakes, and fixes.</p>
 <h2>What You Only See After Doing It</h2>
 <leo-diagram title="Key points across 67 sprints" caption="Dotted lines mark early decisions that paid off dozens of sprints later">
@@ -32,12 +32,12 @@ blockquote p{margin:0}
   <leo-milestone date="Sprint 51" title="Gateway's direct DB access removed"><p>40 sprints later, overengineering saved the day</p></leo-milestone>
 </leo-timeline>
 <p><strong>httpOnly cookies — decided in Sprint 8, paid off in Sprint 65.</strong> When I added social login (OAuth), I chose to keep the login token (JWT) in an httpOnly cookie instead of browser storage (localStorage). Page scripts can't read an httpOnly cookie, so a token is much harder to steal through injected script (XSS).</p>
-<p>That choice proved its worth in Sprint 65, when I removed 11 functions that handled localStorage (+42 lines / -440 lines). It took a bit more work up front, but there was no debt to pay back later.</p>
+<p>Because I had moved to cookies early, the 11 leftover localStorage token functions were no longer used by the real code. When I removed them in Sprint 65 (+42 lines / −440 lines), I only had to delete them; nothing else needed changing.</p>
 <leo-timeline>
   <leo-milestone date="Sprint 8" title="Adopted httpOnly cookies"></leo-milestone>
-  <leo-milestone date="Sprint 65" title="Removed 11 localStorage functions"><p>57 sprints later, almost no debt to clean up</p></leo-milestone>
+  <leo-milestone date="Sprint 65" title="Removed 11 localStorage functions"><p>57 sprints later, I only had to delete</p></leo-milestone>
 </leo-timeline>
-<p><strong>Test obsession — 2,432 tests, 99.51%.</strong> The Sprint 51 refactor meant creating 34 new APIs and rewriting 19 files outright. I could do it because the tests were a safety net. I could change things boldly, without worrying "will this break something over there?"</p>
+<p><strong>Test obsession — 2,432 tests in total, 99.51% branch coverage in the user &amp; auth service.</strong> The Sprint 51 refactor meant creating 34 new APIs and rewriting 19 files outright. I could do it because the tests were a safety net. I could change things boldly, without worrying "will this break something over there?"</p>
 <h3>Decisions Deferred</h3>
 <p><strong>Not automating type synchronization.</strong> With the system split into services (MSA), adding a single enum value meant hand-editing at least five files: the user service's entity → the Gateway's types → the frontend's api.ts → the UI components.</p>
 <p>Once I added an enum value, <code>FEEDBACK_RESOLVED</code>, only to the user service and never propagated it. That gap took two more sprints to clean up. A code generator or a shared package, introduced early, would have spared me.</p>
@@ -51,9 +51,9 @@ blockquote p{margin:0}
 <p>Both episodes tell the same story: each part looked right on its own, but something was missing in the whole.</p>
 <h2>AlgoSu by the Numbers</h2>
 <leo-metrics>
-  <leo-metric value="67" note="By sprint number · Sprint 3 – 67" label="Total Sprints"></leo-metric>
+  <leo-metric value="67" label="Total Sprints"></leo-metric>
   <leo-metric value="2,432" note="User &amp; auth service: 99.51% branch coverage" label="Total Tests"></leo-metric>
-  <leo-metric value="15" label="CI Jobs"></leo-metric>
+  <leo-metric value="15" note="Automated checks run on every push and PR" label="CI Jobs"></leo-metric>
   <leo-metric value="6" note="Gateway · Identity · Submission · Problem · GitHub-Worker · AI-Analysis" label="Microservices"></leo-metric>
   <leo-metric value="12" note="The lead agent, Oracle, + 11" label="AI Agents"></leo-metric>
   <leo-metric value="34" note="0 → 34 in Sprint 51" label="User &amp; Auth APIs"></leo-metric>

@@ -15,13 +15,13 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="About AlgoSu"><p>AlgoSu is an algorithm study platform I built on my own. It automates problem assignment, code submission, and AI code review, and I developed it together with twelve AI agents, each with its own role.</p></leo-callout>
+<leo-callout type="note" title="About AlgoSu"><p>AlgoSu is an algorithm study platform I built on my own. It automates problem assignment, code submission, and AI code review, and I developed it together with twelve AI agents, each with its own role. I decided what to build and reviewed the results; the agents split the implementation among themselves.</p></leo-callout>
 <h2>What Happens If You Deploy AI-Written Code Directly?</h2>
 <p>Once, I committed AI-generated code and hit git push. The code itself was fine. Tests passed, lint was clean. But there was one problem — I had amended the commit with <code>git commit --amend</code> and force-pushed.</p>
 <p>CI ran, but <strong>nothing got built.</strong> Files had clearly changed, yet CI determined there were "no changes." <code>dorny/paths-filter</code>, a GitHub Action that looks at changed file paths to tell which services changed, couldn't properly detect the diff from a force-pushed commit. When the first gate of the deployment pipeline — change detection — is breached, every subsequent check doesn't even execute.</p>
-<p>After this incident, force-push (amend) was banned across the entire project. And I learned just how dangerous the mindset of "AI generates code quickly, so CI can be sloppy" really is. The faster AI generates code, the tighter the verification pipeline needs to be.</p>
+<p>The faster AI writes code, the less a person can read every line. So verification had to fall to the pipeline rather than human eyes, and the pipeline's very first gate gave way to a single force-push. After this incident, force-push (amend) was banned across the entire project, and I started building the verification pipeline tighter.</p>
 <leo-adr>
-  <leo-problem><p>Shipping AI-written code as-is turned the speed of generation into a verification gap. One force-push slipped past change detection and nothing got built.</p></leo-problem>
+  <leo-problem><p>AI writes code faster than a person can read it all, so verification had to rely on CI, yet a single force-push broke through CI's first gate (change detection) and nothing got built.</p></leo-problem>
   <leo-decision><p>I stacked the safety net step by step — 8 phases, 15 jobs, from security to a GitOps lock (a setup where nothing deploys except through the deployment-config repo).</p></leo-decision>
   <leo-result><p>Code reaches production only after secrets, quality, tests, dependencies, image vulnerabilities, and the deploy path all pass. Each real incident added another rule.</p></leo-result>
 </leo-adr>
@@ -67,7 +67,7 @@ blockquote p{margin:0}
 <p><code>.env</code> files should be in <code>.gitignore</code>, but they can sneak in if someone accidentally runs <code>git add -A</code> or modifies <code>.gitignore</code>. This check explicitly verifies whether any <code>.env</code> file exists in the Git index. <code>.env.example</code> is allowed; everything else is blocked.</p>
 <p>Why is this needed separately from <code>secret-scan</code>? <code>gitleaks</code> inspects file content patterns, but it doesn't check for the existence of <code>.env</code> files themselves. Since having an environment variable file committed is risky regardless of whether it contains secrets, we block the file's very existence.</p>
 <h2>Phase 2: Change Detection — detect-changes</h2>
-<p>AlgoSu is a monorepo. Six backend services + one frontend + one blog, all in a single repo. Building every service every time would be wasteful, so we use the <code>dorny/paths-filter</code> mentioned above to detect only the services that actually changed.</p>
+<p>AlgoSu is a monorepo. Six backend services + one frontend + one blog (AlgoSu's internal blog that shows decision records as web pages), all in a single repo. Building every service every time would be wasteful, so we use the <code>dorny/paths-filter</code> mentioned above to detect only the services that actually changed.</p>
 <pre><code class="language-yaml">filters: |
   gateway:
     - 'services/gateway/**'
@@ -78,7 +78,7 @@ blockquote p{margin:0}
 <p>One important point — when manually triggered via <code>workflow_dispatch</code>, we provide an option that forces every service to rebuild regardless of changes (<code>rebuild_all</code>). It is a safety mechanism for cases like infrastructure changes or base image updates, where everything needs rebuilding.</p>
 <h2>Phase 3: Quality Gate — lint + typecheck</h2>
 <p>Linting and type checking run for services where changes were detected. They split into three tracks.</p>
-<h3>NestJS Services (5 — matrix strategy)</h3>
+<h3>Node.js Services (5 — matrix strategy)</h3>
 <p><code>quality-nestjs</code> runs 5 services in parallel using a matrix strategy (copying the same job once per service, each with its own settings).</p>
 <ul><li><strong>Gateway, Identity, Submission, Problem</strong>: ESLint + TypeScript <code>tsc --noEmit</code></li><li><strong>GitHub Worker</strong>: ESLint (<code>src/**/*.ts</code>) + TypeScript <code>tsc --noEmit</code></li></ul>
 <p>The matrix is designed flexibly so each service can have different <code>has_eslint</code> and <code>lint_glob</code> options.</p>
@@ -89,7 +89,7 @@ blockquote p{margin:0}
 <h2>Phase 4: Test Matrix</h2>
 <p>Tests only run after passing the quality gate. Dependencies like <code>needs: [detect-changes, quality-nestjs]</code> mean that if linting fails, tests don't even start.</p>
 <h3>test-node (Jest x 5)</h3>
-<p>Five NestJS services are tested in parallel via matrix. All services have <code>--coverage --ci</code> flags, and coverage results are uploaded as artifacts.</p>
+<p>Four NestJS services and the GitHub Worker, written in plain Node.js, are tested in parallel via matrix. All services have <code>--coverage --ci</code> flags, and coverage results are uploaded as artifacts.</p>
 <pre><code class="language-yaml">strategy:
   fail-fast: false
   matrix:
@@ -110,7 +110,7 @@ blockquote p{margin:0}
 <p><code>audit-npm</code> runs in parallel with tests. It performs <code>npm audit</code> across 6 Node.js projects (5 backend + 1 frontend).</p>
 <pre><code class="language-yaml">- name: npm audit (high/critical)
   run: npm audit --audit-level=critical --omit=dev</code></pre>
-<p><code>--audit-level=critical</code> blocks only critical-level vulnerabilities. <code>--omit=dev</code> excludes development dependencies. Blocking vulnerabilities in devDependencies that never reach production would cause CI to break far too often.</p>
+<p><code>--audit-level=critical</code> blocks only critical-level vulnerabilities. The step name still says high, but the actual threshold is critical. <code>--omit=dev</code> excludes development dependencies. Blocking vulnerabilities in devDependencies that never reach production would cause CI to break far too often.</p>
 <h2>Phase 6: Build Gate — This Is the Heart of It</h2>
 <p>The build job's conditions reveal the philosophy of this pipeline.</p>
 <pre><code class="language-yaml">build-services:
@@ -180,7 +180,7 @@ with open('kustomization.yaml', 'w') as f:
 done</code></pre>
 <p>The advantage of this architecture is that <strong>the source code repo and the deployment repo are separated</strong>. No matter how many mistakes are made in the source repo, production deployments are unaffected unless the deployment-config repo is directly modified.</p>
 <h3>Sequential Rollout on the Deployment Server</h3>
-<p>Once ArgoCD has synced the deployment-config repo's manifests to the cluster, the <code>deploy.sh</code> script on the deployment server (the k3s cluster) deploys the services one layer at a time, in the order below.</p>
+<p>Day-to-day deployment is handled by ArgoCD. Rolling the services out one layer at a time, in the order below, is the order built into the <code>deploy.sh</code> script that ran directly on the deployment server (the k3s cluster) before ArgoCD came in.</p>
 <leo-pipeline>
   <leo-stage title="L0 Infrastructure">PostgreSQL · Redis · RabbitMQ</leo-stage>
   <leo-stage title="L1 Identity">Authentication (dependency for other services)</leo-stage>
@@ -193,7 +193,7 @@ done</code></pre>
 <h2>Lessons: Real Incidents We Experienced</h2>
 <h3>1. The Amend + Force-Push Trap</h3>
 <p>As mentioned earlier, <code>git commit --amend</code> followed by force-push causes <code>dorny/paths-filter</code> to miss changes. paths-filter compares the previous commit with the current one. But amending gives the commit a new SHA, so the previous commit that paths-filter uses as its baseline disappears from the remote branch.</p>
-<p><strong>Resolution</strong>: Force-push was banned across the entire project. If a fix is needed, make a new commit. While some may dislike a "messy commit history," a safe CI pipeline is more important than a clean history.</p>
+<p><strong>Resolution</strong>: Force-push was banned across the entire project. If a fix is needed, make a new commit. Giving up a tidy commit history has a cost, but a safe CI pipeline is more important than a clean history.</p>
 <leo-callout type="warn" title="Force-push banned"><p><code>git commit --amend</code> + force-push disables <code>dorny/paths-filter</code> change detection. When change detection is breached, every subsequent check (tests, builds, scans) doesn't even execute. <strong>A safe CI pipeline is always more important than a clean history.</strong></p></leo-callout>
 <h3>2. The Risk of Manual Tag Changes in the Deployment-Config Repo</h3>
 <p>Once, I needed a quick deployment and manually edited kustomization.yaml in the deployment-config repo. I changed the image tag directly, but the image corresponding to that tag didn't exist in GHCR, GitHub's container registry. ArgoCD synced the manifest, but k3s couldn't pull the image, and the Pod fell into <code>ImagePullBackOff</code> (failing to fetch the image and retrying over and over).</p>
@@ -207,7 +207,7 @@ done</code></pre>
 <pre><code class="language-yaml">permissions: {}</code></pre>
 <p>Default permissions are set to <strong>zero</strong>, and each job explicitly declares only the permissions it needs. <code>secret-scan</code> gets only <code>contents: read</code>; <code>build-services</code> gets only <code>contents: read</code> and <code>packages: write</code>. This way, even if a specific job is compromised, the blast radius is limited.</p>
 <h2>Balancing AI and CI</h2>
-<p>In the AlgoSu project, AI generated the bulk of the code. Twelve agents divided the work by role, and the lead agent, Oracle, coordinated the whole operation. But no matter how sophisticated the agent system became, final verification had to be handled not by humans but by an <strong>automated pipeline</strong>.</p>
+<p>In the AlgoSu project, AI generated the bulk of the code. Twelve agents divided the work by role, and a lead agent coordinated the whole operation. But no matter how sophisticated the agent system became, final verification had to be handled not by humans but by an <strong>automated pipeline</strong>.</p>
 <p>The 15 CI jobs asked these questions about AI-generated code:</p>
 <ol><li><strong>Were any secrets leaked?</strong> (secret-scan)</li><li><strong>Does code quality meet the standard?</strong> (quality-nestjs, quality-python, quality-frontend)</li><li><strong>Do tests pass?</strong> (test-node, test-ai-analysis, test-frontend)</li><li><strong>Are there dependency vulnerabilities?</strong> (audit-npm)</li><li><strong>Are there vulnerabilities in the built images?</strong> (trivy-scan)</li><li><strong>Is the deployment path secure?</strong> (deploy → deployment-config repo → ArgoCD)</li></ol>
 <p>Code could reach production only after passing every one of these gates.</p>

@@ -15,10 +15,10 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="알고수는"><p>제가 혼자 만든 알고리즘 스터디 플랫폼입니다. 문제 배정, 코드 제출, AI 코드 리뷰를 자동화했고, 개발은 역할을 나눈 AI 에이전트 12명과 함께 했습니다.</p></leo-callout>
+<leo-callout type="note" title="알고수는"><p>제가 혼자 만든 알고리즘 스터디 플랫폼입니다. 문제 배정, 코드 제출, AI 코드 리뷰를 자동화했고, 개발은 역할을 나눈 AI 에이전트 12명과 함께 했습니다. 저는 무엇을 만들지 정하고 결과를 검수했고, 구현은 에이전트들이 나눠 맡았습니다.</p></leo-callout>
 <h2>67번째 스프린트를 마치고</h2>
 <p>출발점은 멀티에이전트 시스템에 대한 호기심이었습니다. "AI 에이전트 여러 명이 협업하면 혼자서도 서비스를 만들 수 있지 않을까?" 그 궁금증 하나로 시작한 프로젝트가 67번의 스프린트(짧은 작업 주기)를 지나며 하나의 플랫폼이 됐습니다.</p>
-<ul><li><strong>67개</strong> 스프린트</li><li><strong>2,432개</strong> 테스트 케이스, 분기(branch) 커버리지 <strong>99.51%</strong>(사용자·인증 서비스 기준)</li><li><strong>6개</strong> 마이크로서비스 + <strong>1개</strong> 프론트엔드</li><li>사용자·인증 서비스(Identity)의 API 엔드포인트 <strong>34개</strong></li><li><strong>12개</strong> AI 에이전트</li></ul>
+<ul><li><strong>67개</strong> 스프린트</li><li>전체 테스트 <strong>2,432개</strong>, 그중 사용자·인증 서비스의 분기(branch) 커버리지 <strong>99.51%</strong></li><li><strong>6개</strong> 마이크로서비스 + <strong>1개</strong> 프론트엔드</li><li>사용자·인증 서비스(Identity)의 API 엔드포인트 <strong>34개</strong></li><li><strong>12개</strong> AI 에이전트</li></ul>
 <p>숫자만 보면 깔끔합니다. 하지만 그 뒤에는 결정하고, 실수하고, 고치는 일이 반복됐습니다.</p>
 <h2>해보니까 보이는 것들</h2>
 <leo-diagram title="67 스프린트의 주요 지점" caption="점선은 일찍 한 결정이 수십 스프린트 뒤에 빛난 순간">
@@ -32,12 +32,12 @@ blockquote p{margin:0}
   <leo-milestone date="Sprint 51" title="Gateway의 DB 직접 접근 제거"><p>40 스프린트 뒤, 과한 설계가 미래를 구했다</p></leo-milestone>
 </leo-timeline>
 <p><strong>httpOnly 쿠키 — Sprint 8에서 결정, Sprint 65에서 빛남.</strong> 소셜 로그인(OAuth)을 붙이면서, 로그인 토큰(JWT)을 브라우저 저장소(localStorage) 대신 httpOnly 쿠키에 두기로 했습니다. httpOnly 쿠키는 페이지의 스크립트가 읽을 수 없어서, 악성 스크립트 삽입(XSS)으로 토큰을 빼앗길 위험이 줄어듭니다.</p>
-<p>이 선택은 Sprint 65에서 localStorage를 다루던 함수 11개를 걷어낼 때(+42줄 / -440줄) 진가를 발휘했습니다. 초기에 조금 더 손이 갔지만, 나중에 갚을 빚이 없었습니다.</p>
+<p>쿠키로 일찍 옮겨 둔 덕분에, 남아 있던 localStorage 토큰 함수 11개는 이미 실제 코드에서 쓰이지 않는 상태였습니다. Sprint 65에 이를 걷어낼 때(+42줄 / −440줄) 다른 코드를 고칠 필요 없이 지우기만 하면 됐습니다.</p>
 <leo-timeline>
   <leo-milestone date="Sprint 8" title="httpOnly 쿠키 도입"></leo-milestone>
-  <leo-milestone date="Sprint 65" title="localStorage 함수 11개 제거"><p>57 스프린트 뒤, 정리할 빚이 거의 없었다</p></leo-milestone>
+  <leo-milestone date="Sprint 65" title="localStorage 함수 11개 제거"><p>57 스프린트 뒤, 지우기만 하면 됐다</p></leo-milestone>
 </leo-timeline>
-<p><strong>테스트 집착 — 2,432개, 99.51%.</strong> 앞의 Sprint 51 작업에서는 API 34개를 새로 만들고 파일 19개를 통째로 바꿨습니다. 이게 가능했던 건 테스트가 안전망이 되어 줬기 때문입니다. "이거 고치면 저쪽이 깨지지 않을까?" 하는 불안 없이 과감하게 고칠 수 있었습니다.</p>
+<p><strong>테스트 집착 — 전체 테스트 2,432개, 사용자·인증 서비스 분기 커버리지 99.51%.</strong> 앞의 Sprint 51 작업에서는 API 34개를 새로 만들고 파일 19개를 통째로 바꿨습니다. 이게 가능했던 건 테스트가 안전망이 되어 줬기 때문입니다. "이거 고치면 저쪽이 깨지지 않을까?" 하는 불안 없이 과감하게 고칠 수 있었습니다.</p>
 <h3>미룬 결정들</h3>
 <p><strong>타입 동기화를 자동화하지 않은 것.</strong> 서비스가 여러 개로 나뉜 구조(MSA)에서는 enum 값 하나를 추가해도 손으로 고칠 파일이 최소 5개였습니다. 사용자 서비스의 엔티티 → Gateway의 타입 → 프론트엔드의 api.ts → 화면 컴포넌트 순서로요.</p>
 <p>한번은 <code>FEEDBACK_RESOLVED</code>라는 enum 값을 사용자 서비스에만 넣고 나머지에 전파하지 않았습니다. 이 누락은 두 스프린트 뒤에야 정리됐습니다. 코드 생성기나 공유 패키지를 일찍 들였다면 겪지 않았을 일입니다.</p>
@@ -51,9 +51,9 @@ blockquote p{margin:0}
 <p>두 에피소드는 같은 이야기입니다. 부분만 보면 맞는데, 전체를 보면 빠진 게 있었습니다.</p>
 <h2>숫자로 보는 알고수</h2>
 <leo-metrics>
-  <leo-metric value="67" unit="개" note="스프린트 번호 기준 · Sprint 3 ~ 67" label="총 스프린트"></leo-metric>
+  <leo-metric value="67" unit="개" label="총 스프린트"></leo-metric>
   <leo-metric value="2,432" unit="건" note="사용자·인증 서비스 분기 커버리지 99.51%" label="총 테스트"></leo-metric>
-  <leo-metric value="15" unit="개" label="CI Jobs"></leo-metric>
+  <leo-metric value="15" unit="개" note="푸시·PR마다 도는 자동 검사 15종" label="CI Jobs"></leo-metric>
   <leo-metric value="6" unit="개" note="Gateway · Identity · Submission · Problem · GitHub-Worker · AI-Analysis" label="마이크로서비스"></leo-metric>
   <leo-metric value="12" unit="개" note="총괄 에이전트 Oracle + 11" label="AI 에이전트"></leo-metric>
   <leo-metric value="34" unit="개" note="Sprint 51에서 0 → 34" label="사용자·인증 API"></leo-metric>

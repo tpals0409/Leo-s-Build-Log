@@ -43,7 +43,7 @@ blockquote p{margin:0}
 </leo-pipeline>
 <p>이는 연결 시점과 배치에 관한 설정입니다. 기다렸다 연결한다고 해서 복제본이 생기거나, 다른 서버로 데이터가 이동하지는 않습니다. 단일 노드 구성에서는 스케줄링을 고려해도 저장 위치가 그 노드 바깥으로 나가는 것은 아닙니다.</p>
 <h2>data와 backup이 같은 경계 안에 있었습니다</h2>
-<p>PostgreSQL의 data PVC와 backup PVC, 작업 도구 Cowork의 PVC는 모두 <code>local-path-retain</code>을 사용했습니다. Cowork는 SQLite DB, AI 에이전트 Hermes의 전용 home 디렉터리, cache를 1Gi PVC 아래의 <code>/data</code>에 보존하는 구성이었습니다. PostgreSQL뿐 아니라 작업 도구의 상태도 Pod의 수명과 분리되어 있었습니다.</p>
+<p>PostgreSQL의 data PVC와 backup PVC는 물론, 상태를 저장하는 다른 PVC도 모두 <code>local-path-retain</code>을 사용했습니다. PostgreSQL뿐 아니라 다른 상태도 Pod의 수명과 분리되어 있었습니다.</p>
 <leo-diagram title="단일 노드의 저장 경계" caption="별도 PVC여도 같은 노드에 의존합니다. 호스트 밖 사본은 별도로 확인할 대상입니다.">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 440" style="max-width:320px;margin:0 auto" role="img" aria-label="별도 PVC여도 같은 노드에 의존합니다. 호스트 밖 사본은 별도로 확인할 대상입니다." font-family="sans-serif" font-size="16" fill="currentColor">
 <rect x="12" y="12" width="296" height="282" fill="none" stroke="currentColor"></rect>
@@ -51,7 +51,7 @@ blockquote p{margin:0}
 <path d="M24 62H284M24 112H284M24 162H284M24 212H284" fill="none" stroke="currentColor" opacity="0.35"></path>
 <text x="160" y="93" text-anchor="middle">PostgreSQL data PVC</text>
 <text x="160" y="143" text-anchor="middle">PostgreSQL backup PVC</text>
-<text x="160" y="193" text-anchor="middle">Cowork PVC · /data</text>
+<text x="160" y="193" text-anchor="middle">다른 상태 저장 PVC</text>
 <text x="160" y="258" text-anchor="middle">local-path-retain · 로컬 저장소</text>
 <path d="M12 320H308" stroke="currentColor" stroke-dasharray="5 5"></path>
 <text x="160" y="357" text-anchor="middle">호스트 밖 복구</text>

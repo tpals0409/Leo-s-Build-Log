@@ -15,12 +15,12 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="About AlgoSu"><p>AlgoSu is an algorithm study platform I built on my own. It automates problem assignment, code submission, and AI code review, and I developed it together with twelve AI agents, each with its own role. This post is about the control structure that kept those twelve working steadily.</p></leo-callout>
+<leo-callout type="note" title="About AlgoSu"><p>AlgoSu is an algorithm study platform I built on my own. It automates problem assignment, code submission, and AI code review, and I developed it together with twelve AI agents, each with its own role. I decided what to build and reviewed the results; the agents split the implementation among themselves. This post is about the control structure that kept those twelve working steadily.</p></leo-callout>
 
 <leo-adr>
   <leo-problem><p>Running 12 agents as a team broke down without control. Who verifies whose code, who mediates conflicts, and how do shared rules stay consistent?</p></leo-problem>
   <leo-decision><p>Three things. Narrow communication to a single channel, the lead agent Oracle; split the agents into three priority tiers (echelons); and gather the shared rules into one file (<code>persona-base.md</code>).</p></leo-decision>
-  <leo-result><p>67 sprints (short work cycles) completed at consistent quality. In exchange, the context cost of re-reading rules and an Oracle bottleneck remained, and domain intuition was still a human job.</p></leo-result>
+  <leo-result><p>Consistent quality all the way to sprint 67 (sprints are short work cycles). In exchange, the context cost of re-reading rules and an Oracle bottleneck remained, and domain intuition was still a human job.</p></leo-result>
 </leo-adr>
 
 <h2>Turning 12 Agents into a Team</h2>
@@ -29,7 +29,7 @@ blockquote p{margin:0}
 <p>Without control, each agent churned out code on its own, and technical debt piled up faster than any human could create it. When 12 agents wrote code by their own judgment, style, quality, and direction all diverged. The very advantage of fast output was turning into a risk.</p>
 
 <h2>One Channel — Oracle and a One-Way Flow</h2>
-<p>Talking to all 12 was impossible. With only a few agents, calling each one directly was fine. With 12, I couldn't even keep track of who was doing what. So I narrowed communication to one channel.</p>
+<p>Talking to all 12 was impossible. With the first eight agents, calling each one directly was fine. With 12, I couldn't even keep track of who was doing what. So I narrowed communication to one channel.</p>
 <p>The lead agent, Oracle, became the <strong>only agent</strong> that talks to me, the PM. Oracle directs the other 11.</p>
 <p>The flow goes one way: PM → Oracle → the agent in charge → Oracle → PM. Agents don't talk to each other directly.</p>
 <p>Services talking over HTTP is not the same as agents talking to each other. For example, when the submission service (code owned by Conductor, the submission-flow agent) asks the problem service (code owned by Curator, the problem-management agent) for a deadline, that's an internal HTTP call between programs. The agents that build them never talk to each other directly.</p>
@@ -68,7 +68,7 @@ blockquote p{margin:0}
 <leo-callout type="note" title="persona-base.md — the single source of truth for all 12"><p>One file every agent must read before starting work. Code conventions, security principles, escalation paths, and interface contracts all live here. Change this file, and the behavior of all 12 agents changes at once.</p></leo-callout>
 <p>Each agent's own definition file carried the same line:</p>
 <blockquote><p><strong>Shared Rules</strong>: Reference: <code>agents/_shared/persona-base.md</code> (mandatory read before starting)</p></blockquote>
-<p>The file had three key rules. The time limits below (4 hours, 24 hours) are rules written in that shared rules file.</p>
+<p>The file had three key rules. The time limits below (4 hours, 24 hours) are rules written in that shared rules file. They were modeled on a human team's rules, so rather than anyone timing them, they worked as ordering rules: "don't sit on it alone, report it" and "announce a change before making it."</p>
 <p><strong>Escalation (passing it upward)</strong> — When a decision was beyond an agent's scope, or agents conflicted, it went up to Oracle. If it couldn't be decided within 4 hours, it was reported to the PM. Agents don't know everything either; the point was to pass it up instead of guessing. In practice, when Palette (design system) and Herald (frontend) disagreed on a component spec, Oracle mediated.</p>
 <p><strong>Interface contracts</strong> — When changing an API spec, the affected agents were notified 24 hours ahead. Backward compatibility came first, and breaking changes needed Oracle's approval. The goal was to keep one service's change from breaking another in a microservice setup.</p>
 <p><strong>Code rules</strong> — One responsibility per function, 20 lines max, DRY, SOLID. A descriptive comment at the top of every file (header annotation) was mandatory. No values hardcoded inline. These rules applied the same way to all 12. Whether Conductor or Herald wrote the code, it followed the same style and the same quality bar.</p>
@@ -80,13 +80,13 @@ blockquote p{margin:0}
 
 <h2>What This Structure Gave — and What It Couldn't</h2>
 <p>I ran 67 sprints under this structure. It gave some things and couldn't give others.</p>
-<p>It gave <strong>consistent code quality</strong>. Because <code>persona-base.md</code> worked as the single source of truth, annotation rules, naming conventions, and error handling stayed the same from start to finish. But it came with a <strong>context cost</strong>. Every time an agent started work, it spent part of its context window (how much it can handle at once) reading the shared rules, its own definition file, and tool files.</p>
+<p>It gave <strong>consistent code quality</strong>. Because <code>persona-base.md</code> worked as the single source of truth, annotation rules, naming conventions, and error handling stayed the same from start to finish. But it came with a <strong>context cost</strong>. Every time an agent started work, it spent part of its context window (how much it can handle at once) reading the shared rules and its own definition file.</p>
 <p>It gave <strong>context retention</strong>. Three records kept the context: the per-sprint decision records (ADRs); <code>MEMORY.md</code>, a memory file loaded automatically every session; and <code>sprint-window.md</code>, read first in every session, which holds only the last finished sprint and the one in progress. With these, I could find a decision from three months ago in five seconds. But it created an <strong>Oracle bottleneck</strong>. Since all work went through Oracle, tasks could be handed to several agents at once, but final verification happened one at a time.</p>
 <p>It gave <strong>safe changes</strong>. Librarian (database) made database changes ship in 3 phases, Gatekeeper verified security rules, and Architect checked resource limits. But the <strong>lack of domain intuition</strong> stayed unsolved. "Does the user actually need this feature?" was a question agents couldn't answer. Carrying out technical decisions could be handed to agents; setting direction was still a human job.</p>
 <leo-callout type="warn" title="What This Structure Couldn't Give"><p>Context cost (reading the rule files on every task), an Oracle bottleneck (final verification one at a time), and no domain intuition ("Does the user actually need this?" is a question agents can't answer). Technical execution can be delegated, but setting direction is still a human job.</p></leo-callout>
 
 <h2>Controlled AI Is Useful AI</h2>
 <p>Letting AI write code wasn't the hard part. The hard part was making that AI follow the project's rules, stay out of other areas, and be reversible when it made mistakes.</p>
-<p>Oracle, the referee, makes the calls; the priority tiers set the order; and one file keeps everything consistent. It wasn't a perfect system, but it was the structure that let me finish 67 sprints at consistent quality. Uncontrolled AI is dangerous; controlled AI held its consistency without wavering.</p>
+<p>Oracle, the referee, makes the calls; the priority tiers set the order; and one file keeps everything consistent. It wasn't a perfect system, but it was the structure that kept quality consistent all the way to sprint 67. Uncontrolled AI is dangerous; controlled AI held its consistency without wavering.</p>
 </body>
 </html>

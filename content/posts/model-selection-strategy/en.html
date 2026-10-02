@@ -15,15 +15,15 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="About AlgoSu"><p>AlgoSu is an algorithm study platform I built on my own. It automates problem assignment, code submission, and AI code review, and I developed it together with twelve AI agents, each with its own role. This post is about when to give those agents a more expensive model.</p></leo-callout>
+<leo-callout type="note" title="About AlgoSu"><p>AlgoSu is an algorithm study platform I built on my own. It automates problem assignment, code submission, and AI code review, and I developed it together with twelve AI agents, each with its own role, and later added one more seat: Critic, a review agent that checks code with an AI model from a different company. I decided what to build and reviewed the results; the agents split the implementation among themselves. This post is about when to give those agents a more expensive model.</p></leo-callout>
 <p>One thing up front: all twelve agents run on Anthropic's Claude models. Day to day, I used Claude Opus (Anthropic's top model until then) and Claude Sonnet (a lighter one).</p>
 <p>The session-limit notice showed up in the last sprint of a five-sprint cleanup (a sprint is a short work cycle).</p>
-<p>The auth &amp; security agent (Gatekeeper) was in the middle of pinning eight third-party GitHub Actions, used in sixteen places, to exact commits (SHAs). The run log (the <code>.out</code> file) held two lines: "session limit · resets 7:10pm." The agent had stopped mid-task, and its uncommitted changes were still sitting there. My reaction was less surprise than "Oh, right. This model."</p>
-<p>Fable 5, a high-end model a step above Opus, came out on June 10, 2026, and I switched that same day. The first sprint instruction I gave it was: "Analyze every security issue and improvement point in the codebase, then build a sprint plan."</p>
+<p>The auth &amp; security agent (Gatekeeper) was in the middle of pinning eight third-party GitHub Actions, used in sixteen places, to exact commits (SHAs). The run log (the <code>.out</code> file) held two lines: "session limit · resets 7:10pm." That is the notice that Claude usage has hit the cap allowed for a set period. The agent had stopped mid-task, and its uncommitted changes were still sitting there. My reaction was less surprise than "Oh, right. The pricier model this time."</p>
+<p>Fable 5, Anthropic's high-end model a step above Opus, came out on June 10, 2026, and I switched that same day. The first sprint instruction I gave it was: "Analyze every security issue and improvement point in the codebase, then build a sprint plan."</p>
 <leo-adr>
   <leo-problem><p>A more capable model was available. But whether it was always the right choice was a different question.</p></leo-problem>
   <leo-decision><p>Use Claude Opus and Sonnet day to day, and bring in Fable 5, the newer model above them (the premium model from here on), only for large cleanups.</p></leo-decision>
-  <leo-result><p>What six sprints taught me wasn&#x27;t a model&#x27;s limits — it was the importance of timing.</p></leo-result>
+  <leo-result><p>What six sprints (one audit plus five cleanups) taught me wasn&#x27;t a model&#x27;s limits — it was the importance of timing.</p></leo-result>
 </leo-adr>
 <h2>On Launch Day, I Had It Audit the Entire Codebase</h2>
 <p>Giving Fable 5 a full codebase audit as its first job was, in hindsight, the right kind of test. It wasn't "let's see if it's better" — it was closer to "let's give it the hardest thing we have."</p>
@@ -48,13 +48,13 @@ blockquote p{margin:0}
 <p>The frontend decomposition went the same way. First, the review stages: the review agent, Critic, looks at code in two stages. ① Automated review (Auto-Critic) checks each change as it's committed. ② The final pre-merge review looks at the whole change against the base branch, not a single commit, and runs in rounds 1, 2, … until it's clean. Here's where the frontend problems were caught:</p>
 <ul><li>Text not wrapped in translation keys → ① automated review</li><li>A dropped <code>setError(null)</code> reset → ② final review, round 1</li><li>A missed derived value (one computed from other state) → ② final review, round 2</li></ul>
 <p>Round 3 of the final review was the first clean pass.</p>
-<p>A more capable model might catch these in one pass. If problems that surfaced in the automated review or final review rounds 1 and 2 were caught from the start, those review rounds — and their cost — would go away. Taking the ADR-030 five-sprint plan as an example:</p>
+<p>These decomposition sprints ran on Fable 5 too. Even so, these problems were only caught after rounds of review. Here is how much review the ADR-030 five-sprint plan took:</p>
 <leo-metrics>
   <leo-metric value="15" unit="rounds" note="Backend 7 + frontend 8 (including final reviews)" label="Critic review rounds (two decomposition sprints)"></leo-metric>
   <leo-metric value="6" unit="findings" note="Found by automated review and final review rounds 1–2" label="Regressions at boundaries"></leo-metric>
 </leo-metrics>
-<p>Every boundary regression only surfaced at the review stage — in the automated review or the final review of the whole change. If a premium model's deeper reasoning catches them in the first review, that saves the cost of running the automated and final reviews again and again.</p>
-<p>I know this is a hypothesis, not a measured result. But running the ADR-030 plan myself, the premium model seemed to look at file boundaries more carefully from the first review. That's an impression, nothing more.</p>
+<p>Every boundary regression only surfaced at the review stage — in the automated review or the final review of the whole change. Even with the premium model doing the work, what caught these regressions was a second look from a different model.</p>
+<p>I haven't measured whether a premium model cuts the number of review rounds. I never ran the same decomposition on the normal models, so there's nothing to compare against.</p>
 <h2>When a Premium Model Pays Off</h2>
 <p>The heart of the strategy is <strong>choosing where to use it</strong>.</p>
 <p>Regular sprints — new features, bug fixes, documentation updates — are fine on Opus and Sonnet. When you're adding code on top of established patterns, the difference in reasoning depth barely shows. Cost efficiency matters far more.</p>
@@ -69,12 +69,12 @@ blockquote p{margin:0}
 <p>Reading this as "always use the premium model" would be wrong.</p>
 <p>It rests on a few conditions.</p>
 <p><strong>First, wholesale refactoring has quickly diminishing returns.</strong> The ADR-030 decomposition worked because there was clear "principal" to pay down — 823 lines, 516 lines. Splitting code that's already well structured adds regression risk for little gain. Use it where the pain is obvious, not everywhere.</p>
-<p><strong>Second, bigger doesn't automatically mean more accurate.</strong> The ADR-030 decomposition was actually carried out by agents on the normal models (Opus and Sonnet). Fable 5 designed and audited; the regular agents did the execution. Separating review from execution is a strategy in itself.</p>
+<p><strong>Second, bigger doesn't automatically mean more accurate.</strong> The decomposition sprints ran on Fable 5 as well, yet the regressions at the split boundaries still only showed up at review. Even with a stronger model, a second look from a different model was still needed.</p>
 <p><strong>Third, the cost is real.</strong> Hitting the session limit in the fifth sprint was a warning. Run every sprint on a premium model and token usage, the risk of interrupted sessions, and cost all rise together. That's why it has to stay selective.</p>
 <h2>The Previous Post and This One</h2>
-<p>In my earlier post, <a href="/en/posts/toward-model-agnostic-harness">“Toward a Model-Agnostic Harness”</a>, I wrote about a system that isn't tied to any one model — bringing in Critic, the review agent, as an addition rather than a replacement, and moving toward a harness (the rules, tools, and runtime the agents work in) where any model can take any seat.</p>
-<p>This post is the sequel. It answers <strong>the question that comes after that freedom: "So which model, when, and where?"</strong></p>
-<p>Without that freedom, the question doesn't even exist. If you're locked into one model, there's nothing to choose. Only once the harness supports swapping models, and any model can sit in the Critic's seat, does a strategy become possible — and timing becomes something you can choose.</p>
+<p>In my earlier post, <a href="/en/posts/toward-model-agnostic-harness">“Why I Had a Different AI Review Code Written by AI”</a>, I wrote about a system that isn't tied to any one model — bringing in Critic, the review agent, as an addition rather than a replacement, and moving toward a harness (the rules, tools, and runtime the agents work in) where any model can take any seat.</p>
+<p>This post is the sequel. It answers <strong>the next question that comes from moving toward that freedom: "So which model, when, and where?"</strong></p>
+<p>If you're locked into one model, there's nothing to choose, so the question doesn't even exist. Only by moving toward a setup where models can be swapped does a strategy become possible, and timing becomes something you can choose.</p>
 <p>The day Fable 5 launched, I put the brand-new model on a full codebase audit. The results were good. But what mattered more came after: learning when to reach for it again, and seeing that judgment settle into a frame — not a performance comparison, but <strong>when to pay down technical debt</strong>.</p>
 <p>When the next large refactoring is needed, I'll bring the premium model out again. Not now. The boundaries are already clean, and regular sprints are running well on top of them.</p>
 </body>

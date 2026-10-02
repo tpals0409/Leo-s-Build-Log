@@ -15,7 +15,7 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="About AlgoSu"><p>AlgoSu is an algorithm study platform I built on my own. It automates problem assignment, code submission, and AI code review, and I developed it together with twelve AI agents, each with its own role.</p></leo-callout>
+<leo-callout type="note" title="About AlgoSu"><p>AlgoSu is an algorithm study platform I built on my own. It automates problem assignment, code submission, and AI code review, and I developed it together with twelve AI agents, each with its own role. I decided what to build and reviewed the results; the agents split the implementation among themselves.</p></leo-callout>
 <leo-adr>
   <leo-problem><p>Even for a solo-built service, a monolith meant one agent had to understand the entire codebase — and accuracy dropped as its context widened.</p></leo-problem>
   <leo-decision><p>Split services by data ownership so they line up with agent responsibility boundaries; humans decide service boundaries, communication, auth, and deployment, and AI executes.</p></leo-decision>
@@ -25,13 +25,13 @@ blockquote p{margin:0}
 <h2>Why MSA?</h2>
 <p>MSA (microservice architecture) means building an application as several small services instead of one large one.</p>
 <p>When designing AlgoSu, the first question wasn't about architecture patterns. It was <strong>how to delegate work to AI agents</strong>.</p>
-<p>With a monolith, a single agent would need to understand the entire codebase. Fixing auth logic would require knowing submission logic, understanding the DB schema, and more. I'd already learned from experience that the wider an agent's context gets, the less accurate it becomes.</p>
+<p>With a monolith, a single agent would need to understand the entire codebase. Fixing auth logic would require knowing submission logic, understanding the DB schema, and more. I'd already seen that the shorter and narrower an agent's instructions were, the better it followed the key ones.</p>
 <p>What if, instead, we split services into small units? The narrower the domain an AI manages, the clearer its role becomes, and the more accurate its decisions within a single service. The auth &amp; security agent (Gatekeeper) handles only the Gateway, the database agent (Librarian) only DB schemas, and the submission-flow agent (Conductor) only Submission. Aligning agent responsibility boundaries with service boundaries — that was the core reason for choosing MSA.</p>
 <p>Of course, MSA is complex. Inter-service communication, distributed transactions, deployment pipelines — problems you'd never have to worry about in a monolith. But if AI agents can share that complexity, the tradeoff holds up.</p>
 
 <h2>How We Split the Services</h2>
 <p>The criteria for splitting services were simple. <strong>If data ownership differs, split the service.</strong></p>
-<p>Identity manages user data, Submission manages code submissions, Problem manages problems — each owns its own database, and none directly accesses another service's DB. We applied the Database per Service principle from day one, because we knew that splitting later would be migration hell.</p>
+<p>Identity manages user data, Submission manages code submissions, Problem manages problems — each owns its own database. Because splitting later would be migration hell, we split the databases per service early on. For a while, though, the Gateway still connected directly to Identity's DB; only after we built an API in the Identity service and cut that connection did the rule that no service touches another service's DB (Database per Service) actually hold.</p>
 <p>Async tasks were extracted into separate workers. GitHub pushes and AI analysis are long-running operations — we couldn't make users wait. We made GitHub Worker and AI Analysis into independent services, connected via RabbitMQ.</p>
 <p>The Gateway is the sole external entry point. It handles auth, routing, rate limiting, and SSE (Server-Sent Events, the server pushing real-time updates to the browser) streaming. All other services communicate only within the cluster.</p>
 <leo-diagram title="k3s on OCI ARM (24GB · 4 OCPU)" caption="Lightweight Kubernetes (k3s) on a single Oracle Cloud (OCI) ARM server (24GB memory, 4 OCI virtual CPUs). 7 services behind a Cloudflare Tunnel, which accepts outside traffic without opening any server ports. Solid lines are requests, dotted lines are real-time events">
@@ -47,10 +47,10 @@ blockquote p{margin:0}
     <tr><td>Problem</td><td>NestJS · problem_db</td><td>3002</td><td>Problem CRUD · deadlines</td></tr>
     <tr><td>GitHub Worker</td><td>Node.js · prefetch=2</td><td>9100</td><td>submission.github_push queue → GitHub push</td></tr>
     <tr><td>AI Analysis</td><td>FastAPI · Circuit Breaker</td><td>8000</td><td>submission.ai_analysis queue → Claude API</td></tr>
-    <tr><td>Claude API</td><td>claude-haiku-4-5-20251001</td><td>—</td><td>MAX_TOKENS=8192, 4-step JSON fallback parsing (if parsing the response JSON fails, it falls back to the next method, up to four)</td></tr>
+    <tr><td>Claude API</td><td>claude-haiku-4-5-20251001 (the model the service's AI code review feature calls)</td><td>—</td><td>MAX_TOKENS=8192, 4-step JSON fallback parsing (if parsing the response JSON fails, it falls back to the next method, up to four)</td></tr>
   </tbody>
 </table>
-<p>In this structure, the division of AI agent responsibilities falls into place naturally. The security agent is responsible only for Gateway auth and security, the database agent manages only each service's DB schema, and the submission-flow agent handles only Submission's Saga logic. Since service boundaries are agent responsibility boundaries, the confusion of "whose job is this?" disappears.</p>
+<p>In this structure, the division of AI agent responsibilities fell into place naturally. Most agents own a single service: the security agent owns the Gateway, the submission-flow agent owns Submission, the problem agent owns Problem, and so on. Work that spans several services, like databases and infrastructure, got its own owners. Since service boundaries became responsibility boundaries for most agents, the confusion of "whose job is this?" disappears.</p>
 
 <h2>How We Chose Communication Patterns</h2>
 <p>Once services are split, you need to decide how they talk to each other. We picked from four patterns based on use case.</p>

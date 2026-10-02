@@ -15,7 +15,7 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="알고수는"><p>제가 혼자 만든 알고리즘 스터디 플랫폼입니다. 문제 배정, 코드 제출, AI 코드 리뷰를 자동화했고, 개발은 역할을 나눈 AI 에이전트 12명과 함께 했습니다.</p></leo-callout>
+<leo-callout type="note" title="알고수는"><p>제가 혼자 만든 알고리즘 스터디 플랫폼입니다. 문제 배정, 코드 제출, AI 코드 리뷰를 자동화했고, 개발은 역할을 나눈 AI 에이전트 12명과 함께 했습니다. 저는 무엇을 만들지 정하고 결과를 검수했고, 구현은 에이전트들이 나눠 맡았습니다.</p></leo-callout>
 <leo-adr>
   <leo-problem><p>혼자 만드는 서비스인데도, 모놀리스로는 에이전트 하나가 코드베이스 전체를 알아야 했고 맥락이 넓어질수록 정확도가 떨어졌다.</p></leo-problem>
   <leo-decision><p>데이터 소유권 기준으로 서비스를 나눠 에이전트의 책임 경계와 맞추고, 서비스 경계·통신·인증·배포는 사람이 결정하고 AI가 실행하게 나눴다.</p></leo-decision>
@@ -25,13 +25,13 @@ blockquote p{margin:0}
 <h2>왜 MSA였는가</h2>
 <p>MSA(마이크로서비스 아키텍처)는 하나의 큰 애플리케이션 대신 작은 서비스 여러 개로 나눠 만드는 방식입니다.</p>
 <p>알고수를 설계할 때 가장 먼저 고민한 건 아키텍처 패턴이 아니었습니다. <strong>AI 에이전트에게 어떻게 일을 시킬 것인가</strong>였습니다.</p>
-<p>모놀리스로 만들면 하나의 에이전트가 전체 코드베이스를 이해해야 합니다. 인증 로직을 고치려면 제출 로직도 알아야 하고, DB 스키마도 파악해야 합니다. 에이전트의 컨텍스트가 넓어질수록 정확도가 떨어지는 건 이미 경험한 사실이었습니다.</p>
+<p>모놀리스로 만들면 하나의 에이전트가 전체 코드베이스를 이해해야 합니다. 인증 로직을 고치려면 제출 로직도 알아야 하고, DB 스키마도 파악해야 합니다. 에이전트에게 주는 지시가 짧고 범위가 좁을수록 핵심 지시를 더 잘 따른다는 건 이미 겪어 본 일이었습니다.</p>
 <p>반대로 서비스를 작은 단위로 나누면 어떨까. AI가 관리하는 영역이 좁아질수록 역할이 분명해지고, 한 서비스 안에서의 판단이 더 정확해질 거라 생각했습니다. 인증·보안 담당 에이전트(Gatekeeper)는 Gateway만, DB 담당 에이전트(Librarian)는 DB 스키마만, 제출 흐름 담당 에이전트(Conductor)는 Submission만 맡깁니다. 에이전트의 책임 경계와 서비스의 경계를 일치시키는 것 — 이게 MSA를 선택한 핵심 이유였습니다.</p>
 <p>물론 MSA는 복잡합니다. 서비스 간 통신, 분산 트랜잭션, 배포 파이프라인 — 모놀리스에서는 고민하지 않아도 될 문제들이 생깁니다. 하지만 그 복잡성을 AI 에이전트가 분담해줄 수 있다면, 트레이드오프가 성립한다고 판단했습니다.</p>
 
 <h2>서비스를 어떻게 나눴나</h2>
 <p>서비스 분리 기준은 단순했습니다. <strong>데이터의 소유권</strong>이 다르면 서비스를 나눕니다.</p>
-<p>사용자 정보를 관리하는 Identity, 코드 제출을 관리하는 Submission, 문제를 관리하는 Problem — 각각 자기 데이터베이스를 갖고, 다른 서비스의 DB에는 직접 접근하지 않습니다. Database per Service 원칙을 처음부터 적용했습니다. 나중에 분리하면 마이그레이션 지옥이 된다는 걸 알고 있었기 때문입니다.</p>
+<p>사용자 정보를 관리하는 Identity, 코드 제출을 관리하는 Submission, 문제를 관리하는 Problem — 각각 자기 데이터베이스를 갖습니다. 나중에 분리하면 마이그레이션 지옥이 된다는 걸 알고 있었기 때문에 DB는 초기에 서비스별로 나눴습니다. 다만 Gateway가 Identity의 DB에 직접 붙는 구조가 한동안 남아 있었고, Identity 서비스에 API를 만들어 그 연결을 끊은 뒤에야 다른 서비스의 DB에 직접 접근하지 않는다는 원칙(Database per Service)이 실제로 지켜졌습니다.</p>
 <p>비동기 작업은 별도 워커로 뺐습니다. GitHub Push와 AI 분석은 시간이 오래 걸리는 작업이라, 사용자를 기다리게 할 수 없었습니다. GitHub Worker와 AI Analysis를 각각 독립 서비스로 만들고 RabbitMQ로 연결했습니다.</p>
 <p>Gateway는 유일한 외부 진입점입니다. 인증, 라우팅, Rate Limit, SSE(서버가 브라우저로 실시간 알림을 보내는 방식) 스트리밍을 담당합니다. 나머지 서비스는 클러스터 내부에서만 통신합니다.</p>
 <leo-diagram title="k3s on OCI ARM (24GB · 4 OCPU)" caption="오라클 클라우드(OCI) ARM 서버 한 대(메모리 24GB, OCI 가상 CPU 4개) 위의 경량 쿠버네티스(k3s). 서버 포트를 열지 않고 외부 접속을 받는 Cloudflare Tunnel 뒤의 7개 서비스. 실선은 요청, 점선은 실시간 이벤트">
@@ -47,10 +47,10 @@ blockquote p{margin:0}
     <tr><td>Problem</td><td>NestJS · problem_db</td><td>3002</td><td>문제 CRUD · 마감 관리</td></tr>
     <tr><td>GitHub Worker</td><td>Node.js · prefetch=2</td><td>9100</td><td>submission.github_push 큐 → GitHub Push</td></tr>
     <tr><td>AI Analysis</td><td>FastAPI · Circuit Breaker</td><td>8000</td><td>submission.ai_analysis 큐 → Claude API</td></tr>
-    <tr><td>Claude API</td><td>claude-haiku-4-5-20251001</td><td>—</td><td>MAX_TOKENS=8192, JSON 4-step fallback 파싱(응답 JSON 파싱이 실패하면 다음 방법으로 넘어가는 4단계 대비책)</td></tr>
+    <tr><td>Claude API</td><td>claude-haiku-4-5-20251001 (서비스의 AI 코드 리뷰 기능이 호출하는 모델)</td><td>—</td><td>MAX_TOKENS=8192, JSON 4-step fallback 파싱(응답 JSON 파싱이 실패하면 다음 방법으로 넘어가는 4단계 대비책)</td></tr>
   </tbody>
 </table>
-<p>이 구조에서 AI 에이전트의 역할 분담이 자연스럽게 결정됩니다. 보안 담당은 Gateway의 인증·보안만 책임지고, DB 담당은 각 서비스의 DB 스키마만 관리하고, 제출 흐름 담당은 Submission의 Saga 로직만 다룹니다. 서비스 경계가 곧 에이전트의 책임 경계가 되니, "이건 누구 담당이지?"라는 혼란이 사라졌습니다.</p>
+<p>이 구조에서 AI 에이전트의 역할 분담이 자연스럽게 정해졌습니다. 대부분은 서비스 하나를 맡습니다. 보안 담당은 Gateway, 제출 흐름 담당은 Submission, 문제 담당은 Problem을 맡는 식입니다. DB와 인프라처럼 여러 서비스에 걸친 일은 따로 담당을 두었습니다. 서비스 경계가 대부분의 에이전트에게 책임 경계가 되니, "이건 누구 담당이지?"라는 혼란이 사라졌습니다.</p>
 
 <h2>통신을 어떻게 결정했나</h2>
 <p>서비스를 나누면 통신 방식을 정해야 합니다. 4가지 패턴을 용도에 따라 골라 썼습니다.</p>

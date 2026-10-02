@@ -12,10 +12,10 @@
   "thumbnail": "thumbnail.webp",
   "ko": {
     "title": "로그인 만료 시간이 제각각이었다 — JWT·쿠키·프런트 정책 통합기",
-    "summary": "JWT 수명은 2시간인데 1시간 만에 로그아웃됩니다. 쿠키 수명, 활동 중 토큰 자동 갱신(sliding refresh), 프론트엔드 타이머까지 — 4개 레이어가 각자의 시계를 갖고 있었습니다. 서버 환경변수 하나로 통일한 기록입니다."
+    "summary": "JWT 수명은 2시간인데 1시간 만에 로그아웃됩니다. 쿠키 수명, 활동 중 토큰 자동 갱신(sliding refresh), 프론트엔드 타이머까지 — 4개 레이어가 각자의 시계를 갖고 있었습니다. 서버 환경변수 한 곳으로 통일한 기록입니다."
   },
   "en": {
     "title": "Login Expiry Times Didn’t Match — Unifying JWT, Cookie, and Frontend Policies",
-    "summary": "The JWT lifetime is 2 hours, but users get logged out after 1. Cookie lifetime, sliding refresh while the user is active, a frontend timer — 4 layers each had their own clock. Here's how we unified them into a single source of truth: one server env var."
+    "summary": "The JWT lifetime is 2 hours, but users get logged out after 1. Cookie lifetime, sliding refresh while the user is active, a frontend timer — 4 layers each had their own clock. Here's how we unified them into a single source of truth: server env vars in one place."
   }
 }

@@ -43,7 +43,7 @@ blockquote p{margin:0}
 </leo-pipeline>
 <p>This is a setting for placement and binding time. Waiting to bind does not create a replica or move data to another server. In a single-node configuration, scheduling-aware binding does not take storage outside that node.</p>
 <h2>Data and backup were inside the same boundary</h2>
-<p>The PostgreSQL data PVC, PostgreSQL backup PVC, and the PVC for Cowork, a working tool, all used <code>local-path-retain</code>. Cowork’s configuration kept its SQLite database, a dedicated home directory for Hermes, an AI agent, and cache under <code>/data</code> on a 1Gi PVC. The working tool’s state, not just PostgreSQL’s data, had a lifetime separate from its Pod.</p>
+<p>The PostgreSQL data and backup PVCs, along with the other PVCs that held state, all used <code>local-path-retain</code>. Not just PostgreSQL’s data but other state, too, had a lifetime separate from its Pod.</p>
 <leo-diagram title="The single-node storage boundary" caption="Separate PVCs still depend on one node. Copies outside the host require a separate check.">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 440" style="max-width:320px;margin:0 auto" role="img" aria-label="Separate PVCs still depend on one node. Copies outside the host require a separate check." font-family="sans-serif" font-size="16" fill="currentColor">
 <rect x="12" y="12" width="296" height="282" fill="none" stroke="currentColor"></rect>
@@ -51,7 +51,7 @@ blockquote p{margin:0}
 <path d="M24 62H284M24 112H284M24 162H284M24 212H284" fill="none" stroke="currentColor" opacity="0.35"></path>
 <text x="160" y="93" text-anchor="middle">PostgreSQL data PVC</text>
 <text x="160" y="143" text-anchor="middle">PostgreSQL backup PVC</text>
-<text x="160" y="193" text-anchor="middle">Cowork PVC · /data</text>
+<text x="160" y="193" text-anchor="middle">Other stateful PVCs</text>
 <text x="160" y="258" text-anchor="middle">local-path-retain · local storage</text>
 <path d="M12 320H308" stroke="currentColor" stroke-dasharray="5 5"></path>
 <text x="160" y="357" text-anchor="middle">Off-host recovery</text>

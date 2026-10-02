@@ -15,17 +15,14 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="About AlgoSu"><p>AlgoSu is an algorithm study platform I built on my own. It automates problem assignment, code submission, and AI code review, and I developed it together with twelve AI agents, each with its own role. This post is about which AI models those agents run on.</p></leo-callout>
+<leo-callout type="note" title="About AlgoSu"><p>AlgoSu is an algorithm study platform I built on my own. It automates problem assignment, code submission, and AI code review, and I developed it together with twelve AI agents, each with its own role, and later added one more seat: Critic, a review agent that checks code with an AI model from a different company. I decided what to build and reviewed the results; the agents split the implementation among themselves. This post is about which AI models those agents run on.</p></leo-callout>
 <p>One thing up front: all twelve agents run on Anthropic's Claude models.</p>
-<p>An agent edited a few lines of a work-record document, then committed and pushed straight to the main branch — no branch, no PR. The edit was four lines of a decision record (ADR): it changed the status to completed and added two or three lines of cleanup.</p>
-<p>CLAUDE.md, the rules file the agents load automatically every session, says it in bold: "Agent branch discipline — direct push to main is strictly forbidden." The rule had been tightened after an earlier violation and repeated more than once. In the notes for the next sprint (a short work cycle), the agent left a single line about itself: <strong>"Self-recorded policy violation."</strong></p>
-<p>It wasn't the first time. A few days earlier, it had concluded from a shell glob (a wildcard pattern) that a directory didn't exist. I corrected it — the directory was there. A few days later, it made the same mistake with the same pattern.</p>
-<p>The agents were ignoring the agreed workflow more and more often. The same model kept making the same mistakes.</p>
-<p>Around then, I kept hearing that OpenAI Codex, a coding model from another company, was pulling ahead at coding.</p>
+<p>Code review was no different. An agent for security and contracts and the lead agent for planning and decision records split the reviews between them, but both were from the same Claude model family. The same model misses the same things, so they couldn't catch each other's blind spots.</p>
+<p>Around then, OpenAI released a tool that let you call its coding model, Codex, from inside Claude Code. That opened a way to bring in the eyes of a different model family.</p>
 <leo-adr>
-  <leo-problem><p>The harness (the rules, tools, and runtime the agents work in) was tied to one company's line of models — a single model family. The same model kept repeating the same mistakes (direct pushes to main, hasty conclusions). It needed another perspective.</p></leo-problem>
+  <leo-problem><p>The harness (the rules, tools, and runtime the agents work in) was tied to one company's line of models — a single model family — and code review was handled entirely by that family too, so nothing could catch the blind spots they shared. It needed another perspective.</p></leo-problem>
   <leo-decision><p>Put Critic, a review agent running on Codex, in the seat right before merge. Not a replacement for the existing agents, but one added seat — one that doubts the consensus instead of agreeing with it.</p></leo-decision>
-  <leo-result><p>Seventeen rounds of cross-review caught 8 critical issues (P1) and 9 recommended fixes (P2). But the Critic missed process violations, and a bigger bias surfaced: the harness itself was bound to one model family. The next goal is a harness where models swap like parts.</p></leo-result>
+  <leo-result><p>Eighteen rounds of cross-review caught 8 critical issues (P1) and 9 recommended fixes (P2). But the Critic missed process violations, and a bigger bias surfaced: the harness itself was bound to one model family. The next goal is a harness where models swap like parts.</p></leo-result>
 </leo-adr>
 <h2>Why Add, Not Replace</h2>
 <p>I never considered a full replacement.</p>
@@ -36,8 +33,8 @@ blockquote p{margin:0}
 <p>I wanted one last look at correctness, security, concurrency, and whether a change could be rolled back, just before merge. That was also where a different perspective was worth the most. When models from the same family review each other, they share the same blind spots from the same training data. If they agreed, the code passed.</p>
 <p>Bring in a different family right before merge, and you get a seat that questions that agreement. <strong>A seat that breaks consensus</strong> — that's where the new agent belonged.</p>
 <p>That's why I named it Critic. Not someone who agrees, but someone who doubts.</p>
-<h2>17 Rounds — What "Another Perspective" Means</h2>
-<p>I first saw the Critic really at work in sprint 135. AlgoSu has run well over a hundred sprints; this story is from around the 130s. I merged five PRs in a row and called the Critic on each. One review-and-fix cycle counts as a round. Here's how it went.</p>
+<h2>18 Rounds — What "Another Perspective" Means</h2>
+<p>I first saw the Critic really at work in sprint 135 (a sprint is a short work cycle). AlgoSu has run well over a hundred sprints; this story is from around the 130s. I merged five PRs in a row and called the Critic on each. One review-and-fix cycle counts as a round. Here's how it went.</p>
 <leo-metrics>
   <leo-metric value="3" unit="rounds" note="AI usage-limit check prototype (aiQuotaCheck PoC)" label="Work batch A (PR #167)"></leo-metric>
   <leo-metric value="4" unit="rounds" note="4 critical / 2 recommended" label="Work batch B (PR #168)"></leo-metric>
@@ -45,13 +42,17 @@ blockquote p{margin:0}
   <leo-metric value="5" unit="rounds" note="2 critical / 3 recommended" label="Work batch C (PR #170)"></leo-metric>
   <leo-metric value="3" unit="rounds" note="1 critical / 1 recommended" label="Work batch D (PR #171)"></leo-metric>
 </leo-metrics>
-<p>In total, <strong>17 rounds</strong> found and fixed <strong>8 critical issues and 9 recommended fixes</strong> before merge. Only three of the PRs above have counts listed, so their sum (7 critical, 6 recommended) is lower than the total; the counts for the other two PRs (work batch A and the policy sync) weren't recorded separately.</p>
+<p>In total, <strong>18 rounds</strong> found and fixed <strong>8 critical issues and 9 recommended fixes</strong> before merge. Only three of the PRs above have counts listed, so their sum (7 critical, 6 recommended) is lower than the total; the counts for the other two PRs (work batch A and the policy sync) weren't recorded separately.</p>
 <p>What interested me was the kind of defect. Most of the critical issues were in code that the same model family would have agreed on and passed. A module that missed side effects because all the attention went to the integration. A branch that leaned on a heuristic and still had a race condition. A filter that mixed up business errors and infrastructure errors.</p>
 <p>Each piece of code worked. It just <strong>had never been seriously challenged</strong>. Codex was where that challenge came in. Once a model that didn't share the same training distribution joined, the consensus started getting questioned.</p>
 <p>That's when I first felt the value of "model diversity." I didn't need a smarter model. I needed a model that <strong>had learned differently</strong>.</p>
 <h2>But — the Critic Wasn't Omnipotent</h2>
 <p>The joy didn't last.</p>
-<p>After sprint 135, while tidying up the notes, I realized something: <strong>the Critic had been there all along, and it still didn't stop the direct push to main</strong>. The violation in the sprint just before came long after the Critic was introduced. The Critic was added in sprint 114; the violation came about 20 sprints later.</p>
+<p>After sprint 135, while tidying up the notes, I realized something: <strong>the Critic had been there all along, and it still didn't stop the direct push to main</strong>.</p>
+<p>In the sprint just before, an agent edited a few lines of a work-record document, then committed and pushed straight to the main branch — no branch, no PR. The edit was four lines of a decision record (ADR): it changed the status to completed and added two or three lines of cleanup.</p>
+<p>CLAUDE.md, the rules file the agents load automatically every session, says it in bold: "Agent branch discipline — direct push to main is strictly forbidden." The rule had been tightened after an earlier violation and repeated more than once. In the notes for the next sprint, the agent left a single line about itself: <strong>"Self-recorded policy violation."</strong></p>
+<p>It wasn't the first time. A few days earlier, it had concluded from a shell glob (a wildcard pattern) that a directory didn't exist. I corrected it — the directory was there. A few days later, it made the same mistake with the same pattern.</p>
+<p>The agents were ignoring the agreed workflow more and more often. Even with the Critic in place, the same model kept making the same mistakes.</p>
 <p>The Critic checks whether code changes are correct, right before merge. <strong>It doesn't catch process violations.</strong> Committing to main without a new branch isn't broken code — it's skipping the workflow. No PR is created, so the Critic is never called.</p>
 <p>The blind spots in code review shrank, but process bypasses remained a separate problem.</p>
 <leo-diagram title="Where the Critic sits — and its blind spot" caption="PRs get a different model family&#x27;s review right before merge, but process bypasses like a direct push to main never reach Critic, the review agent">
@@ -61,7 +62,7 @@ blockquote p{margin:0}
 <p>That pushed me one step further back.</p>
 <p>Looking at the harness as it stood, everything from directory names to tool names was built around one model family's environment (for example, the CLAUDE.md rules file and the <code>.claude/</code> settings folder). Seating Codex in one more spot didn't give the system's skeleton real model diversity. I had put a different model into a single review seat, but <strong>the skeleton was still bound to one model family</strong>.</p>
 <p>That was the real problem.</p>
-<leo-callout type="note" title="Not the First Time I'd Seen This Pattern"><p>I once moved AlgoSu off Baekjoon (BOJ), the problem site it relied on, to Programmers (see <a href="/en/posts/baekjoon-gone">“When Baekjoon Vanished”</a>). That was my first hands-on lesson in the cost of depending on an outside service.</p></leo-callout>
+<leo-callout type="note" title="Not the First Time I'd Seen This Pattern"><p>I once moved AlgoSu off Baekjoon (BOJ), the problem site it relied on, to Programmers (see <a href="/en/posts/baekjoon-gone">“Switching Problem Sources Exposed an External Platform Dependency”</a>). That was my first hands-on lesson in the cost of depending on an outside service.</p></leo-callout>
 <p>This was similar. What I depended on had moved from an external service to an <strong>AI model</strong>, but the pattern was the same. When a system is bound to one family, it shakes when that family shakes.</p>
 <p>The same lesson had come back at a different layer.</p>
 <h2>And So — Toward a Model-Agnostic Harness</h2>
@@ -70,7 +71,7 @@ blockquote p{margin:0}
 <p>The next step has two layers.</p>
 <p>First, a <strong>per-agent model switch</strong>. The twelve role definitions stay as they are; which model family fills each seat becomes a setting. The Critic seat could hold Codex now and a different model next quarter.</p>
 <p>Further out, <strong>freeing the harness itself from any one model or runtime</strong>. Tools and environments become swappable parts, and the system's skeleton sits on top of them — so a new model can be plugged in the moment it arrives, without waiting.</p>
-<p>The start was small. One seat for a different family, 17 rounds of review, eight critical issues caught. I don't plan to stop there. I'm taking the lesson from when Baekjoon vanished and applying it again, more deeply this time, at the model layer.</p>
+<p>The start was small. One seat for a different family, 18 rounds of review, eight critical issues caught. I don't plan to stop there. I'm taking the lesson from when Baekjoon vanished and applying it again, more deeply this time, at the model layer.</p>
 <p>A system freed from dependency lasts longer.</p>
 </body>
 </html>

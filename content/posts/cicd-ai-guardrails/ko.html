@@ -15,13 +15,13 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="알고수는"><p>제가 혼자 만든 알고리즘 스터디 플랫폼입니다. 문제 배정, 코드 제출, AI 코드 리뷰를 자동화했고, 개발은 역할을 나눈 AI 에이전트 12명과 함께 했습니다.</p></leo-callout>
+<leo-callout type="note" title="알고수는"><p>제가 혼자 만든 알고리즘 스터디 플랫폼입니다. 문제 배정, 코드 제출, AI 코드 리뷰를 자동화했고, 개발은 역할을 나눈 AI 에이전트 12명과 함께 했습니다. 저는 무엇을 만들지 정하고 결과를 검수했고, 구현은 에이전트들이 나눠 맡았습니다.</p></leo-callout>
 <h2>AI가 쓴 코드를 바로 배포하면 어떻게 될까?</h2>
 <p>한번은 AI가 생성한 코드를 커밋하고, git push를 눌렀습니다. 코드 자체는 멀쩡했어요. 테스트도 통과했고, 린트도 깨끗했습니다. 그런데 한 가지 문제가 있었습니다 — <code>git commit --amend</code>로 커밋을 수정한 뒤 force-push를 했거든요.</p>
 <p>CI가 돌았지만, <strong>아무것도 빌드되지 않았습니다.</strong> 변경된 파일이 분명 있는데, CI는 "변경 없음"으로 판단했습니다. 바뀐 파일 경로를 보고 어느 서비스가 변경됐는지 가려내는 GitHub Action <code>dorny/paths-filter</code>가 force-push된 커밋의 diff를 정상적으로 감지하지 못한 거예요. 배포 파이프라인의 첫 번째 관문인 변경 감지가 뚫리면, 그 뒤의 모든 체크는 실행조차 되지 않습니다.</p>
-<p>이 사건 이후로 force-push(amend)는 프로젝트 전체에서 금지됐습니다. 그리고 "AI가 빠르게 코드를 만들어주니까 CI도 대충 해도 되겠지"라는 생각이 얼마나 위험한지를 깨달았습니다. AI가 빠르게 코드를 생성할수록, 그 코드를 검증하는 파이프라인은 더 촘촘해야 합니다.</p>
+<p>AI가 코드를 빠르게 만들수록, 사람이 한 줄 한 줄 다 볼 수는 없습니다. 그래서 검증은 사람 눈이 아니라 파이프라인이 맡아야 했는데, 그 파이프라인의 첫 관문이 force-push 한 번에 뚫렸던 거예요. 이 사건 이후로 force-push(amend)는 프로젝트 전체에서 금지됐고, 검증 파이프라인을 더 촘촘하게 쌓기 시작했습니다.</p>
 <leo-adr>
-  <leo-problem><p>AI가 쓴 코드를 그대로 배포하자, 빠른 생성 속도만큼 검증 공백이 위험으로 돌아왔다. force-push 한 번에 변경 감지가 뚫려 아무것도 빌드되지 않았다.</p></leo-problem>
+  <leo-problem><p>AI가 빠르게 만드는 코드를 사람이 다 볼 수 없어 검증을 CI에 맡겨야 했는데, force-push 한 번에 CI의 첫 관문(변경 감지)이 뚫려 아무것도 빌드되지 않았다.</p></leo-problem>
   <leo-decision><p>보안부터 GitOps 락(배포 설정 저장소를 거쳐야만 배포되는 구조)까지 8단계 15 jobs로 안전망을 단계적으로 쌓았다.</p></leo-decision>
   <leo-result><p>시크릿·품질·테스트·의존성·이미지 취약점·배포 경로를 모두 통과해야 프로덕션에 닿는다. 실제로 겪은 사고마다 규칙을 하나씩 더했다.</p></leo-result>
 </leo-adr>
@@ -67,7 +67,7 @@ blockquote p{margin:0}
 <p><code>.env</code> 파일은 <code>.gitignore</code>에 들어있어야 하지만, 실수로 <code>git add -A</code>를 하거나 <code>.gitignore</code>를 수정하면 슬쩍 들어갈 수 있습니다. 이 체크는 Git 인덱스에 <code>.env</code> 파일이 존재하는지를 명시적으로 검사합니다. <code>.env.example</code>은 허용하고, 나머지는 모두 차단합니다.</p>
 <p>왜 이게 <code>secret-scan</code>과 별도로 필요할까요? <code>gitleaks</code>는 파일 내용의 패턴을 검사하지만, <code>.env</code> 파일 자체의 존재 여부는 검사하지 않습니다. 환경변수 파일이 커밋되면 시크릿이 들어있든 없든 위험하기 때문에, 파일 존재 자체를 차단하는 것입니다.</p>
 <h2>2단계: 변경 감지 — detect-changes</h2>
-<p>알고수는 모노레포입니다. 6개 백엔드 서비스 + 1개 프론트엔드 + 1개 블로그가 한 레포에 있어요. 매번 모든 서비스를 빌드하면 비용이 낭비되니까, 앞서 말한 <code>dorny/paths-filter</code>로 실제로 변경된 서비스만 감지합니다.</p>
+<p>알고수는 모노레포입니다. 6개 백엔드 서비스 + 1개 프론트엔드 + 1개 블로그(결정 기록을 웹페이지로 보여 주는 알고수 내부 블로그)가 한 레포에 있어요. 매번 모든 서비스를 빌드하면 비용이 낭비되니까, 앞서 말한 <code>dorny/paths-filter</code>로 실제로 변경된 서비스만 감지합니다.</p>
 <pre><code class="language-yaml">filters: |
   gateway:
     - 'services/gateway/**'
@@ -78,7 +78,7 @@ blockquote p{margin:0}
 <p>여기서 중요한 점 하나 — <code>workflow_dispatch</code>로 수동 실행할 때는 변경 여부와 상관없이 전체 서비스를 강제로 다시 빌드하는 옵션(<code>rebuild_all</code>)을 제공합니다. 인프라 변경, 베이스 이미지 업데이트처럼 모든 서비스를 다시 빌드해야 하는 상황에 대비한 안전장치입니다.</p>
 <h2>3단계: 품질 게이트 — lint + typecheck</h2>
 <p>변경이 감지된 서비스에 대해 린트와 타입 체크가 실행됩니다. 세 가지 트랙으로 나뉩니다.</p>
-<h3>NestJS 서비스 (5개 — matrix 전략)</h3>
+<h3>Node.js 서비스 (5개 — matrix 전략)</h3>
 <p><code>quality-nestjs</code>는 matrix 전략(같은 job을 서비스별 설정으로 복제해 돌리는 방식)으로 5개 서비스를 병렬 실행합니다.</p>
 <ul><li><strong>Gateway, Identity, Submission, Problem</strong>: ESLint + TypeScript <code>tsc --noEmit</code></li><li><strong>GitHub Worker</strong>: ESLint (<code>src/**/*.ts</code>) + TypeScript <code>tsc --noEmit</code></li></ul>
 <p>각 서비스마다 <code>has_eslint</code>와 <code>lint_glob</code> 옵션이 다를 수 있도록 matrix를 유연하게 설계했습니다.</p>
@@ -89,7 +89,7 @@ blockquote p{margin:0}
 <h2>4단계: 테스트 매트릭스</h2>
 <p>품질 게이트를 통과해야 테스트가 실행됩니다. <code>needs: [detect-changes, quality-nestjs]</code> 같은 의존성이 걸려 있어서, 린트가 실패하면 테스트는 시작조차 하지 않습니다.</p>
 <h3>test-node (Jest x 5)</h3>
-<p>NestJS 5개 서비스가 matrix로 병렬 테스트됩니다. 모든 서비스에 <code>--coverage --ci</code> 플래그가 붙어 있고, 커버리지 결과는 아티팩트로 업로드됩니다.</p>
+<p>NestJS 서비스 4개와 순수 Node.js로 만든 GitHub Worker, 모두 5개가 matrix로 병렬 테스트됩니다. 모든 서비스에 <code>--coverage --ci</code> 플래그가 붙어 있고, 커버리지 결과는 아티팩트로 업로드됩니다.</p>
 <pre><code class="language-yaml">strategy:
   fail-fast: false
   matrix:
@@ -110,7 +110,7 @@ blockquote p{margin:0}
 <p>테스트와 병렬로 <code>audit-npm</code>이 실행됩니다. 6개 Node.js 프로젝트(백엔드 5 + 프론트엔드 1)에 대해 <code>npm audit</code>을 수행합니다.</p>
 <pre><code class="language-yaml">- name: npm audit (high/critical)
   run: npm audit --audit-level=critical --omit=dev</code></pre>
-<p><code>--audit-level=critical</code>로 critical 수준의 취약점만 차단합니다. <code>--omit=dev</code>로 개발 의존성은 제외합니다. 프로덕션에 배포되지 않는 devDependency의 취약점까지 차단하면 CI가 너무 자주 깨지기 때문이에요.</p>
+<p><code>--audit-level=critical</code>로 critical 수준의 취약점만 차단합니다. 단계 이름에는 high가 남아 있지만, 실제로 막는 기준은 critical입니다. <code>--omit=dev</code>로 개발 의존성은 제외합니다. 프로덕션에 배포되지 않는 devDependency의 취약점까지 차단하면 CI가 너무 자주 깨지기 때문이에요.</p>
 <h2>6단계: 빌드 게이트 — 이것이 핵심입니다</h2>
 <p>빌드 job의 조건을 보면 이 파이프라인의 철학이 드러납니다.</p>
 <pre><code class="language-yaml">build-services:
@@ -180,7 +180,7 @@ with open('kustomization.yaml', 'w') as f:
 done</code></pre>
 <p>이 구조의 장점은 <strong>소스 코드 레포와 배포 레포가 분리</strong>되어 있다는 것입니다. 소스 레포에서 아무리 실수를 해도, 배포 설정 저장소를 직접 건드리지 않는 한 프로덕션 배포에는 영향을 주지 않습니다.</p>
 <h3>배포 서버의 순차 롤아웃</h3>
-<p>ArgoCD가 배포 설정 저장소의 매니페스트를 클러스터에 동기화하고 나면, 배포 서버(k3s 클러스터)에서 <code>deploy.sh</code> 스크립트가 서비스를 아래 Layer 순서대로 하나씩 배포합니다.</p>
+<p>평소 배포는 ArgoCD가 맡습니다. 서비스를 아래 Layer 순서대로 하나씩 올리는 방식은, ArgoCD를 들이기 전 배포 서버(k3s 클러스터)에서 직접 돌리던 <code>deploy.sh</code> 스크립트에 담겨 있던 순서입니다.</p>
 <leo-pipeline>
   <leo-stage title="L0 인프라">PostgreSQL · Redis · RabbitMQ</leo-stage>
   <leo-stage title="L1 Identity">인증 (다른 서비스의 의존성)</leo-stage>
@@ -193,7 +193,7 @@ done</code></pre>
 <h2>교훈: 실제로 겪은 사고들</h2>
 <h3>1. amend + force-push의 함정</h3>
 <p>앞서 말한 것처럼, <code>git commit --amend</code> 후 force-push를 하면 <code>dorny/paths-filter</code>가 변경을 감지하지 못합니다. paths-filter는 이전 커밋과 현재 커밋의 diff를 비교합니다. 그런데 amend하면 커밋이 새 SHA로 바뀌어, paths-filter가 비교 기준으로 삼는 이전 커밋이 원격 브랜치에서 사라지기 때문이에요.</p>
-<p><strong>해결</strong>: force-push를 프로젝트 전체에서 금지했습니다. 수정이 필요하면 새 커밋을 만듭니다. "커밋 히스토리가 지저분해지는 게 싫다"는 의견도 있지만, 안전한 CI가 깨끗한 히스토리보다 중요합니다.</p>
+<p><strong>해결</strong>: force-push를 프로젝트 전체에서 금지했습니다. 수정이 필요하면 새 커밋을 만듭니다. 깔끔한 커밋 히스토리를 포기하는 비용은 있지만, 안전한 CI가 깨끗한 히스토리보다 중요합니다.</p>
 <leo-callout type="warn" title="force-push 금지 원칙"><p><code>git commit --amend</code> + force-push는 <code>dorny/paths-filter</code>의 변경 감지를 무력화합니다. 변경 감지가 뚫리면 그 뒤의 모든 체크(테스트, 빌드, 스캔)가 실행조차 되지 않습니다. <strong>안전한 CI가 깨끗한 히스토리보다 항상 중요합니다.</strong></p></leo-callout>
 <h3>2. 배포 설정 저장소 수동 태그 변경의 위험</h3>
 <p>한번은 급하게 배포해야 해서 배포 설정 저장소의 kustomization.yaml을 수동으로 편집했습니다. 이미지 태그를 직접 변경했는데, 그 태그에 해당하는 이미지가 GitHub의 컨테이너 이미지 저장소(GHCR)에 존재하지 않았습니다. ArgoCD는 매니페스트를 동기화했지만, k3s가 이미지를 풀링하지 못해서 Pod가 <code>ImagePullBackOff</code>(이미지를 받지 못해 재시도만 반복하는 상태)에 빠졌습니다.</p>
@@ -207,7 +207,7 @@ done</code></pre>
 <pre><code class="language-yaml">permissions: {}</code></pre>
 <p>기본 권한을 <strong>제로</strong>로 설정하고, 각 job에서 필요한 권한만 명시적으로 선언합니다. <code>secret-scan</code>은 <code>contents: read</code>만, <code>build-services</code>는 <code>contents: read</code>와 <code>packages: write</code>만. 이렇게 하면 특정 job이 탈취되더라도 피해 범위가 제한됩니다.</p>
 <h2>AI와 CI의 균형</h2>
-<p>알고수 프로젝트에서 AI는 코드의 대부분을 생성했습니다. 12개의 에이전트가 역할을 나누어 작업했고, 총괄 에이전트 Oracle이 전체를 조율했습니다. 하지만 아무리 정교한 에이전트 체계를 갖추어도, 최종 검증은 사람이 아닌 <strong>자동화된 파이프라인</strong>이 맡아야 했습니다.</p>
+<p>알고수 프로젝트에서 AI는 코드의 대부분을 생성했습니다. 12개의 에이전트가 역할을 나누어 작업했고, 총괄 에이전트가 전체를 조율했습니다. 하지만 아무리 정교한 에이전트 체계를 갖추어도, 최종 검증은 사람이 아닌 <strong>자동화된 파이프라인</strong>이 맡아야 했습니다.</p>
 <p>15개의 CI job은 AI가 생성한 코드에 대해 이런 질문들을 던졌습니다:</p>
 <ol><li><strong>시크릿이 유출되었나?</strong> (secret-scan)</li><li><strong>코드 품질이 기준을 충족하나?</strong> (quality-nestjs, quality-python, quality-frontend)</li><li><strong>테스트가 통과하나?</strong> (test-node, test-ai-analysis, test-frontend)</li><li><strong>의존성에 취약점이 있나?</strong> (audit-npm)</li><li><strong>빌드된 이미지에 취약점이 있나?</strong> (trivy-scan)</li><li><strong>배포 경로가 안전한가?</strong> (deploy → 배포 설정 저장소 → ArgoCD)</li></ol>
 <p>이 모든 관문을 통과해야 코드가 프로덕션에 도달할 수 있었습니다.</p>

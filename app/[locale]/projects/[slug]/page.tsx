@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const locale = await localeOf(params);
   const project = getProject(slug);
-  return project ? pageMeta(locale, `/projects/${slug}`, { title: project.name[locale], description: project.summary[locale] }) : {};
+  return project ? pageMeta(locale, `/projects/${slug}`, { title: project.name[locale], description: project.summary[locale], ownImage: true }) : {};
 }
 
 export default async function ProjectPage({ params }: Props) {

@@ -27,9 +27,11 @@ export const localeOf = async (params: Promise<{ locale: string }>): Promise<Loc
 
 // 페이지 metadata 공통: 설명·canonical/hreflang·링크 미리보기(OG/X 카드) 텍스트.
 // 브라우저 탭 제목은 모든 페이지가 블로그 이름으로 고정(사용자 지정 2026-10-02) — 페이지 제목은 링크 미리보기에만 쓴다.
-// 미리보기 이미지는 opengraph-image 파일이 자동으로 붙인다 ([locale]/ 기본, posts/[slug]/ 글 전용).
-export function pageMeta(locale: Locale, path: string, m: { title?: string; description?: string; type?: 'website' | 'article' } = {}): Metadata {
+// 미리보기 이미지: 페이지가 openGraph를 정하면 상위 폴더의 opengraph-image가 물려지지 않아서 기본 이미지([locale]/opengraph-image)를 직접 넣는다.
+// 글·프로젝트처럼 자기 폴더에 opengraph-image 파일이 있는 페이지는 ownImage: true — 여기서 이미지를 넣으면 그 파일을 덮는다.
+export function pageMeta(locale: Locale, path: string, m: { title?: string; description?: string; type?: 'website' | 'article'; ownImage?: boolean } = {}): Metadata {
   const title = m.title ?? SITE.name[locale];
+  const images = m.ownImage ? undefined : [{ url: `/${locale}/opengraph-image`, width: 1200, height: 630, alt: SITE.name[locale] }];
   return {
     ...(m.description && { description: m.description }),
     alternates: alternates(locale, path),
@@ -41,7 +43,8 @@ export function pageMeta(locale: Locale, path: string, m: { title?: string; desc
       locale: locale === 'ko' ? 'ko_KR' : 'en_US',
       alternateLocale: locale === 'ko' ? 'en_US' : 'ko_KR',
       type: m.type ?? 'website',
+      ...(images && { images }), // undefined라도 키가 있으면 파일 이미지를 지운다
     },
-    twitter: { card: 'summary_large_image', title, description: m.description },
+    twitter: { card: 'summary_large_image', title, description: m.description, ...(images && { images }) },
   };
 }

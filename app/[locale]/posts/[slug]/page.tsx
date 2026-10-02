@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const locale = await localeOf(params);
   const post = await getPost(slug, locale);
-  return post ? pageMeta(locale, `/posts/${slug}`, { title: post.title, description: post.summary, type: 'article' }) : {};
+  return post ? pageMeta(locale, `/posts/${slug}`, { title: post.title, description: post.summary, type: 'article', ownImage: true }) : {};
 }
 
 export default async function PostPage({ params }: Props) {

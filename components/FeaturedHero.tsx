@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import type { PostCard as P } from '@/lib/db';
 import { DICT, type Locale } from '@/lib/i18n';
-import Eyebrow from './ui/Eyebrow';
 import Thumb from './ui/Thumb';
 
 const INTERVAL = 5000; // 사용자 지정 (2026-10-02)
@@ -62,25 +61,28 @@ export default function FeaturedHero({ posts, locale }: { posts: P[]; locale: Lo
               </div>
               <div className="absolute inset-0 flex items-end rounded-panel bg-linear-to-t from-surface/90 via-surface/70 via-35% to-transparent to-60% p-6 lg:items-center lg:bg-linear-to-r lg:via-40% lg:to-75% lg:p-0 lg:pl-20">
                 <div className="lg:w-2/5">
-                  <Eyebrow tone="text-fg">{t.featured}</Eyebrow>
-                  <h2 className="mt-3 t-tile lg:mb-4 lg:t-section">{post.title}</h2>
+                  <h2 className="t-tile lg:mb-4 lg:t-section">{post.title}</h2>
                   {post.summary && <p className="hidden t-body text-fg lg:block">{post.summary}</p>}
                 </div>
               </div>
             </Link>
           </div>
         ))}
-        {/* 넓은 화면만 좌우 화살표 (좁은 화면은 스와이프). 누르면 자동 넘김을 끈다 */}
+        {/* 넓은 화면만 좌우 화살표 (좁은 화면은 스와이프). 원으로 감싸지 않은 꺾쇠만, 누르는 영역은 슬라이드 위에서 아래까지(사용자 지정 2026-10-02).
+            올리면 꺾쇠가 가리키는 쪽으로 움직인다(arrow/arrow-back). 누르면 자동 넘김을 끈다 */}
         {posts.length > 1 &&
-          ([[-1, t.prev, 'left-4', 'M15 6l-6 6 6 6'], [1, t.next, 'right-4', 'M9 6l6 6-6 6']] as const).map(([d, label, side, path]) => (
+          ([[-1, t.prev, 'left-0', 'M15 6l-6 6 6 6'], [1, t.next, 'right-0', 'M9 6l6 6-6 6']] as const).map(([d, label, side, path]) => (
             <button
               key={d}
               type="button"
               aria-label={label}
               onClick={() => go(i + d)}
-              className={`press absolute top-1/2 z-10 hidden size-11 -translate-y-1/2 items-center justify-center rounded-pill bg-surface/80 text-fg lg:flex ${side}`}
+              className={`group absolute inset-y-0 z-10 hidden w-20 items-center justify-center text-fg lg:flex ${side}`}
             >
-              <svg aria-hidden viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {/* 사진이 어두우면 꺾쇠가 묻혀서, 올렸을 때 바깥쪽 끝에서 옅어지는 흰 막을 깐다 (AGENTS.md '이미지 위 글자').
+                  버튼(80px)보다 넓게(192px), 끝 70% → 가운데쯤 25% → 0으로 길게 옅어져 띠 경계가 보이지 않게 */}
+              <span aria-hidden className={`hover-veil pointer-events-none absolute inset-y-0 w-48 from-surface/70 via-surface/25 via-45% to-transparent ${d < 0 ? 'left-0 rounded-l-panel bg-linear-to-r' : 'right-0 rounded-r-panel bg-linear-to-l'}`} />
+              <svg aria-hidden viewBox="0 0 24 24" className={`relative size-7 ${d < 0 ? 'arrow-back' : 'arrow'}`} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d={path} />
               </svg>
             </button>

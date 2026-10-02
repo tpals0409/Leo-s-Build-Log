@@ -114,6 +114,20 @@
   :where(.group):hover & { translate: 3px 0; }
   @media (prefers-reduced-motion: reduce) { :where(.group):hover & { translate: none; } }
 }
+/* 사진 위 버튼의 흰 막: 평소엔 숨고, 버튼(group)에 올리거나 키보드로 오면 나타남 — 대표 글 슬라이드 좌우 화살표 (사용자 지정 2026-10-02) */
+@utility hover-veil {
+  opacity: 0;
+  transition: opacity var(--duration-zoom) var(--ease-standard); /* 썸네일 확대와 같은 느린 속도 — 막이 '켜지는' 느낌 없이 스며들게 */
+  :where(.group):hover &, :where(.group):focus-visible & { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { transition: none; }
+}
+/* ← (이전 글 등): arrow와 같은 움직임을 왼쪽으로 (사용자 지정 2026-10-02) */
+@utility arrow-back {
+  display: inline-block;
+  transition: translate var(--duration-hover) var(--ease-standard);
+  :where(.group):hover & { translate: -3px 0; }
+  @media (prefers-reduced-motion: reduce) { :where(.group):hover & { translate: none; } }
+}
 
 /* 등장 — 사용자 지정(2026-10-01). 들어오는 것만, 나가는 효과 없음.
    reveal: 카드 (ui/Reveal이 화면 아래쪽 것만 숨겼다가 보이면 data-in) / page-enter: 페이지 이동 시 (app/[locale]/template.tsx)

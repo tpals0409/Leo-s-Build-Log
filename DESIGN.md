@@ -281,3 +281,16 @@ Omit only the smallest unresolved value or group. Do not replace it with a plaus
 Record, review, and validate changes before adoption.
 
 <!-- design-md:claim-end -->
+
+## 8. Project overrides (Leo's Build Log)
+
+This section records user-directed changes for this repository, per "Changes" above. Other user-specified overrides (palette, fonts, mockup layout, hover and entrance motion, featured carousel, post header) are recorded in `AGENTS.md`.
+
+### Truncated card title tooltip (2026-10-02)
+
+- Post card titles show at most two lines; summaries at most two lines.
+- Hovering any post card (pointer devices only) shows the full title in a tooltip next to the cursor that follows it; keyboard focus shows it just below the title. The tooltip stays inside the viewport.
+- Surface: `paper` background with a 1px `line` border, `charcoal` text in the Body Small role, at most 320px wide, no shadow. Corners use the card radius (10px), an exception to the image-only rule for this surface.
+- Motion: opacity only, `--duration-hover` with `--ease-standard`; none under reduced motion.
+- Touch devices show the clipped title; the full title is on the post page.
+

@@ -149,3 +149,13 @@
   &:not([data-on]) { opacity: 0; }
   @media (prefers-reduced-motion: reduce) { transition: none; }
 }
+
+/* 카드 제목 툴팁 — 사용자 지정(2026-10-02, DESIGN.md §8). 위치(커서 옆)는 ui/ClampTitle이 정한다.
+   마우스가 있는 기기에서 카드(group)에 올리거나 키보드로 포커스하면 뜬다. 투명도만 바뀜 */
+@utility float-tip {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--duration-hover) var(--ease-standard), visibility var(--duration-hover);
+  @media (hover: hover) { :where(.group:hover, .group:focus-visible) & { opacity: 1; visibility: visible; } }
+  @media (prefers-reduced-motion: reduce) { transition: none; }
+}

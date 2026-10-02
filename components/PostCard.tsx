@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { PostCard as P } from '@/lib/db';
 import { DICT, fmtDate, type Locale } from '@/lib/i18n';
+import ClampTitle from './ui/ClampTitle';
 import Eyebrow from './ui/Eyebrow';
 import Thumb from './ui/Thumb';
 
@@ -18,8 +19,8 @@ export default function PostCard({ post, locale, size = 'md' }: { post: P; local
         <Thumb src={post.thumbnail} className={`thumb-zoom ${s.thumb}`} />
       </div>
       <Eyebrow>{DICT[locale].category[post.category]}</Eyebrow>
-      <h3 className={s.title}>{post.title}</h3>
-      <p className="line-clamp-3 t-body-sm text-muted">{post.summary}</p>{/* 요약은 3줄까지, 없어도 칸은 둔다 (subgrid 행 5개). 제목은 자르지 않는다 */}
+      <ClampTitle title={post.title} className={s.title} />
+      <p className="line-clamp-2 t-body-sm text-muted">{post.summary}</p>{/* 제목·요약 모두 2줄까지(잘린 제목은 ClampTitle이 띄워 보여 준다). 요약이 없어도 칸은 둔다 (subgrid 행 5개) */}
       <time dateTime={post.created_at.toISOString()} className="mt-2 t-caption text-muted">{fmtDate(post.created_at, locale)}</time>
     </Link>
   );

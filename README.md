@@ -70,7 +70,11 @@ podman compose exec -T app sh -c 'rm -rf /app/uploads/* && tar -C /app -xzf -' <
 ## k3s 배포 (이미지)
 main에 푸시되면 CI가 검사를 통과한 뒤 `ghcr.io/tpals0409/leo-s-build-log:main-<git sha>` (linux/arm64)를 올린다. `latest` 태그는 없다.
 매니페스트(aether-gitops 등)가 맞춰야 할 것:
-- **포트** 3000, **probe** `GET /api/health` (DB를 안 봐서 DB 장애로 재시작되지 않음)
+- **포트** 3000, **probe** `GET /api/health` (DB를 직접 안 봐서 DB 장애로 재시작되지 않음)
+  — 막 뜬 직후엔 스스로 데우는 동안(`instrumentation.ts`, 보통 1초 안팎, 최대 60초) **503**. readiness·startup probe로 쓰고,
+  liveness는 startupProbe 뒤에 돌게 하거나 60초 넘게 버티게 둔다
+- **배포 교체**: replicas 1이라 `strategy: RollingUpdate`(`maxSurge: 1`, `maxUnavailable: 0`) — 새 컨테이너가 준비된 뒤 옛 것을 내린다.
+  업로드 PVC가 ReadWriteOnce여도 같은 노드면 둘이 함께 붙는다(`Recreate`면 교체 동안 사이트가 멈춘다)
 - **env**: `DATABASE_URL`, `ADMIN_TOKEN`, `SITE_URL`(https 도메인), `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ADMIN_EMAIL`. `ADMIN_TOKEN`·`GOOGLE_CLIENT_SECRET`·DB 비밀번호는 SealedSecret 등으로
 - **업로드**: `/app/uploads`에 PVC. 컨테이너는 `node`(uid 1000)로 돌므로 `securityContext.fsGroup: 1000`
   — ReadWriteOnce PVC면 **replicas 1** (여러 개 띄우려면 RWX 또는 오브젝트 스토리지로 바꿔야 함)

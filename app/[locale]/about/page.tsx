@@ -71,7 +71,7 @@ export default async function AboutPage({ params }: Props) {
         </ol>
       </Section>
 
-      {/* 기술만 제목을 위로: 세 묶음이 본문 폭 전체를 쓴다. 숙련도는 레오 발바닥 5개(본인 평가) */}
+      {/* 기술만 제목을 위로: 세 묶음이 본문 폭 전체를 쓴다. 숙련도는 레오 발바닥 5개(본인 평가). 20px로 작게 그려서, 화면 배율마다 딱 맞는 크기(20·40·60px)를 따로 둔다 — 브라우저가 크게 줄이면 흐려진다 */}
       <section className="flex flex-col gap-6 border-t border-line pt-8">
         <h2 className="t-tile">{t.skills}</h2>
         <div className="grid gap-x-14 gap-y-8 md:grid-cols-3">
@@ -84,7 +84,7 @@ export default async function AboutPage({ params }: Props) {
                     <span className="t-body">{name[locale]}</span>
                     <span aria-hidden className="flex shrink-0 gap-1">
                       {[1, 2, 3, 4, 5].map((n) => (
-                        <img key={n} src="/about/paw.webp" alt="" className={`size-5 object-contain ${n > level ? 'opacity-25 grayscale' : ''}`} />
+                        <img key={n} src="/about/paw-20.webp" srcSet="/about/paw-20.webp 1x, /about/paw-40.webp 2x, /about/paw-60.webp 3x" width={20} height={20} alt="" className={`size-5 object-contain ${n > level ? 'opacity-25 grayscale' : ''}`} />
                       ))}
                     </span>
                   </li>

@@ -23,24 +23,24 @@ blockquote p{margin:0}
   <leo-decision><p>Application owners would hand over the image together with its runtime contract, and infrastructure would own only deployment, connectivity, observability, and recovery. Missing information meant holding the deployment and reporting the blocker and its owner.</p></leo-decision>
   <leo-result><p>The role boundary was confirmed on July 29, 2026. Passing checks and reaching production were also kept apart: a change that had only passed its checks, like the July 27 pgvector transition, was not called deployed.</p></leo-result>
 </leo-adr>
-<h2>What made a service ready for deployment</h2>
+<h2>What "Deployable" Required</h2>
 <p>We agreed that the service owner would hand over a runnable image together with its runtime contract. Infrastructure would deploy and connect it according to that contract.</p>
 <table><thead><tr><th>Handoff information</th><th>What infrastructure needed to establish</th></tr></thead><tbody><tr><td>Image commit SHA and digest</td><td>Which build artifact are we deploying?</td></tr><tr><td>Container port</td><td>Where should the Service send traffic?</td></tr><tr><td>Health, liveness, and readiness paths</td><td>Which endpoints report status?</td></tr><tr><td>Environment variables and credential keys</td><td>What configuration must be delivered securely?</td></tr><tr><td>External dependencies, including the DB</td><td>Which services and network paths are required?</td></tr></tbody></table>
 <p>For example, the backend contract specified internal port 8080, the <code>/api/core</code> context path, and <code>/api/core/actuator/health</code>. These were not values for infrastructure to guess. The application owner defined them; infrastructure connected the service accordingly.</p>
 <p>Credentials followed the same principle. We distinguished the required key schema from the secret values themselves. Production secrets would be injected through Secrets, not stored in the image or Git.</p>
-<h2>Not fixing someone else&#x27;s application code</h2>
+<h2>Not Fixing Others' Code</h2>
 <p>When I worked alone on AlgoSu, my personal algorithm study platform, I could change application code if I found a problem during deployment. That approach did not carry over unchanged to a team.</p>
 <p>The boundary confirmed on July 29 was explicit. Infrastructure owned deployment, connectivity, observability, and recovery. It did not write or modify another owner&#x27;s application code. Reviewing that code, deciding API internals, or determining database migration files and their order were also outside its scope.</p>
 <table><thead><tr><th>Application owner</th><th>Infrastructure owner</th></tr></thead><tbody><tr><td>Deliver a runnable image and runtime contract</td><td>Deploy that image to Kubernetes</td></tr><tr><td>Own application configuration and probe internals</td><td>Configure Services, Ingress, and health checks</td></tr><tr><td>Own database migration files and ordering</td><td>Provide database connectivity and deployment/recovery procedures</td></tr><tr><td>Define credential keys and external dependencies</td><td>Provide Secret delivery and network configuration</td></tr></tbody></table>
 <p>We also defined what to do when information was missing. Rather than filling the gap by editing application code, infrastructure would hold the deployment and report the blocker and its owner.</p>
 <p>The same boundary applied to Pico, the AI agent I worked with on infrastructure. An agent&#x27;s ability to modify code was separate from its authority to do so.</p>
-<h2>From an image to an operational deployment</h2>
+<h2>From Image to Production</h2>
 <p>We defined a Kubernetes and Argo CD GitOps flow rather than running images directly on the server. In GitOps, deployment configuration lives in Git, and changes there are applied to the cluster. Argo CD is the tool that keeps the cluster in line with Git.</p>
 <p>Image references would not rely on a mutable tag alone. They would pin both the commit SHA and the digest (an identifier derived from the image content).</p>
 <leo-steps><leo-step title="Image and contract"><p>The application owner delivers the required information</p></leo-step><leo-step title="Validate the handoff"><p>If incomplete: hold deployment → identify blocker and owner → request an updated handoff</p></leo-step><leo-step title="Infra PR and checks"><p>Update image references and deployment configuration; validate and obtain approval</p></leo-step><leo-step title="Argo CD and verification"><p>Apply changes, then inspect rollout, health, and logs</p></leo-step></leo-steps>
 <p><em>This is the deployment flow I set. The backend deployment below has not gone through every stage yet.</em></p>
 <p>A change in Git was also distinct from a healthy running service. After applying it, we still needed to inspect Pod health, events, logs, and metrics. Infrastructure&#x27;s responsibility did not end with updating an image reference.</p>
-<h2>Passing checks did not mean deployment was complete</h2>
+<h2>Passing Checks Is Not Deploying</h2>
 <p>The July 27 pgvector transition review makes this distinction concrete.</p>
 <p>pgvector is a PostgreSQL extension that adds vector columns. The backend&#x27;s Flyway migration (Flyway applies database schema changes in order) created the <code>vector</code> extension, while the AI migrations used vector columns. The production PostgreSQL image therefore needed the extension binaries. This was where an application requirement had to be matched by its operating environment.</p>
 <p>At that point, the infrastructure PR had passed its checks but remained open. Production PostgreSQL still used its existing image, and the <code>vector</code> extension was not installed. The backend image-publishing workflow changes existed only in a local commit, with no remote PR yet.</p>
@@ -48,7 +48,7 @@ blockquote p{margin:0}
 <p>So I don't call this change "deployed" yet. The deployment contract has been reviewed and the changes checked, but rolling it out to production is still pending.</p>
 <p>The database transition also had recovery conditions. Before and after creating the extension, returning to the previous image meant different things. Once the extension existed, we would not simply revert to the old image without the required shared library. Restarting a single-replica database also required separate maintenance approval.</p>
 <p>Nor did the existence of a backup file mean recovery was proven. The database backup archive passed its format check, but the database was still an initial database with no user tables. So I didn't count it as a restore test.</p>
-<h2>What infrastructure could take responsibility for</h2>
+<h2>What Infrastructure Owns</h2>
 <p>Looking back, what I needed as the infrastructure owner was not authority to fix every piece of code. I needed to understand the conditions under which the artifact I received would run, and meet those conditions in the operating environment.</p>
 <p>The application owner supplied a runnable image and a contract. Infrastructure deployed it, connected it, observed it, and handled recovery. An incomplete handoff meant stopping at that boundary and checking again.</p>
 <p>This was how the structure, conventions, and responsibilities the team agreed on before development took shape in deployment. Receiving an image was the beginning. We also had to define what came with it, how far my responsibility extended, and which states we could not yet call complete.</p>

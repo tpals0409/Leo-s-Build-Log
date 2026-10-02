@@ -23,7 +23,7 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<h2>From Reading a Reference to Doing It Myself</h2>
+<h2>From Reference to Practice</h2>
 <p>The first time I read Channel.io's post “Backend CI Refactoring” (Channel.io is a Korean SaaS company), my immediate reaction was: "I could do this for AlgoSu." Their story of cutting a 36.6-minute CI run down to 15 minutes and 38 seconds. The method was concrete, the principles clear.</p>
 <p>But I couldn't follow it directly. AlgoSu is different from Channel.io. It's <strong>one developer directing a team of AI agents</strong>, every build runs inside Docker, and a lead agent hands tasks out to the other agents. I could borrow the underlying principles, but I still had to <strong>translate those principles into AlgoSu's context</strong>.</p>
 <p>This isn't a post introducing a finished CI architecture. AlgoSu has run more than a hundred sprints (short work cycles), and this is a record of five of them, S102–S106, spent reading a reference, experimenting, and sometimes dropping the plan. The focus is on two pieces of work that ended with <strong>zero lines of implementation</strong>, and why those weren't failures but wins.</p>
@@ -50,7 +50,7 @@ blockquote p{margin:0}
 </ol>
 <p>There were also principles I deliberately <strong>didn't</strong> borrow. Two of Channel.io's techniques (uploading prepared setup to S3 and polling it so initialization overlaps, and distributing tests through a dynamic queue) would have been overkill for AlgoSu. GitHub Actions (GHA) artifacts were enough, and with so few tests, the cost of splitting them up outweighed the gain. Choosing what <em>not</em> to carry over is part of translating a reference.</p>
 <p>One more AlgoSu-specific wrinkle: because the lead agent hands out the work, I could apply "pilot then expand" sprint by sprint, but I also had to re-check <strong>which agent should own the work</strong> before each sprint started. In the first sprint I wrongly gave the CI work to the auth &amp; security agent, then moved it to the infrastructure agent. When you work with many agents, checking role boundaries matters as much as writing the code.</p>
-<h2>The 4-Sprint Roadmap: The Full Picture</h2>
+<h2>The 4-Sprint Roadmap</h2>
 <p>The roadmap I drew up after reading the Channel.io post covered four sprints (S102–S105); in practice, S106 was added for leftover items. Here's what each sprint aimed for and what it actually delivered:</p>
 <leo-steps>
   <leo-step title="S102 · Operations Automation"><p>Dependabot grouping + Auto-merge + Branch Protection (merge rules for main)</p></leo-step>
@@ -60,7 +60,7 @@ blockquote p{margin:0}
   <leo-step title="S106 · Deferred Items"><p>Coverage 70% achieved (real implementation) + L2 cache &amp; build optimization stopped early by pre-checks</p></leo-step>
 </leo-steps>
 <p>Each sprint stood on its own, yet each one's lessons fed the next design. The finding that "a PR that changes CI can't measure its own effect" became the usage rules for rebuild_all, an option that forces every service to rebuild. And the habit of a <strong>pre-check</strong> (asking another agent whether something is needed before building it) made the final sprint's zero-line conclusion possible.</p>
-<h2>S102: Auto-merge &amp; Branch Protection</h2>
+<h2>S102: Auto-merge, Branch Rules</h2>
 <p>The first problem was 30 open Dependabot PRs. Reviewing and merging weekly patch/minor updates by hand had piled up into a backlog.</p>
 <p>The solution had two steps: <strong>group dependabot.yml</strong> to reduce individual PR count, and an <strong>auto-merge workflow</strong> that merges patch/minor PRs automatically once checks pass.</p>
 <h3>Dependabot Grouping</h3>
@@ -131,7 +131,7 @@ required_conversation_resolution: true</code></pre>
 <p>Verification of the work PR:</p>
 <table><thead><tr><th>Check</th><th>Result</th></tr></thead><tbody><tr><td>Work PR, full CI</td><td>✅ 26 success / 10 skipped / 0 failure (counting jobs expanded by the matrix)</td></tr><tr><td>Auto-merge workflow</td><td>✅ 7/7 success (7 group PRs)</td></tr><tr><td>Actual auto-merge confirmed</td><td>✅ github-worker group PR (3 updates), merged by <code>app/github-actions</code></td></tr><tr><td>Branch Protection in effect</td><td>✅ Direct push to main blocked, strict mode requires up-to-date base</td></tr></tbody></table>
 <leo-callout type="note" title="Key Lesson: Workflow ≠ Feature"><p>A workflow file alone gets you halfway. <code>allow_auto_merge: true</code> + required status checks must both be in place for it to actually work. "The code looks right, so why isn't it working?" might be a repository settings issue. CI automation doesn't end with a single file.</p></leo-callout>
-<h2>S103–S104: Composite Action, Pilot to Rollout</h2>
+<h2>S103–104: Pilot, Then Rollout</h2>
 <p>The second problem was the repeated <code>setup-node + cache + npm ci</code> pattern. The fix was a composite action, a GitHub Actions feature that bundles several steps into one reusable step. Three jobs, <code>quality-nestjs</code>, <code>audit-npm</code>, and <code>test-node</code>, each ran the same setup steps across a 5-service matrix.</p>
 <p>I applied the Channel.io principle of "validate on the smallest service first, then expand" at the sprint level. <strong>S103: pilot on github-worker only. S104: roll out to every service.</strong></p>
 <h3>S103: Composite Action Pilot</h3>
@@ -212,7 +212,7 @@ function findLcovFiles(dir) { /* ... */ }</code></pre>
     # install-command: 'npm ci --ignore-scripts'</code></pre>
 <p>Removing the 3-step inline (Setup Node + Cache + Install) × 3 jobs = <strong>67 lines deleted from ci.yml</strong>, roughly a 25% reduction. A maintainability win you feel before you even measure performance.</p>
 <leo-callout type="warn" title="Pitfall: Infra PRs Can&#x27;t Benchmark Themselves"><p>The pilot PR and the rollout PR both modified only <code>.github/workflows/ci.yml</code>. <code>detect-changes</code> (a path filter that picks which jobs to run from the changed file paths) saw no change under <code>services/github-worker/**</code>, so every service job was skipped. The composite action was in place, but no run ever executed it. After-change (post) samples: 0, so there was no way to measure. The gap carried over to the next sprint.</p></leo-callout>
-<h2>S105: Measurement Rules &amp; commitlint Automation</h2>
+<h2>S105: Measurement Automation</h2>
 <p>S105 was the <strong>closing sprint</strong> of the four-sprint roadmap. Three tasks bundled together.</p>
 <h3>[A] Operating Rules for rebuild_all</h3>
 <p>The fix for that pitfall (a PR that changes CI can't measure itself) was already in ci.yml: <code>workflow_dispatch.inputs.rebuild_all=true</code>, an option on manual runs that forces every service to rebuild. It had existed since the pilot, but there were no rules for when, by whom, and how to use it.</p>
@@ -270,7 +270,7 @@ export default {
   },
 };</code></pre>
 <p>Now adding a directory under <code>services/</code> automatically registers the scope. The recurring "remember to update scope-enum when adding a new directory" feedback loop was resolved structurally. <strong>Human-dependent feedback promoted to system automation.</strong></p>
-<h2>S106: The "Zero-Line Implementation" Decision</h2>
+<h2>S106: The Zero-Line Decision</h2>
 <p>The last sprint handled the three items carried over until then. The table below calls each task a track. Ultimately, <strong>one track was actually implemented</strong>, while <strong>two were closed without any code changes</strong>.</p>
 <table><thead><tr><th>Track</th><th>Task</th><th>Result</th></tr></thead><tbody><tr><td>[A] Coverage 70%</td><td>Frontend branches 69.55% → 71%+ + global gate 70%</td><td>✅ Implemented (2 PRs)</td></tr><tr><td>[B] L2 Cache Layer</td><td>Target: 40% Docker build reduction</td><td>❌ Not introduced (stopped at pre-check)</td></tr><tr><td>[C] Frontend Build Optimization</td><td><code>swcMinify</code> · <code>optimizePackageImports</code> · <code>sourceMaps</code></td><td>❌ Not introduced (stopped at pre-check)</td></tr></tbody></table>
 <h3>[A] Coverage 70%: Frontend Branches Was the Single Bottleneck</h3>

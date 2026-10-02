@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 // 글 오른쪽 목차 (사용자 지정 2026-10-02, 화면 상하 가운데). 본문(Shadow DOM)의 h2를 읽어 만들고, 지금 읽는 소제목만 fg로 진하게.
 // 본문 폭(1120) 바깥 오른쪽 여백에 고정 — 여백이 충분한 2xl(1536px) 이상에서만 보인다. 좁은 화면엔 없음.
@@ -10,6 +10,7 @@ type Item = { el: HTMLElement; text: string };
 export default function PostToc({ label }: { label: string }) {
   const [items, setItems] = useState<Item[]>([]);
   const [active, setActive] = useState(-1);
+  const nav = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const root = document.querySelector('[data-post-body]')?.shadowRoot;
@@ -27,6 +28,15 @@ export default function PostToc({ label }: { label: string }) {
     return () => { removeEventListener('scroll', update); cancelAnimationFrame(frame); };
   }, []);
 
+  // 목차가 화면보다 길면 목차 안에서만 스크롤 — 지금 항목이 목차 밖으로 나가면 따라 내린다(페이지는 건드리지 않음)
+  useEffect(() => {
+    const box = nav.current;
+    const el = box?.querySelectorAll('button')[active];
+    if (!box || !el) return;
+    if (el.offsetTop < box.scrollTop) box.scrollTop = el.offsetTop;
+    else if (el.offsetTop + el.offsetHeight > box.scrollTop + box.clientHeight) box.scrollTop = el.offsetTop + el.offsetHeight - box.clientHeight;
+  }, [active]);
+
   if (items.length < 2) return null;
   const go = (el: HTMLElement) => {
     const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -34,7 +44,7 @@ export default function PostToc({ label }: { label: string }) {
   };
 
   return (
-    <nav aria-label={label} className="fixed left-[calc(50%+592px)] top-1/2 hidden max-h-[calc(100vh-10rem)] -translate-y-1/2 w-[calc(50%-624px)] max-w-60 overflow-y-auto 2xl:block">
+    <nav ref={nav} aria-label={label} className="fixed left-[calc(50%+592px)] top-1/2 hidden max-h-[calc(100vh-10rem)] -translate-y-1/2 w-[calc(50%-624px)] max-w-60 overflow-y-auto overflow-x-hidden [overflow-wrap:anywhere] [scrollbar-width:none] 2xl:block">
       <ul className="border-l border-line">
         {items.map((item, i) => (
           <li key={i}>

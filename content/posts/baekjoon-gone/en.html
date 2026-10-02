@@ -15,7 +15,7 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<h2>The Day "Algorithms Means Baekjoon" Broke</h2>
+<h2>When "Just Use Baekjoon" Broke</h2>
 <p>If you've studied algorithms in Korea, you've almost certainly used Baekjoon Online Judge (BOJ), the country's go-to problem-solving site, think LeetCode for Korean developers. It had been around for more than a decade. So when I saw its shutdown notice, my first feeling wasn't shock. It was closer to awkwardness. "Baekjoon is shutting down?" I knew, intellectually, that any service can end. I just hadn't actually felt it.</p>
 <p>AlgoSu was built on Baekjoon. Problem data, difficulty badges, the submission flow, GitHub sync, AI feedback: Baekjoon was woven into all of it. After reading the notice, what I had to face wasn't a code problem. It was an assumption I'd been carrying without noticing.</p>
 <leo-adr>
@@ -23,7 +23,7 @@ blockquote p{margin:0}
   <leo-decision><p>Move the problem source to Programmers over three sprints (short work cycles), shipping a hand-picked set of problems as JSON files instead of scraping live, and keeping the existing Baekjoon data alongside.</p></leo-decision>
   <leo-result><p>373 problems landed with zero DB migrations and zero regression for existing users. The sourcePlatform (source site) column added early turned out to be a survival condition.</p></leo-result>
 </leo-adr>
-<h2>I Knew About the Dependency</h2>
+<h2>A Dependency I Knew About</h2>
 <p>Don't get me wrong. I knew AlgoSu depended on Baekjoon. I'd known from the start, which is exactly why I'd put a few safety nets into the design early on. (Baekjoon problem data came through Solved.ac, a community service that adds difficulty ratings and tags to Baekjoon problems.)</p>
 <ul><li>A <code>sourcePlatform</code> column on the problem table, recording which site a problem comes from, added early</li><li>The API that fetches external problem data split into its own module, at the edge of the Gateway, the service that receives every request</li><li>Difficulty values (enums) and UI design tokens designed independently of any one platform</li></ul>
 <p>The abstractions were already there. I did think another platform might be added someday.</p>
@@ -35,7 +35,7 @@ blockquote p{margin:0}
   <leo-side label="The new assumption"><ul><li>Baekjoon can disappear</li><li>external APIs can be cut off at any time</li><li>there are no exceptions</li></ul></leo-side>
 </leo-compare>
 <p>That was the one-line lesson of this migration. Technically, there wasn't much I didn't already know. If anything, it confirmed that the design decisions I'd already made were right. But <strong>the attitude behind those decisions</strong> (design on the assumption that nothing lasts) only sank in this time.</p>
-<h2>A Migration in Three Sprints</h2>
+<h2>A Three-Sprint Migration</h2>
 <p>The new source was Programmers, a Korean coding-test and practice-problem platform.</p>
 <p>My first instinct was to cram the entire migration into one sprint: data, backend, frontend, submissions, and docs, all at once. I stopped myself while drafting the plan. The risk of breaking existing features was too high. So I split it into a three-sprint roadmap.</p>
 <leo-timeline>
@@ -58,7 +58,7 @@ blockquote p{margin:0}
 </leo-metrics>
 <p>The Programmers Gateway endpoints mirror the existing Baekjoon ones, so the abstraction layer stayed intact.</p>
 <p>More meaningful than the numbers was the shape of the change: we added a new platform without breaking the old one. An external shock, absorbed inside the internal structure.</p>
-<h2>What Services Built on External Platforms Must Never Forget</h2>
+<h2>Lessons for Dependent Services</h2>
 <p>That's the technical story. What follows is the real conclusion of this migration.</p>
 <h3>Erase "Surely Not" from the Design</h3>
 <p>Knowing about a dependency and designing for it to be cut off are not the same thing. I had done the first and put off the second. The <code>sourcePlatform</code> column was about extensibility: "another platform might be added someday." It wasn't about survival: "Baekjoon might disappear."</p>

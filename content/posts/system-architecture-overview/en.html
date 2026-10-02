@@ -29,14 +29,14 @@ blockquote p{margin:0}
   <leo-result><p>Humans set the direction and AI filled in the details, keeping 6 services at consistent quality even working solo.</p></leo-result>
 </leo-adr>
 
-<h2>Why MSA?</h2>
+<h2>Why MSA</h2>
 <p>MSA (microservice architecture) means building an application as several small services instead of one large one.</p>
 <p>When designing AlgoSu, the first question wasn't about architecture patterns. It was <strong>how to delegate work to AI agents</strong>.</p>
 <p>With a monolith, a single agent would need to understand the entire codebase. Fixing auth logic would require knowing submission logic, understanding the DB schema, and more. I'd already seen that the shorter and narrower an agent's instructions were, the better it followed the key ones.</p>
 <p>What if, instead, we split services into small units? The narrower the domain an AI manages, the clearer its role becomes, and the more accurate its decisions within a single service. The auth &amp; security agent (Gatekeeper) handles only the Gateway, the database agent (Librarian) only DB schemas, and the submission-flow agent (Conductor) only Submission. Aligning agent responsibility boundaries with service boundaries was the core reason for choosing MSA.</p>
 <p>Of course, MSA is complex. Inter-service communication, distributed transactions, deployment pipelines: problems you'd never have to worry about in a monolith. But if AI agents can share that complexity, the tradeoff holds up.</p>
 
-<h2>How We Split the Services</h2>
+<h2>How Services Were Split</h2>
 <p>The criteria for splitting services were simple. <strong>If data ownership differs, split the service.</strong></p>
 <p>Identity manages user data, Submission manages code submissions, Problem manages problems, and each owns its own database. Because splitting later would be migration hell, we split the databases per service early on. For a while, though, the Gateway still connected directly to Identity's DB; only after we built an API in the Identity service and cut that connection did the rule that no service touches another service's DB (Database per Service) actually hold.</p>
 <p>Async tasks were extracted into separate workers. GitHub pushes and AI analysis are long-running operations, so we couldn't make users wait. We made GitHub Worker and AI Analysis into independent services, connected via RabbitMQ.</p>
@@ -59,7 +59,7 @@ blockquote p{margin:0}
 </table>
 <p>In this structure, the division of AI agent responsibilities fell into place naturally. Most agents own a single service: the security agent owns the Gateway, the submission-flow agent owns Submission, the problem agent owns Problem, and so on. Work that spans several services, like databases and infrastructure, got its own owners. Since service boundaries became responsibility boundaries for most agents, the confusion of "whose job is this?" disappears.</p>
 
-<h2>How We Chose Communication Patterns</h2>
+<h2>Choosing Communication Patterns</h2>
 <p>Once services are split, you need to decide how they talk to each other. We picked from four patterns based on use case.</p>
 <ul class="cards">
 <li class="card"><p class="card-title">Sync HTTP</p><p class="card-body">Immediate response (Gateway → services)</p></li>
@@ -73,7 +73,7 @@ blockquote p{margin:0}
 <p><strong>SSE</strong> is the final leg that streams data in real-time to the browser. Max connection time of 5 minutes, 30-second heartbeat, ownership verification: the security and submission-flow agents built these safeguards together. One notable issue: creating a Redis subscriber per SSE connection would exhaust the connection pool. Solving it with a shared subscriber pattern, where all connections use one subscriber, was the submission-flow agent's call.</p>
 <p>The choice of each communication pattern was made by a human. "GitHub push after submission must be async" is an architectural decision. But the detailed design that carries out that decision was filled in by AI agents.</p>
 
-<h2>The Journey of a Single Submission</h2>
+<h2>One Submission's Journey</h2>
 <p>Let's trace what actually happens with a single code submission to see this architecture in action.</p>
 <p>When a user clicks "Submit," the Gateway validates the JWT, and the Submission Service's Saga Orchestrator manages the entire flow. The Saga pattern runs work that spans several services step by step, and when a step fails, it rolls back or skips in a defined way.</p>
 <leo-diagram title="Saga state transitions" caption="Dotted lines are failure branches">
@@ -86,7 +86,7 @@ blockquote p{margin:0}
 </leo-compare>
 <p>The human established the principle: "data must never be lost, even on failure." The AI built the concrete mechanisms to uphold that principle.</p>
 
-<h2>Auth, Security, Deployment: Who Decided What?</h2>
+<h2>Who Decided Auth and Deploys</h2>
 <p>The remaining architectural decisions follow the same pattern. Humans set the direction; AI executes.</p>
 <p><strong>Auth</strong>: Whether to use httpOnly cookies or localStorage was a human decision. The reason was defense against XSS attacks. But details like the implementation of the OAuth flow, the automatic JWT renewal logic (TokenRefreshInterceptor, 5 minutes before expiry), and pinning the algorithm to HS256 were carried out by the security agent following security principles.</p>
 <p><strong>Security</strong>: The principle "All containers run as non-root, and privilege escalation is blocked" was set by a human. The infrastructure agent applied it consistently across every k8s (Kubernetes) manifest. A read-only file system (<code>readOnlyRootFilesystem</code>), every Linux capability removed (<code>capabilities.drop: ALL</code>), and temporary writable space (emptyDir) only on paths that truly need it. Applying identical security settings across 6 services without missing a single one is easy to slip up on when doing it alone. Applying default-deny NetworkPolicy and whitelisting only required communication follows the same logic.</p>

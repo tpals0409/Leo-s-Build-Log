@@ -32,12 +32,12 @@ blockquote p{margin:0}
   <leo-decision><p>Use Claude Opus and Sonnet day to day, and bring in Fable 5, the newer model above them (the premium model from here on), only for large cleanups.</p></leo-decision>
   <leo-result><p>What six sprints (one audit plus five cleanups) taught me wasn&#x27;t a model&#x27;s limits. It was the importance of timing.</p></leo-result>
 </leo-adr>
-<h2>On Launch Day, I Had It Audit the Entire Codebase</h2>
+<h2>The Launch-Day Full Audit</h2>
 <p>Giving Fable 5 a full codebase audit as its first job was, in hindsight, the right kind of test. It wasn't "let's see if it's better." It was closer to "let's give it the hardest thing we have."</p>
 <p>The result was a decision record (ADR), ADR-030. In this post, ADR-030 means both that audit and the cleanup plan that came out of it.</p>
 <p>It scanned three areas in parallel (security exposure, code quality, and CI and infrastructure), and every suspicious conclusion was checked by opening the code directly. That filtered out five wrong calls. For example, it reported that the rollback logic for failures (Saga compensation: when a multi-service operation fails partway, undo the earlier steps) was missing, but it was there: <code>compensateGitHubFailed</code>/<code>compensateAiFailed</code>. It also reported that the code editor (Monaco) wasn't lazy-loaded, but <code>next/dynamic</code> already handled that. Separating the broad sweep from the careful check is what caught these mistakes.</p>
 <p>The final verdict was <strong>zero high-risk findings</strong>, confirmation that the fundamentals were solid. Three medium, five low, seven improvements. From that came a five-sprint plan to work through them. One audit sprint plus five cleanup sprints: those are the six sprints this post talks about.</p>
-<h2>Five Sprints Ran</h2>
+<h2>Five Sprints In</h2>
 <leo-steps>
   <leo-step title="Sprint 1 · Quick security wins"><p>One place to mark public APIs · Input validation for the events API · Isolate outside input that ends up in prompts · Request-header cleanup</p></leo-step>
   <leo-step title="Sprint 2 · Operations runbooks"><p>Encryption-key rotation procedure · Procedure for reprocessing failed messages (docs only)</p></leo-step>
@@ -48,7 +48,7 @@ blockquote p{margin:0}
 <p>The plan went as expected. But what stood out more than performance was <strong>cost</strong>.</p>
 <p>Token usage was clearly different. Deeper reasoning means the model holds more context in one pass, and that means burning more tokens. In the fifth sprint, the security agent hit the session limit partway through the version-pinning work, a first. It was the first session interruption since switching to Fable 5.</p>
 <leo-callout type="warn" title="The Other Side of Performance"><p>Reasoning depth and token usage trade off against each other. A more powerful model is not always the cheaper fix. Fable 5 being able to see more at once also means it spends more at once.</p></leo-callout>
-<h2>Regressions Gather at the Seams</h2>
+<h2>Regressions at the Seams</h2>
 <p>Across the backend and frontend decomposition sprints, one pattern kept repeating.</p>
 <p>When you split large files apart, the regressions (things that used to work and now don't) <strong>gather at the new boundaries</strong>.</p>
 <p>When <code>study.service.ts</code> was split into five files, what broke wasn't the logic inside any one file. It was the boundaries between them. The <code>redis.keys O(N)</code> problem, which scans every Redis key, had been in the code before the split; the split is what finally brought it into view of Critic, the review agent that checks code right before merge.</p>
@@ -76,7 +76,7 @@ blockquote p{margin:0}
 </leo-diagram>
 <leo-callout type="note" title="The Compounding Effect of Clean Boundaries"><p>After the ADR-030 decomposition, the work of the submission-flow agent (Conductor) and the security agent felt noticeably better in the sprints that followed. Once the 823-line service was split into pieces of around 200 lines, each with a single responsibility, the agents had less code to read and fewer chances to misjudge a boundary. On clean boundaries, cheaper models do better work too.</p></leo-callout>
 <p>That's the core lesson of these six sprints. Spending on a premium model isn't for that one sprint. It's to <strong>raise the baseline for many sprints after it</strong>. Like paying down debt: retire the principal, and the interest (review-round cost) shrinks.</p>
-<h2>Caveats: Where This Strategy Breaks Down</h2>
+<h2>Where This Strategy Fails</h2>
 <p>Reading this as "always use the premium model" would be wrong.</p>
 <p>It rests on a few conditions.</p>
 <p><strong>First, wholesale refactoring has quickly diminishing returns.</strong> The ADR-030 decomposition worked because there was clear "principal" to pay down: 823 lines, 516 lines. Splitting code that's already well structured adds regression risk for little gain. Use it where the pain is obvious, not everywhere.</p>

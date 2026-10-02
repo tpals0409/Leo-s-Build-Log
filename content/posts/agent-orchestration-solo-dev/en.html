@@ -23,7 +23,7 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<h2>I Wanted to Build It Myself</h2>
+<h2>A Platform I Wanted to Build</h2>
 <p>Running an algorithm study group, the same frustrations kept coming back. Assigning problems, checking submissions, requesting code reviews. Every week, the same tasks, done by hand.</p>
 <p>As the group grew, the management overhead grew exponentially. The thought came naturally: "It'd be great if there were a platform that automated all this."</p>
 <p>Around then, I came across the idea of AI agent orchestration: give several AI agents different roles and have them work together as one system. The more I read, the more I wondered what would happen if I applied it to building a real service.</p>
@@ -35,7 +35,7 @@ blockquote p{margin:0}
   <leo-result><p>It paid off in preventing a DB incident, catching leftover insecure code, and cutting the time it took to find past decisions (one from three months earlier in five seconds). Work ordering, and the balance between control and autonomy, are still being refined.</p></leo-result>
 </leo-adr>
 
-<h2>The Walls You Hit When Building Alone</h2>
+<h2>Limits of Building Alone</h2>
 <p>The walls showed up quickly. Not because I couldn't write the code, but because <strong>it's hard to keep both productivity and consistency</strong> when you're alone.</p>
 <h3>The Limits of Productivity</h3>
 <p>Working across 6 microservices (Gateway, Identity, Submission, Problem, GitHub Worker, AI Analysis) means a lot of context switching.</p>
@@ -46,7 +46,7 @@ blockquote p{margin:0}
 <p>Commit conventions, file structure, error handling: they drift a little every day. With 6 services, the inconsistencies multiply by six.</p>
 <p>Both problems pointed at the same thing. <strong>One person's head can't hold the whole system's context and standards at once.</strong></p>
 
-<h2>First Attempt: 8 Agents</h2>
+<h2>First Try: 8 Agents</h2>
 <p>I built the agent setup on Claude Code, Anthropic's coding-agent tool. All the agents run on Anthropic's Claude models. It started with 8 agents, each mapped to one role on a real development team.</p>
 <ul>
   <li><strong>Oracle</strong>: the lead agent. Splits up the work and coordinates.</li>
@@ -85,7 +85,7 @@ blockquote p{margin:0}
 </leo-diagram>
 <p>I (the PM) talk only to Oracle. Oracle analyzes a task, hands it to the right agent, then gathers the results and reports back. Agents don't talk to each other directly. When they conflict, Oracle mediates.</p>
 
-<h2>Moments I Felt It in Practice</h2>
+<h2>Effects Felt in Practice</h2>
 <h3>The Database Incident That Didn't Happen</h3>
 <p>I was changing the database schema of the Problem service and wanted to rename a column. Librarian's rules stopped me.</p>
 <blockquote><p>Expand-Contract pattern enforced. Column deletion/rename must use a 3-phase deployment.<br>Always assume a situation where old and new versions coexist during Rolling Updates.</p></blockquote>
@@ -122,7 +122,7 @@ blockquote p{margin:0}
 <p>Inside its own area, an agent decides for itself. Outside it, the agent must go through Oracle. The rules live in a single file (a single source of truth, or SSoT), so they can't drift apart. Hard calls come up to a human.</p>
 <p>I don't know yet whether this is the right answer. Each sprint brings new problems, and I keep adjusting the setup bit by bit. One thing is certain: this is a kind of thinking I never would have done on my own.</p>
 
-<h2>The Difference Between Doing It and Not</h2>
+<h2>What Doing It Changed</h2>
 <p>Reading about AI agent orchestration and actually doing it are completely different experiences. On paper, it boils down to "divide the roles and write the rules." In reality, the setup took shape through dozens of incidents: tangled workflows, lost context, rules drifting apart.</p>
 <p>If I hadn't tried, I'd have stayed at the shallow idea that "AI writes code for you." Because I did, I learned things. What to hand to agents and what to do myself. Where to draw the line between control and autonomy. How to combine one person's judgment with twelve agents' execution.</p>
 <p>In the end, what mattered was starting.</p>

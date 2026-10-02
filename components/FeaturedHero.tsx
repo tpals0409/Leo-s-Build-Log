@@ -11,7 +11,7 @@ const SWIPE = 40; // 이만큼(px) 가로로 끌면 다음/이전 글
 
 // 대표 글(featured) 슬라이드: 영역 전체가 링크. 썸네일을 가득 채우고 흰 그라데이션 위에 제목 — 넓은 화면은 왼쪽, 좁은 화면은 아래(세로 3:4, 제목만 t-tile).
 // 이미지 위 글자는 전부 fg (AGENTS.md '이미지 위 글자'). 슬라이드를 한 칸에 겹쳐 쌓는다 → 넘어갈 때 화면이 흔들리지 않음.
-// 마우스·키보드 포커스가 있으면 멈추고, 점을 누르거나 가로로 끌면(스와이프·드래그) 자동 넘김을 끈다. 움직임 줄이기 설정이면 자동으로 넘기지 않는다.
+// 마우스·키보드 포커스가 있으면 멈추고, 점·화살표를 누르거나 가로로 끌면(스와이프·드래그) 자동 넘김을 끈다. 움직임 줄이기 설정이면 자동으로 넘기지 않는다.
 export default function FeaturedHero({ posts, locale }: { posts: P[]; locale: Locale }) {
   const [i, setI] = useState(0);
   const [held, setHeld] = useState(false);
@@ -39,7 +39,7 @@ export default function FeaturedHero({ posts, locale }: { posts: P[]; locale: Lo
       onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setHeld(false)}
     >
       <div
-        className="grid touch-pan-y"
+        className="relative grid touch-pan-y"
         onPointerDown={(e) => ((startX.current = e.clientX), (swiped.current = false))}
         onPointerUp={(e) => {
           const dx = startX.current === null ? 0 : e.clientX - startX.current;
@@ -57,7 +57,7 @@ export default function FeaturedHero({ posts, locale }: { posts: P[]; locale: Lo
               <div className="overflow-hidden rounded-panel">
                 <Thumb src={post.thumbnail} className="thumb-zoom aspect-3/4 lg:aspect-[12/5]" />
               </div>
-              <div className="absolute inset-0 flex items-end rounded-panel bg-linear-to-t from-surface/90 via-surface/70 via-35% to-transparent to-60% p-6 lg:items-center lg:bg-linear-to-r lg:via-40% lg:to-75% lg:p-0 lg:pl-12">
+              <div className="absolute inset-0 flex items-end rounded-panel bg-linear-to-t from-surface/90 via-surface/70 via-35% to-transparent to-60% p-6 lg:items-center lg:bg-linear-to-r lg:via-40% lg:to-75% lg:p-0 lg:pl-20">
                 <div className="lg:w-2/5">
                   <Eyebrow tone="text-fg">{t.featured}</Eyebrow>
                   <h2 className="mt-3 t-tile lg:mb-4 lg:t-section">{post.title}</h2>
@@ -67,6 +67,21 @@ export default function FeaturedHero({ posts, locale }: { posts: P[]; locale: Lo
             </Link>
           </div>
         ))}
+        {/* 넓은 화면만 좌우 화살표 (좁은 화면은 스와이프). 누르면 자동 넘김을 끈다 */}
+        {posts.length > 1 &&
+          ([[-1, t.prev, 'left-4', 'M15 6l-6 6 6 6'], [1, t.next, 'right-4', 'M9 6l6 6-6 6']] as const).map(([d, label, side, path]) => (
+            <button
+              key={d}
+              type="button"
+              aria-label={label}
+              onClick={() => go(i + d)}
+              className={`press absolute top-1/2 z-10 hidden size-11 -translate-y-1/2 items-center justify-center rounded-pill bg-surface/80 text-fg lg:flex ${side}`}
+            >
+              <svg aria-hidden viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d={path} />
+              </svg>
+            </button>
+          ))}
       </div>
       {posts.length > 1 && (
         <div className="mt-3 flex justify-center">

@@ -82,6 +82,8 @@ DESIGN.md보다 우선하는 사용자 지정은 넷뿐: **레오 팔레트**(�
   | `t-caption` | Caption | 12/16 · 500 · -0.12px | 날짜·카테고리·보조 |
 
   Gmarket Sans는 300·500·700뿐 → DESIGN.md의 400은 500(Gmarket 본문 굵기), 600은 700으로 대응.
+  화면에는 글자를 줄인 WOFF2(`public/fonts/GmarketSans*.woff2`, 한글 2,350자 + 블로그에 쓰인 글자)를 쓴다. 원본 TTF는 링크 미리보기용.
+  새 글·문구에 드문 한글이 들어가면 `scripts/subset-fonts.sh`를 다시 돌린다(안 돌리면 그 글자만 시스템 글꼴로 보임).
   **글 본문(Shadow DOM) 안은 Pretendard**(`--font-post`): `lib/postHtml.ts`가 본문 안의 `--font-sans`를 Pretendard로, 굵기 토큰을 DESIGN.md 원래 값(400·600)으로 바꾼다. 글 CSS는 본문에 `var(--font-sans)`, 소제목(h2·h3)에 `var(--font-heading, var(--font-sans))`(Gmarket Sans)을 쓴다.
 - 버튼(`ui/Button`): DESIGN.md 그대로 — lg 44px · 11px 21px · 17px, sm 36px · 8px 15px · 14px, 980px pill.
 - 색(역할): `surface`(paper 흰 배경) `fg` `secondary` `muted` `label` `link` `primary` `primary-hover` `on-primary` `fog` `line` `highlight`

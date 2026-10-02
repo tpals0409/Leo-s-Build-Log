@@ -31,7 +31,7 @@ export default async function ProjectPage({ params }: Props) {
     <Container className="pb-20">
       <h1 className="pb-4 pt-12 t-section">{project.name[locale]}</h1>
       <p className="mb-8 t-body text-secondary">{project.summary[locale]}</p>
-      <Thumb src={project.image} className="mb-12 aspect-[2.1/1] rounded-panel" />
+      <Thumb src={project.image} eager sizes="(min-width: 1120px) 1120px, 100vw" className="mb-12 aspect-[2.1/1] rounded-panel" />
       <SectionHeader title={t.posts} />
       {posts.length ? <PostGrid posts={posts} locale={locale} /> : <p className="py-12 text-muted">{t.noPosts}</p>}
     </Container>

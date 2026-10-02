@@ -35,12 +35,12 @@ export default async function PostPage({ params }: Props) {
     <article className="pb-20">
       <div aria-hidden className="read-progress fixed inset-x-0 top-0 z-20 h-0.5 bg-primary" />
       {/* 썸네일을 살짝 흐리게 깔고 흰 막(60%)을 얹어 그 위에 제목 (사용자 지정 2026-10-02).
-          이미지 위 글자는 전부 fg(가장 어두운 썸네일에서도 6:1), 링크는 fg+밑줄 — AGENTS.md '이미지 위 글자' 규칙. 높이는 글자에 맞춤 → 모바일에서도 첫 문단이 첫 화면에 */}
+          흐리게 깔아서 작은 사본(sizes 240px → 480~800w)으로 충분. 이미지 위 글자는 전부 fg(가장 어두운 썸네일에서도 6:1), 링크는 fg+밑줄 — AGENTS.md '이미지 위 글자' 규칙. 높이는 글자에 맞춤 → 모바일에서도 첫 문단이 첫 화면에 */}
       <Container className={post.thumbnail ? 'pb-14 pt-8' : 'pb-14 pt-14'}>
         <header className={post.thumbnail ? 'relative isolate overflow-hidden rounded-panel px-6 py-14 text-center' : 'text-center'}>
           {post.thumbnail && (
             <>
-              <Thumb src={post.thumbnail} className="absolute inset-0 -z-10 h-full scale-105 blur-xs" />
+              <Thumb src={post.thumbnail} eager sizes="240px" className="absolute inset-0 -z-10 h-full scale-105 blur-xs" />
               <div aria-hidden className="absolute inset-0 -z-10 bg-surface/60" />
             </>
           )}
@@ -63,8 +63,8 @@ export default async function PostPage({ params }: Props) {
         <Container>
           {/* 본문 끝: 가는 선 아래 글 카드 2개(목록 카드와 같은 모양). 이전 = 더 오래된 글(왼쪽), 다음 = 더 새로운 글(오른쪽) */}
           <nav aria-label={t.nav} className="mt-6 grid gap-5 border-t border-line pt-10 sm:grid-cols-2">
-            {prev ? <PostCard post={prev} locale={locale} label={`← ${t.prev}`} /> : <span className="max-sm:hidden" />}
-            {next && <PostCard post={next} locale={locale} label={`${t.next} →`} labelEnd />}
+            {prev ? <PostCard post={prev} locale={locale} label={`← ${t.prev}`} sizes="(min-width: 640px) 50vw, 100vw" /> : <span className="max-sm:hidden" />}
+            {next && <PostCard post={next} locale={locale} label={`${t.next} →`} labelEnd sizes="(min-width: 640px) 50vw, 100vw" />}
           </nav>
         </Container>
       )}

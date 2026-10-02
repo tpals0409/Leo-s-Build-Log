@@ -19,6 +19,9 @@ export default function FeaturedHero({ posts, locale }: { posts: P[]; locale: Lo
   const t = DICT[locale].home;
   const startX = useRef<number | null>(null);
   const swiped = useRef(false); // 끌어서 넘겼으면 손을 뗄 때의 링크 클릭은 무시
+  // 겹쳐 쌓인 슬라이드는 전부 화면 안이라 lazy가 안 먹는다 → 지금 장과 다음 장 이미지만 받고, 넘어갈 때마다 다음 장을 미리 받는다
+  const [loaded, setLoaded] = useState(() => new Set([0, 1]));
+  useEffect(() => setLoaded((s) => (s.has(i) && s.has((i + 1) % posts.length) ? s : new Set([...s, i, (i + 1) % posts.length]))), [i, posts.length]);
 
   const go = (n: number) => (setI((n + posts.length) % posts.length), setStopped(true));
 
@@ -55,7 +58,7 @@ export default function FeaturedHero({ posts, locale }: { posts: P[]; locale: Lo
           <div key={post.slug} inert={n !== i} data-on={n === i ? '' : undefined} className="slide-fade col-start-1 row-start-1">
             <Link href={`/${locale}/posts/${post.slug}`} className="group press-card relative block">
               <div className="overflow-hidden rounded-panel">
-                <Thumb src={post.thumbnail} className="thumb-zoom aspect-3/4 lg:aspect-[12/5]" />
+                <Thumb src={loaded.has(n) ? post.thumbnail : null} eager={n === 0} sizes="(min-width: 1120px) 1120px, 100vw" className="thumb-zoom aspect-3/4 lg:aspect-[12/5]" />
               </div>
               <div className="absolute inset-0 flex items-end rounded-panel bg-linear-to-t from-surface/90 via-surface/70 via-35% to-transparent to-60% p-6 lg:items-center lg:bg-linear-to-r lg:via-40% lg:to-75% lg:p-0 lg:pl-20">
                 <div className="lg:w-2/5">

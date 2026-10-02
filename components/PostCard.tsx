@@ -6,8 +6,8 @@ import Thumb from './ui/Thumb';
 
 // md: 3열 그리드용, sm: 4열 그리드용
 const SIZE = {
-  md: { thumb: 'aspect-2/1', title: 't-tile' },
-  sm: { thumb: 'aspect-5/2', title: 't-body' },
+  md: { thumb: 'aspect-2/1', title: 't-tile', sizes: '(min-width: 1024px) 360px, (min-width: 640px) 50vw, 100vw' },
+  sm: { thumb: 'aspect-5/2', title: 't-body', sizes: '(min-width: 1024px) 270px, (min-width: 640px) 50vw, 100vw' },
 };
 
 // 카테고리(또는 label) · 날짜 한 줄 — 카드와 목록 보기가 같이 쓴다
@@ -20,13 +20,13 @@ export function PostMeta({ post, locale, label, end }: { post: P; locale: Locale
   );
 }
 
-// label: 카테고리 자리에 대신 쓸 문구 (글 아래 '← 이전 글' 등), labelEnd: 그 줄을 오른쪽 끝에 ('다음 글 →')
-export default function PostCard({ post, locale, size = 'md', label, labelEnd }: { post: P; locale: Locale; size?: keyof typeof SIZE; label?: string; labelEnd?: boolean }) {
+// label: 카테고리 자리에 대신 쓸 문구 (글 아래 '← 이전 글' 등), labelEnd: 그 줄을 오른쪽 끝에 ('다음 글 →'), sizes: 그리드가 아닌 곳에서 썸네일 폭이 다를 때
+export default function PostCard({ post, locale, size = 'md', label, labelEnd, sizes }: { post: P; locale: Locale; size?: keyof typeof SIZE; label?: string; labelEnd?: boolean; sizes?: string }) {
   const s = SIZE[size];
   return (
     <Link href={`/${locale}/posts/${post.slug}`} className="group press-card row-span-4 grid grid-rows-subgrid gap-y-1.5">
       <div className="mb-3 overflow-hidden rounded-card">
-        <Thumb src={post.thumbnail} className={`thumb-zoom ${s.thumb}`} />
+        <Thumb src={post.thumbnail} sizes={sizes ?? s.sizes} className={`thumb-zoom ${s.thumb}`} />
       </div>
       <PostMeta post={post} locale={locale} label={label} end={labelEnd} />
       <ClampTitle title={post.title} className={s.title} />

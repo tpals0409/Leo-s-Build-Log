@@ -2,9 +2,11 @@
 /* 글 본문 글꼴 (사용자 지정 2026-10-01). 자체 호스팅, 쓰는 글자 범위만 받는 subset. @font-face는 문서 쪽에 있어야 shadow root 안에서도 쓴다 */
 @import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
 
-@font-face { font-family: 'Gmarket Sans'; font-weight: 300; font-display: swap; src: url('/fonts/GmarketSansTTFLight.ttf') format('truetype'); }
-@font-face { font-family: 'Gmarket Sans'; font-weight: 500; font-display: swap; src: url('/fonts/GmarketSansTTFMedium.ttf') format('truetype'); }
-@font-face { font-family: 'Gmarket Sans'; font-weight: 700; font-display: swap; src: url('/fonts/GmarketSansTTFBold.ttf') format('truetype'); }
+/* Gmarket Sans: 원본 TTF(2.4MB)를 WOFF2로 압축하고 글자를 줄임(scripts/subset-fonts.sh) — 한글 2,350자 + 영문·기호 + 블로그에 쓰인 글자.
+   목록 밖 드문 글자는 시스템 글꼴로 보인다. TTF는 링크 미리보기(lib/og.tsx)가 그대로 쓴다. */
+@font-face { font-family: 'Gmarket Sans'; font-weight: 300; font-display: swap; src: url('/fonts/GmarketSansLight.woff2') format('woff2'); }
+@font-face { font-family: 'Gmarket Sans'; font-weight: 500; font-display: swap; src: url('/fonts/GmarketSansMedium.woff2') format('woff2'); }
+@font-face { font-family: 'Gmarket Sans'; font-weight: 700; font-display: swap; src: url('/fonts/GmarketSansBold.woff2') format('woff2'); }
 
 /* 토큰. 색은 레오 팔레트(2026-10-01) + 배경 흰색(paper) — DESIGN.md(Apple)는 이제 타이포·레이아웃 참고용.
    `@theme static`: 쓰이지 않아도 모든 토큰을 CSS 변수로 내보낸다 — 글 컴포넌트(lib/leo/style.ts)는 클래스 대신 var()로 쓴다.

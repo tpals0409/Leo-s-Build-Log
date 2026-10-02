@@ -79,3 +79,21 @@ export async function readUpload(name: string, dir = UPLOAD_DIR): Promise<{ data
   const ext = path.extname(name).toLowerCase();
   return { data: await readFile(path.join(/*turbopackIgnore: true*/ dir, name)), type: MIME[ext] };
 }
+
+// 썸네일 사본: 카드·목록에 원본(1600px대, 약 120KB)을 그대로 쓰지 않도록 폭을 줄인 webp.
+// 정해진 폭만 받는다(아무 폭이나 받으면 서버가 끝없이 만들게 된다). 한 번 만들면 UPLOAD_DIR/w<폭>/에 두고 다시 쓴다.
+export const THUMB_WIDTHS = [480, 800, 1200] as const;
+
+export async function readUploadResized(name: string, width: number, dir = UPLOAD_DIR): Promise<{ data: Buffer; type: string }> {
+  if (!safeUploadName(name) || !(THUMB_WIDTHS as readonly number[]).includes(width)) throw new Error('invalid resize request');
+  const cached = path.join(/*turbopackIgnore: true*/ dir, `w${width}`, `${name}.webp`);
+  try {
+    return { data: await readFile(cached), type: 'image/webp' };
+  } catch { /* 아직 없음 → 만든다 */ }
+  const { data: original } = await readUpload(name, dir);
+  const sharp = (await import('sharp')).default;
+  const data = await sharp(original).resize({ width, withoutEnlargement: true }).webp({ quality: 80 }).toBuffer();
+  await mkdir(path.dirname(cached), { recursive: true });
+  await writeFile(cached, data, { mode: 0o600 }).catch(() => {}); // 못 써도 이번 응답은 준다
+  return { data, type: 'image/webp' };
+}

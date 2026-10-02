@@ -76,7 +76,7 @@ main에 푸시되면 CI가 검사를 통과한 뒤 `ghcr.io/tpals0409/leo-s-buil
 - **배포 교체**: replicas 1이라 `strategy: RollingUpdate`(`maxSurge: 1`, `maxUnavailable: 0`) — 새 컨테이너가 준비된 뒤 옛 것을 내린다.
   업로드 PVC가 ReadWriteOnce여도 같은 노드면 둘이 함께 붙는다(`Recreate`면 교체 동안 사이트가 멈춘다)
 - **env**: `DATABASE_URL`, `ADMIN_TOKEN`, `SITE_URL`(https 도메인), `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ADMIN_EMAIL`. `ADMIN_TOKEN`·`GOOGLE_CLIENT_SECRET`·DB 비밀번호는 SealedSecret 등으로
-- **업로드**: `/app/uploads`에 PVC. 컨테이너는 `node`(uid 1000)로 돌므로 `securityContext.fsGroup: 1000`
+- **업로드**: `/app/uploads`에 PVC. 썸네일 사본(`?w=480|800|1200`)은 처음 요청 때 만들어 같은 PVC의 `w<폭>/`에 둔다(지워도 다시 만듦). 컨테이너는 `node`(uid 1000)로 돌므로 `securityContext.fsGroup: 1000`
   — ReadWriteOnce PVC면 **replicas 1** (여러 개 띄우려면 RWX 또는 오브젝트 스토리지로 바꿔야 함)
 - **Postgres**: 별도로. 추후 챗봇(pgvector)을 생각하면 `pgvector/pgvector` 이미지. 스키마는 앱이 첫 쿼리 때 만든다
 - **Ingress**: TLS는 Ingress(Traefik)에서. `X-Forwarded-Proto`가 넘어와야 관리자 쿠키에 `Secure`가 붙는다 (Traefik 기본값으로 넘김)

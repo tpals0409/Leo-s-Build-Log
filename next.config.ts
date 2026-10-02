@@ -8,4 +8,10 @@ export default {
   experimental: { globalNotFound: true },
   // 언어 자동 감지 없음: /는 항상 한국어판 (AGENTS.md)
   redirects: async () => [{ source: '/', destination: '/ko', permanent: false }],
+  // public/의 폰트·로고·소개 이미지는 브라우저·Cloudflare에 7일 (기본은 4시간). 이름에 해시가 없어서 1년(immutable)은 안 씀 —
+  // 같은 이름으로 내용을 바꾸면(예: scripts/subset-fonts.sh 재실행) 최대 7일 옛 파일이 보일 수 있다. 업로드(/uploads)는 이미 1년.
+  headers: async () => ['/fonts/:path*', '/logo-:name', '/logo.:ext', '/og-:name', '/about/:path*'].map((source) => ({
+    source,
+    headers: [{ key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=86400' }],
+  })),
 } satisfies NextConfig;

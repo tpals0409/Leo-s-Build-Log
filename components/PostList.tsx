@@ -14,7 +14,7 @@ export default function PostList({ posts, locale }: { posts: P[]; locale: Locale
         <li key={post.id} className="border-t border-line">
           <Link href={`/${locale}/posts/${post.slug}`} className="group press-card flex items-center gap-5 py-5">
             <span className="w-28 shrink-0 overflow-hidden rounded-card sm:w-40">
-              <Thumb src={post.thumbnail} className="thumb-zoom aspect-3/2" />
+              <Thumb src={post.thumbnail} sizes="(min-width: 640px) 160px, 112px" className="thumb-zoom aspect-3/2" />
             </span>
             <span className="flex min-w-0 flex-col gap-1.5">
               <PostMeta post={post} locale={locale} />

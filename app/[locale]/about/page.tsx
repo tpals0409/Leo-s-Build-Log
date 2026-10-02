@@ -124,7 +124,7 @@ export default async function AboutPage({ params }: Props) {
           {SITE.contacts.map((c, i) => (
             <div key={c.label} className="contents">
               <dt className={`text-muted sm:mt-0 ${i ? 'mt-3.5' : ''}`}>{c.label}</dt>
-              <dd><a href={c.href} className="link-hover text-link underline">{c.text}</a></dd>
+              <dd><a href={c.href} className="link-hover text-link">{c.text}</a></dd>
             </div>
           ))}
         </dl>

@@ -12,11 +12,19 @@ a{color:var(--color-link)}
 code{font-family:var(--font-mono);font-size:.9em;background:var(--color-fog);padding:0 4px}
 blockquote{margin:1.5em 0;padding-left:var(--space-cluster);border-left:2px solid var(--color-line);color:var(--color-secondary)}
 blockquote p{margin:0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--space-cluster);margin:2em 0;padding:0;list-style:none}
+.cards--2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.card{border:1px solid var(--color-line);border-radius:var(--radius-panel);padding:var(--space-cluster);background:var(--color-surface)}
+.card-kicker{margin:0 0 8px;font:var(--fw-caption) var(--fs-caption)/var(--lh-caption) var(--font-sans);letter-spacing:var(--ls-caption);color:var(--color-label)}
+.card-title{margin:0 0 8px;font:var(--fw-section) var(--fs-body)/var(--lh-body) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-body)}
+.card-body,.card ul{margin:0;font:var(--fw-body-sm) var(--fs-body-sm)/var(--lh-body) var(--font-sans);letter-spacing:var(--ls-body-sm);color:var(--color-secondary)}
+.card ul{padding-left:1.1em}
+.card li+li{margin-top:4px}
 </style>
 </head>
 <body>
 <h2>From Reading a Reference to Doing It Myself</h2>
-<p>The first time I read Channel.io's post <a href="https://channel.io/ko/team/blog/articles/backend-ci-refactoring-73fca77d">“Backend CI Refactoring”</a> (Channel.io is a Korean SaaS company), my immediate reaction was: "I could do this for AlgoSu." Their story of cutting a 36.6-minute CI run down to 15 minutes and 38 seconds. The method was concrete, the principles clear.</p>
+<p>The first time I read Channel.io's post “Backend CI Refactoring” (Channel.io is a Korean SaaS company), my immediate reaction was: "I could do this for AlgoSu." Their story of cutting a 36.6-minute CI run down to 15 minutes and 38 seconds. The method was concrete, the principles clear.</p>
 <p>But I couldn't follow it directly. AlgoSu is different from Channel.io. It's <strong>one developer directing a team of AI agents</strong>, every build runs inside Docker, and a lead agent hands tasks out to the other agents. I could borrow the underlying principles, but I still had to <strong>translate those principles into AlgoSu's context</strong>.</p>
 <p>This isn't a post introducing a finished CI architecture. AlgoSu has run more than a hundred sprints (short work cycles), and this is a record of five of them, S102–S106, spent reading a reference, experimenting, and sometimes dropping the plan. The focus is on two pieces of work that ended with <strong>zero lines of implementation</strong>, and why those weren't failures but wins.</p>
 <leo-adr>
@@ -35,7 +43,11 @@ blockquote p{margin:0}
 </leo-metrics>
 <p>These three problems looked independent, but they shared a common cause: <strong>the momentum of "good enough if it works right now."</strong> If CI passed, we deployed. Cleaning up repetitive code always got pushed to later.</p>
 <p>Three principles I borrowed from the Channel.io post:</p>
-<ol><li><strong>Small pilot → expand</strong>: Don't apply to all services at once. Validate on the simplest service first, then roll out.</li><li><strong>Workflow + repository settings go together</strong>: A GitHub Actions file alone is half the picture. Repository settings have to back it up.</li><li><strong>Removing duplication is a result, not a goal</strong>: You don't build shared modules just to remove duplication; a good abstraction removes it naturally.</li></ol>
+<ol class="cards">
+<li class="card"><p class="card-kicker">01</p><p class="card-title">Small pilot → expand</p><p class="card-body">Don't apply to all services at once. Validate on the simplest service first, then roll out.</p></li>
+<li class="card"><p class="card-kicker">02</p><p class="card-title">Workflow + repository settings go together</p><p class="card-body">A GitHub Actions file alone is half the picture. Repository settings have to back it up.</p></li>
+<li class="card"><p class="card-kicker">03</p><p class="card-title">Removing duplication is a result, not a goal</p><p class="card-body">You don't build shared modules just to remove duplication; a good abstraction removes it naturally.</p></li>
+</ol>
 <p>There were also principles I deliberately <strong>didn't</strong> borrow. Two of Channel.io's techniques (uploading prepared setup to S3 and polling it so initialization overlaps, and distributing tests through a dynamic queue) would have been overkill for AlgoSu. GitHub Actions (GHA) artifacts were enough, and with so few tests, the cost of splitting them up outweighed the gain. Choosing what <em>not</em> to carry over is part of translating a reference.</p>
 <p>One more AlgoSu-specific wrinkle: because the lead agent hands out the work, I could apply "pilot then expand" sprint by sprint, but I also had to re-check <strong>which agent should own the work</strong> before each sprint started. In the first sprint I wrongly gave the CI work to the auth &amp; security agent, then moved it to the infrastructure agent. When you work with many agents, checking role boundaries matters as much as writing the code.</p>
 <h2>The 4-Sprint Roadmap: The Full Picture</h2>
@@ -323,7 +335,7 @@ Layer 5: RUN npm run build   ← generates dist/  → re-runs on Layer 4 MISS</c
   <leo-metric value="69.55" unit="→ 76.42%" note="S106: 77 tests added" label="Frontend Branches"></leo-metric>
   <leo-metric value="2" note="S106: stopped early by pre-checks" label="Zero-Line Decisions"></leo-metric>
 </leo-metrics>
-<p>Reading Channel.io's post <a href="https://channel.io/ko/team/blog/articles/backend-ci-refactoring-73fca77d">“Backend CI Refactoring”</a> again, I realize it didn't give me answers. <strong>It gave me questions.</strong> "What can AlgoSu's pipeline fix?" Carrying those questions into AlgoSu's context and walking the path: that was these five sprints.</p>
+<p>Reading Channel.io's post “Backend CI Refactoring” again, I realize it didn't give me answers. <strong>It gave me questions.</strong> "What can AlgoSu's pipeline fix?" Carrying those questions into AlgoSu's context and walking the path: that was these five sprints.</p>
 <p>The reference pointed the direction. The rest, I walked myself.</p>
 </body>
 </html>

@@ -11,11 +11,11 @@
   "thumbnail": "thumbnail.webp",
   "featured": false,
   "ko": {
-    "title": "1인 개발에서 12개 AI 에이전트를 오케스트레이션한 방법",
-    "summary": "혼자서 마이크로서비스(MSA) 플랫폼을 만들며 AI 에이전트 12명을 팀원으로 키운 실전 기록"
+    "title": "1인 개발을 위한 AI 에이전트 12개 구성과 운영",
+    "summary": "혼자서 마이크로서비스(MSA) 플랫폼을 만들며 AI 에이전트 12개를 팀원으로 키운 실전 기록"
   },
   "en": {
-    "title": "How I Orchestrated 12 AI Agents as a Solo Developer",
+    "title": "Building and Running a Team of 12 AI Agents for Solo Development",
     "summary": "A hands-on account of building a microservice (MSA) platform solo while growing 12 AI agents into teammates"
   }
 }

@@ -5,11 +5,11 @@
   "published": true,
   "thumbnail": "thumbnail.webp",
   "ko": {
-    "title": "신입 개발자 AI 교육을 도우며 본, 개발 경험과 AI 활용 경험의 차이",
+    "title": "신입 개발자 AI 교육에서 본 개발 경험과 AI 활용 경험의 차이",
     "summary": "신입 개발자 대상 AI 교육을 도우며, 개발 경험과 AI 활용 경험의 차이, 결과를 확인하는 책임, 업무와 연결하는 역할을 돌아봤습니다."
   },
   "en": {
-    "title": "What I Saw Helping Train New Developers in AI: Development Experience vs. Experience Using AI",
+    "title": "Development Experience vs. AI Experience, Seen While Training New Developers",
     "summary": "Helping with AI training for junior developers led me to reflect on hands-on experience, the responsibility to check results, and connecting AI use with people’s work."
   }
 }

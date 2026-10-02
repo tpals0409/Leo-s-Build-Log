@@ -10,11 +10,11 @@
   "publishedAt": "2026-04-27",
   "thumbnail": "thumbnail.webp",
   "ko": {
-    "title": "AI가 작성한 코드를 다른 AI에게 검토시킨 이유",
+    "title": "다른 회사 모델(Codex)로 검토하는 리뷰 에이전트 Critic 도입",
     "summary": "다른 회사의 코딩 모델 Codex를 리뷰 에이전트로 들였다, 교체가 아니라 추가로. 18 라운드 리뷰 끝에 깨달은 건, 다른 모델이 필요한 게 아니라 특정 모델에 묶이지 않는 시스템이 필요했다는 사실이었다."
   },
   "en": {
-    "title": "Why I Had a Different AI Review Code Written by AI",
+    "title": "Introducing Critic, a Review Agent Running on Another Company’s Model (Codex)",
     "summary": "I brought in Codex, another company's coding model, as a review agent, as an addition rather than a replacement. After 18 rounds of review, I realized what I needed wasn't a different model. It was a system not tied to any one model."
   }
 }

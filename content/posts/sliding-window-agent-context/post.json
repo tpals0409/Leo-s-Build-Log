@@ -11,11 +11,11 @@
   "publishedAt": "2026-05-13",
   "thumbnail": "thumbnail.webp",
   "ko": {
-    "title": "AI 에이전트에게 모든 기록을 읽히지 않기로 했습니다",
+    "title": "슬라이딩 윈도우 기반 AI 에이전트 컨텍스트 관리",
     "summary": "152번의 스프린트가 지나는 동안 결정 기록(ADR)도, 작업 메모(MEMORY.md)도, 에이전트 규칙 파일(CLAUDE.md)도 함께 부풀었습니다. 이 문서를 매 세션 AI 에이전트에게 전부 읽히는 건 꽉 찬 물통에 물을 더 붓는 일이었어요. 슬라이딩 윈도우 알고리즘에서 빌려 온 단순한 규칙 하나로 컨텍스트를 줄인 기록입니다."
   },
   "en": {
-    "title": "I Stopped Making AI Agents Read Every Record",
+    "title": "Sliding-Window Context Management for AI Agents",
     "summary": "Over 152 sprints, the decision records (ADRs), the work notes (MEMORY.md), and the agents' rules file (CLAUDE.md) all grew together. Making an AI agent read all of it every session was like pouring more water into a full bucket. This is how I trimmed agent context with one simple rule borrowed from the sliding window algorithm."
   }
 }

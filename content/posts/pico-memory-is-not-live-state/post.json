@@ -11,11 +11,11 @@
   "thumbnail": "thumbnail.webp",
   "featured": false,
   "ko": {
-    "title": "서버 운영 AI의 기억과 실제 서버 상태를 구분하기",
+    "title": "운영 AI의 기억과 실제 서버 상태의 구분",
     "summary": "관측과 운영 계약, 원본과 조회용 데이터를 구분하며 피코의 기억을 운영 판단에 사용하는 방법."
   },
   "en": {
-    "title": "Telling an Operations AI’s Memory Apart from the Actual Server State",
+    "title": "Separating an Operations AI’s Memory from Actual Server State",
     "summary": "Separating observations, contracts, evidence, and query views when using Pico’s memory for operational decisions."
   }
 }

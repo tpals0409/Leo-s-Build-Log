@@ -10,11 +10,11 @@
   "publishedAt": "2026-04-21",
   "thumbnail": "thumbnail.webp",
   "ko": {
-    "title": "대기 중인 PR과 중복 설정을 줄인 CI 리팩토링",
+    "title": "대기 PR·중복 설정·커버리지 게이트를 정리한 CI 리팩토링",
     "summary": "채널톡의 CI 개선 글을 출발점으로 자동 병합, 재사용 단계(Composite Action), 커버리지 게이트, 구현 전 사전 검토까지 다섯 스프린트에 걸친 기록. 레퍼런스 글 한 편이 어떻게 실제 파이프라인 개편으로 이어졌는지, 그리고 구현 0줄로 끝난 두 작업이 왜 성과인지를 정리했다."
   },
   "en": {
-    "title": "A CI Refactor That Cut Waiting PRs and Duplicated Config",
+    "title": "A CI Refactor of Waiting PRs, Duplicated Config, and Coverage Gates",
     "summary": "Starting from a Channel.io blog post: auto-merge, composite actions, coverage gates, and pre-checks before building, across five sprints. How one reference article turned into a real pipeline overhaul, and why two pieces of work that shipped zero lines of code were still wins."
   }
 }

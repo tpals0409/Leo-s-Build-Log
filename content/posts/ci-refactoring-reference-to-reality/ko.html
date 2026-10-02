@@ -12,11 +12,19 @@ a{color:var(--color-link)}
 code{font-family:var(--font-mono);font-size:.9em;background:var(--color-fog);padding:0 4px}
 blockquote{margin:1.5em 0;padding-left:var(--space-cluster);border-left:2px solid var(--color-line);color:var(--color-secondary)}
 blockquote p{margin:0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--space-cluster);margin:2em 0;padding:0;list-style:none}
+.cards--2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.card{border:1px solid var(--color-line);border-radius:var(--radius-panel);padding:var(--space-cluster);background:var(--color-surface)}
+.card-kicker{margin:0 0 8px;font:var(--fw-caption) var(--fs-caption)/var(--lh-caption) var(--font-sans);letter-spacing:var(--ls-caption);color:var(--color-label)}
+.card-title{margin:0 0 8px;font:var(--fw-section) var(--fs-body)/var(--lh-body) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-body)}
+.card-body,.card ul{margin:0;font:var(--fw-body-sm) var(--fs-body-sm)/var(--lh-body) var(--font-sans);letter-spacing:var(--ls-body-sm);color:var(--color-secondary)}
+.card ul{padding-left:1.1em}
+.card li+li{margin-top:4px}
 </style>
 </head>
 <body>
 <h2>"참고만 하다가 직접 해본 이야기"</h2>
-<p>채널톡의 <a href="https://channel.io/ko/team/blog/articles/backend-ci-refactoring-73fca77d">「Backend CI Refactoring」</a> 글을 처음 읽었을 때, 즉각 "알고수에도 이렇게 하면 되겠다"는 생각이 들었습니다. 36.6분짜리 CI를 15분 38초로 줄인 이야기. 방법이 구체적이고 원리가 명확했습니다.</p>
+<p>채널톡의 「Backend CI Refactoring」 글을 처음 읽었을 때, 즉각 "알고수에도 이렇게 하면 되겠다"는 생각이 들었습니다. 36.6분짜리 CI를 15분 38초로 줄인 이야기. 방법이 구체적이고 원리가 명확했습니다.</p>
 <p>그런데 그대로 따라할 수 없었습니다. 알고수는 채널톡과 다릅니다. <strong>1인 개발자가 여러 AI 에이전트를 지휘하는 구조</strong>이고, 빌드는 모두 Docker 안에서만 돌며, 총괄 에이전트가 다른 에이전트에게 작업을 나눠 주는 방식으로 일합니다. 레퍼런스의 원리는 차용할 수 있었지만, 그 원리를 <strong>알고수 맥락에 맞게 번역</strong>하는 과정이 필요했습니다.</p>
 <p>이 글은 완성된 CI 아키텍처를 소개하는 글이 아닙니다. 알고수는 스프린트(짧은 작업 주기)를 백 번 넘게 돌렸고, 이 글은 그중 102~106번째, 다섯 스프린트(S102~S106)에 걸쳐 레퍼런스를 읽고, 실험하고, 때로는 계획을 중단한 기록입니다. 특히 "구현 0줄로 끝낸" 두 작업이 왜 실패가 아니라 성과였는지를 중심으로 이야기합니다.</p>
 <leo-adr>
@@ -35,7 +43,11 @@ blockquote p{margin:0}
 </leo-metrics>
 <p>이 세 문제는 독립적으로 보이지만 공통 원인이 있었습니다. <strong>"지금 당장 동작하면 됐다"는 관성.</strong> CI가 통과하면 배포했고, 반복 코드 정리는 늘 다음으로 밀렸습니다.</p>
 <p>채널톡 글에서 차용한 원리는 세 가지입니다.</p>
-<ol><li><strong>작은 범위 파일럿 → 확산</strong>: 전체 서비스에 한 번에 적용하지 않고 가장 단순한 서비스에서 먼저 검증한 뒤 확장한다</li><li><strong>워크플로 + 저장소 설정 결합</strong>: GitHub Actions 파일만 만들면 반쪽이다. 저장소 설정이 뒷받침되어야 실효된다</li><li><strong>중복 제거는 목적이 아니라 결과</strong>: 중복을 없애려고 공통 모듈을 만드는 게 아니라, 좋은 추상이 자연스럽게 중복을 없앤다</li></ol>
+<ol class="cards">
+<li class="card"><p class="card-kicker">01</p><p class="card-title">작은 범위 파일럿 → 확산</p><p class="card-body">전체 서비스에 한 번에 적용하지 않고 가장 단순한 서비스에서 먼저 검증한 뒤 확장한다</p></li>
+<li class="card"><p class="card-kicker">02</p><p class="card-title">워크플로 + 저장소 설정 결합</p><p class="card-body">GitHub Actions 파일만 만들면 반쪽이다. 저장소 설정이 뒷받침되어야 실효된다</p></li>
+<li class="card"><p class="card-kicker">03</p><p class="card-title">중복 제거는 목적이 아니라 결과</p><p class="card-body">중복을 없애려고 공통 모듈을 만드는 게 아니라, 좋은 추상이 자연스럽게 중복을 없앤다</p></li>
+</ol>
 <p>차용하지 <strong>않은</strong> 원리도 있습니다. 채널톡 글의 두 기법, 즉 준비 단계 결과를 S3에 올려 두고 폴링해 초기화를 겹치는 방식과 테스트를 동적 큐로 나눠 돌리는 방식은 알고수에는 과했습니다. GitHub Actions(GHA)의 artifact로 충분했고, 테스트가 적어서, 나눠 돌리는 비용이 얻는 이득보다 컸습니다. 레퍼런스를 번역할 때는 차용하지 않을 것을 고르는 것도 작업입니다.</p>
 <p>알고수만의 사정이 하나 더 있었습니다. 총괄 에이전트가 작업을 나눠 주는 구조라서, "파일럿 후 확산"을 스프린트 단위로 적용하면서도 매 스프린트 시작 전에 <strong>어느 에이전트에게 맡길지</strong>를 다시 확인해야 했습니다. 첫 스프린트에서 CI 작업을 인증·보안 담당 에이전트에게 잘못 맡겼다가 인프라 담당 에이전트로 바꾼 일이 있었습니다. 여러 에이전트와 일할 때 역할 경계 확인은 코드 작성만큼 중요합니다.</p>
 <h2>4스프린트 로드맵: 전체 그림</h2>
@@ -323,7 +335,7 @@ Layer 5: RUN npm run build   ← dist/ 생성       → Layer 4 MISS 시 재실�
   <leo-metric value="69.55" unit="→ 76.42%" note="S106: 77개 테스트 추가" label="Frontend branches"></leo-metric>
   <leo-metric value="2" unit="건" note="S106: 사전 검토로 조기 종결" label="미구현 결정"></leo-metric>
 </leo-metrics>
-<p>채널톡의 <a href="https://channel.io/ko/team/blog/articles/backend-ci-refactoring-73fca77d">「Backend CI Refactoring」</a> 글을 다시 읽어보면, 그 글이 정답을 알려준 게 아니라 <strong>질문을 던진 것</strong>이었습니다. "알고수 파이프라인에서는 무엇을 고칠 수 있지?" 그 질문을 알고수 맥락으로 옮겨 걸어 본 길이 이 다섯 스프린트였습니다.</p>
+<p>채널톡의 「Backend CI Refactoring」 글을 다시 읽어보면, 그 글이 정답을 알려준 게 아니라 <strong>질문을 던진 것</strong>이었습니다. "알고수 파이프라인에서는 무엇을 고칠 수 있지?" 그 질문을 알고수 맥락으로 옮겨 걸어 본 길이 이 다섯 스프린트였습니다.</p>
 <p>레퍼런스는 방향을 가리켰고, 나머지는 직접 걸었습니다.</p>
 </body>
 </html>

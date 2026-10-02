@@ -10,11 +10,11 @@
   "publishedAt": "2026-06-10T09:00:00+09:00",
   "thumbnail": "thumbnail.webp",
   "ko": {
-    "title": "고성능 AI 모델을 어떤 개발 작업에 투입할 것인가",
+    "title": "고성능 AI 모델(Fable 5)의 투입 시점 판단 기준",
     "summary": "새 고성능 모델 Fable 5가 나온 날 바로 전환했습니다. 6 스프린트를 돌리며 얻은 건 성능이 아니라 전략이었습니다. 언제 프리미엄 모델을 써야 하는지, 그리고 그 판단이 왜 기술부채 상환과 같은 말인지에 대한 기록."
   },
   "en": {
-    "title": "Which Development Work Deserves a High-Performance AI Model",
+    "title": "When to Bring In a High-End AI Model (Fable 5)",
     "summary": "I switched to Fable 5, a new high-end model, the day it launched. Six sprints later, what I'd gained wasn't performance but strategy. A record of when to reach for a premium model, and why that judgment is the same thing as paying down technical debt."
   }
 }

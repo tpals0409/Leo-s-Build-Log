@@ -8,11 +8,11 @@
   "publishedAt": "2026-04-20",
   "thumbnail": "thumbnail.webp",
   "ko": {
-    "title": "문제 제공처를 바꾸며 드러난 외부 플랫폼 의존성",
+    "title": "백준 서비스 종료에 따른 프로그래머스 이전과 외부 의존성 정리",
     "summary": "백준 서비스 종료 공지를 마주한 날, 알고수의 문제 제공처를 프로그래머스로 이식하며 배운 것은 기술이 아니라 태도였습니다. 외부 플랫폼에 의존한 서비스는 무엇을 잊지 말아야 하는지에 대한 기록."
   },
   "en": {
-    "title": "Switching Problem Sources Exposed an External Platform Dependency",
+    "title": "Moving to Programmers After Baekjoon’s Shutdown, and Rethinking External Dependencies",
     "summary": "On the day I saw Baekjoon's shutdown notice, migrating AlgoSu's problem source to Programmers taught me something I didn't expect. It wasn't a new technology but an attitude about building services that lean on external platforms."
   }
 }

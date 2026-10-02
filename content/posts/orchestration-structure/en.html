@@ -12,6 +12,14 @@ a{color:var(--color-link)}
 code{font-family:var(--font-mono);font-size:.9em;background:var(--color-fog);padding:0 4px}
 blockquote{margin:1.5em 0;padding-left:var(--space-cluster);border-left:2px solid var(--color-line);color:var(--color-secondary)}
 blockquote p{margin:0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--space-cluster);margin:2em 0;padding:0;list-style:none}
+.cards--2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.card{border:1px solid var(--color-line);border-radius:var(--radius-panel);padding:var(--space-cluster);background:var(--color-surface)}
+.card-kicker{margin:0 0 8px;font:var(--fw-caption) var(--fs-caption)/var(--lh-caption) var(--font-sans);letter-spacing:var(--ls-caption);color:var(--color-label)}
+.card-title{margin:0 0 8px;font:var(--fw-section) var(--fs-body)/var(--lh-body) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-body)}
+.card-body,.card ul{margin:0;font:var(--fw-body-sm) var(--fs-body-sm)/var(--lh-body) var(--font-sans);letter-spacing:var(--ls-body-sm);color:var(--color-secondary)}
+.card ul{padding-left:1.1em}
+.card li+li{margin-top:4px}
 </style>
 </head>
 <body>
@@ -51,10 +59,10 @@ blockquote p{margin:0}
 <h2>Echelons: Priority Tiers</h2>
 <p>Keeping all 12 agents equal meant having no priorities. So I borrowed the idea of echelons from multi-agent system (MAS) research and split them into three tiers.</p>
 <p>"Echelon" implies a chain of command and delegation. It doesn't get confused with server tiers (3-tier architecture), and it expresses both priority and execution order among agents.</p>
-<ul>
-  <li><strong>Tier 1 (Mission Critical)</strong>: Oracle (lead), Conductor (submission flow), Gatekeeper (auth and security), Librarian (database). If these four break, the whole service stops. All agents ran on Anthropic's Claude models, and tier 1 used the most powerful Claude model at the time (Opus).</li>
-  <li><strong>Tier 2 (Core)</strong>: Architect (infrastructure), Postman (GitHub integration), Curator (problem management), Scribe (documentation). They handle the infrastructure foundations and core business logic.</li>
-  <li><strong>Tier 3 (Enhancement)</strong>: Sensei (AI analysis), Herald (frontend), Palette (design system), Scout (user testing). Roles that add value to the service; they start only after tiers 1 and 2 are stable.</li>
+<ul class="cards">
+<li class="card"><p class="card-kicker">Tier 1</p><p class="card-title">Mission Critical</p><p class="card-body">Oracle (lead), Conductor (submission flow), Gatekeeper (auth and security), Librarian (database). If these four break, the whole service stops. All agents ran on Anthropic's Claude models, and tier 1 used the most powerful Claude model at the time (Opus).</p></li>
+<li class="card"><p class="card-kicker">Tier 2</p><p class="card-title">Core</p><p class="card-body">Architect (infrastructure), Postman (GitHub integration), Curator (problem management), Scribe (documentation). They handle the infrastructure foundations and core business logic.</p></li>
+<li class="card"><p class="card-kicker">Tier 3</p><p class="card-title">Enhancement</p><p class="card-body">Sensei (AI analysis), Herald (frontend), Palette (design system), Scout (user testing). Roles that add value to the service; they start only after tiers 1 and 2 are stable.</p></li>
 </ul>
 <p>The tiers weren't just labels; they were also the execution order. Tier 1 set up the safety nets first, tier 2 built, and tier 3 finished. Following this order cut dependency conflicts sharply.</p>
 <leo-diagram title="Twelve agents in three priority tiers (echelons)" caption="As the PM, I talk only to the lead agent, Oracle, which hands out work tier by tier, starting with tier 1">

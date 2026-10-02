@@ -6,6 +6,6 @@
   "published": true,
   "featured": false,
   "thumbnail": "thumbnail.webp",
-  "ko": {"title": "컨테이너 이미지만으로는 부족했던 배포 준비", "summary": "실행 계약, 인프라의 책임 경계, 그리고 검사 통과와 운영 반영의 차이. 2026년 7월 AI 에이전트 피코에 남긴 기록으로 돌아보는 핀로그의 배포 준비."},
-  "en": {"title": "Deployment Prep Where a Container Image Was Not Enough", "summary": "Runtime contracts, infrastructure ownership, and the gap between passing checks and deploying: a look back at PinLog’s July 2026 records."}
+  "ko": {"title": "배포를 위한 실행 계약과 인프라 책임 경계 정리", "summary": "실행 계약, 인프라의 책임 경계, 그리고 검사 통과와 운영 반영의 차이. 2026년 7월 AI 에이전트 피코에 남긴 기록으로 돌아보는 핀로그의 배포 준비."},
+  "en": {"title": "Runtime Contracts and Infrastructure Ownership Boundaries for Deployment", "summary": "Runtime contracts, infrastructure ownership, and the gap between passing checks and deploying: a look back at PinLog’s July 2026 records."}
 }

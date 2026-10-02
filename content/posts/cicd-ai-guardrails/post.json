@@ -7,7 +7,7 @@
     "github-actions",
     "gitops"
   ],
-  "publishedAt": "2026-04-09T12:00:00+09:00",
+  "publishedAt": "2026-04-07T09:00:00+09:00",
   "thumbnail": "thumbnail.webp",
   "ko": {
     "title": "AI 코드 검증을 위한 15개 job CI 파이프라인 구축",

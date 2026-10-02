@@ -7,7 +7,7 @@
     "msa",
     "kubernetes"
   ],
-  "publishedAt": "2026-04-09T10:00:00+09:00",
+  "publishedAt": "2026-03-04T09:00:00+09:00",
   "thumbnail": "thumbnail.webp",
   "ko": {
     "title": "AI 에이전트 분업을 위한 MSA 서비스 경계 설계",

@@ -12,7 +12,7 @@ export const DICT = {
     category: { 'ai-agent': 'AI 에이전트', engineering: '엔지니어링', retrospective: '회고' },
     search: { placeholder: '블로그 검색', title: (q: string) => `‘${q}’ 검색 결과`, empty: '결과가 없습니다.' },
     home: { featured: 'Featured', slide: (n: number) => `대표 글 ${n}`, prev: '이전 대표 글', next: '다음 대표 글', latest: '최신 글', projects: '프로젝트', all: '모두 보기', empty: '아직 글이 없습니다.' },
-    posts: { title: '글', all: '전체', empty: '글이 없습니다.', prev: '이전 글', next: '다음 글', nav: '이전 글과 다음 글', toc: '목차' },
+    posts: { title: '글', all: '전체', empty: '글이 없습니다.', prev: '이전 글', next: '다음 글', nav: '이전 글과 다음 글', toc: '목차', view: '보기 방식', grid: '그리드로 보기', list: '목록으로 보기', pages: '페이지', prevPage: '이전 페이지', nextPage: '다음 페이지', page: (n: number) => `${n}페이지` },
     projects: { title: '프로젝트', posts: '관련 글', noPosts: '아직 관련 글이 없습니다.' },
     about: {
       title: '소개',
@@ -42,7 +42,7 @@ export const DICT = {
     category: { 'ai-agent': 'AI Agents', engineering: 'Engineering', retrospective: 'Retrospective' },
     search: { placeholder: 'Search', title: (q: string) => `Results for “${q}”`, empty: 'No results.' },
     home: { featured: 'Featured', slide: (n: number) => `Featured post ${n}`, prev: 'Previous featured post', next: 'Next featured post', latest: 'Latest posts', projects: 'Projects', all: 'View all', empty: 'No posts yet.' },
-    posts: { title: 'Posts', all: 'All', empty: 'No posts.', prev: 'Previous post', next: 'Next post', nav: 'Previous and next posts', toc: 'Table of contents' },
+    posts: { title: 'Posts', all: 'All', empty: 'No posts.', prev: 'Previous post', next: 'Next post', nav: 'Previous and next posts', toc: 'Table of contents', view: 'View', grid: 'Grid view', list: 'List view', pages: 'Pages', prevPage: 'Previous page', nextPage: 'Next page', page: (n: number) => `Page ${n}` },
     projects: { title: 'Projects', posts: 'Related posts', noPosts: 'No related posts yet.' },
     about: {
       title: 'About',

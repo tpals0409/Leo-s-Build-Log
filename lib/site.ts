@@ -66,7 +66,7 @@ export const PROFILE = {
     },
     {
       date: '2026.06',
-      title: { ko: '기업 임원 대상 AX 교육 보조강사 - 삼성전자', en: 'Assistant instructor, AX training for executives - Samsung Electronics' },
+      title: { ko: '임원 대상 AX 교육 보조강사 - 삼성전자', en: 'Assistant instructor, AX training for executives - Samsung Electronics' },
       body: {
         ko: '약 30명 대상 AI Agent 실습 지원, 실습 질문 응대와 교육 운영 보조',
         en: 'Supported about 30 executives in hands-on AI agent practice, answered their questions, and helped run the sessions',

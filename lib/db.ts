@@ -41,16 +41,27 @@ export async function getHome(locale: Locale) {
   return { featured, latest };
 }
 
-export async function listPosts(locale: Locale, f: { category?: string; project?: string; q?: string } = {}) {
-  await ready();
+type Filter = { category?: string; project?: string; q?: string };
+const filterSql = (f: Filter) => {
   const like = `%${(f.q ?? '').replace(/[\\%_]/g, '\\$&')}%`;
-  return sql<PostCard[]>`
-    select ${cardCols} from ${fromLocale(locale)}
+  return sql`
     where p.published
       and (${f.category ?? ''} = '' or p.category = ${f.category ?? ''})
       and (${f.project ?? ''} = '' or p.project = ${f.project ?? ''})
-      and (${f.q ?? ''} = '' or t.title ilike ${like} or t.plain_text ilike ${like})
-    order by p.created_at desc limit 100`;
+      and (${f.q ?? ''} = '' or t.title ilike ${like} or t.plain_text ilike ${like})`;
+};
+
+export async function listPosts(locale: Locale, f: Filter = {}, page: { limit?: number; offset?: number } = {}) {
+  await ready();
+  return sql<PostCard[]>`
+    select ${cardCols} from ${fromLocale(locale)} ${filterSql(f)}
+    order by p.created_at desc limit ${page.limit ?? 100} offset ${page.offset ?? 0}`;
+}
+
+export async function countPosts(locale: Locale, f: Filter = {}) {
+  await ready();
+  const [{ n }] = await sql<{ n: number }[]>`select count(*)::int as n from ${fromLocale(locale)} ${filterSql(f)}`;
+  return n;
 }
 
 export async function getPost(slug: string, locale: Locale) {

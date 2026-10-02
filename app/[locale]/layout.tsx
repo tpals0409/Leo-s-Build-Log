@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const locale = await layoutLocale(params);
   return {
     metadataBase: new URL(SITE_URL),
-    title: { default: SITE.name[locale], template: `%s — ${SITE.name[locale]}` },
+    title: SITE.name[locale], // 탭 제목은 어느 페이지든 블로그 이름 (lib/page.ts pageMeta)
     ...pageMeta(locale, ''),
   };
 }

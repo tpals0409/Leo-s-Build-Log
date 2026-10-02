@@ -7,7 +7,7 @@ import './globals.css';
 // 모든 404 (없는 글·프로젝트, 없는 주소). 이 앱은 root layout이 [locale] 아래·admin 두 개라
 // 일반 not-found.js가 동작하지 않아서 Next의 global-not-found(실험 기능, next.config)를 쓴다.
 // 레이아웃을 거치지 않고 주소의 언어도 모르므로 한/영을 함께 보여준다.
-export const metadata: Metadata = { title: `404 — ${SITE.name.ko}`, robots: { index: false } };
+export const metadata: Metadata = { title: SITE.name.ko, robots: { index: false } };
 
 export default function GlobalNotFound() {
   return (

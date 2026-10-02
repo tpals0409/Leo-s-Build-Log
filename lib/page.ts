@@ -25,12 +25,12 @@ export const localeOf = async (params: Promise<{ locale: string }>): Promise<Loc
   return locale;
 };
 
-// 페이지 metadata 공통: 제목·설명·canonical/hreflang·링크 미리보기(OG/X 카드) 텍스트.
+// 페이지 metadata 공통: 설명·canonical/hreflang·링크 미리보기(OG/X 카드) 텍스트.
+// 브라우저 탭 제목은 모든 페이지가 블로그 이름으로 고정(사용자 지정 2026-10-02) — 페이지 제목은 링크 미리보기에만 쓴다.
 // 미리보기 이미지는 opengraph-image 파일이 자동으로 붙인다 ([locale]/ 기본, posts/[slug]/ 글 전용).
 export function pageMeta(locale: Locale, path: string, m: { title?: string; description?: string; type?: 'website' | 'article' } = {}): Metadata {
   const title = m.title ?? SITE.name[locale];
   return {
-    ...(m.title && { title: m.title }),
     ...(m.description && { description: m.description }),
     alternates: alternates(locale, path),
     openGraph: {

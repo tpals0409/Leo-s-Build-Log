@@ -50,11 +50,10 @@ export const PROFILE = {
       ],
     },
   ] as const satisfies readonly { group: 'ai' | 'backend' | 'ops'; items: readonly (readonly [L, number])[] }[],
-  // 교육 회고 글은 익명이라 회사명 없이. slug는 관련 글
+  // 교육 회고 글은 익명이라 회사명 없이
   activities: [
     {
       date: '2026.09',
-      slug: 'developer-experience-and-ai-practice',
       title: { ko: '신입 개발자 대상 AX 교육 보조강사', en: 'Assistant instructor, AX training for new developers' },
       body: {
         ko: '약 50명 대상 Claude Code 기반 AI Agent 실습 지원 — 하네스·스킬·훅 실습, AI가 쓴 코드의 신뢰성 질문 응대',
@@ -63,7 +62,6 @@ export const PROFILE = {
     },
     {
       date: '2026.06',
-      slug: 'ai-training-after-the-classroom',
       title: { ko: '기업 임원 대상 AX 교육 보조강사', en: 'Assistant instructor, AX training for executives' },
       body: {
         ko: '약 30명 대상 AI Agent 실습 지원, 실습 질문 응대와 교육 운영 보조',

@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { ButtonLink } from '@/components/ui/Button';
 import Container from '@/components/ui/Container';
 import { DICT } from '@/lib/i18n';
@@ -99,8 +98,8 @@ export default async function AboutPage({ params }: Props) {
       <Section title={t.activities}>
         <ul className="flex flex-col gap-4">
           {PROFILE.activities.map((a) => (
-            <DatedRow key={a.slug} date={a.date}>
-              <Link href={`/${locale}/posts/${a.slug}`} className="link-hover t-body text-link underline">{a.title[locale]}</Link>
+            <DatedRow key={a.date} date={a.date}>
+              <span className="t-body">{a.title[locale]}</span>
               <span className="t-body-sm text-secondary">{a.body[locale]}</span>
             </DatedRow>
           ))}

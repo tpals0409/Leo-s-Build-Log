@@ -74,11 +74,12 @@ export const LEO_CSS = `
 .leo-step__title{margin:0 0 8px;${role('body')}}
 .leo-step>.leo-flow{grid-column:2}
 
-/* 파이프라인 — 단계 이름 뒤 → */
-.leo-pipeline{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:${gap}}
-.leo-stage{border-top:2px solid var(--color-fg);padding-top:${gap}}
+/* 파이프라인 — 단계 사이가 끊기지 않는 선 + 단계마다 점과 번호 (줄이 바뀌어도 번호로 순서를 읽는다) */
+.leo-pipeline{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));row-gap:calc(${gap} * 1.5);counter-reset:leo-stage}
+.leo-stage{position:relative;border-top:2px solid var(--color-fg);padding:${gap} ${gap} 0 0;counter-increment:leo-stage}
+.leo-stage::before{content:"";position:absolute;top:-6px;left:0;width:10px;height:10px;border-radius:50%;background:var(--color-fg)}
 .leo-stage__title{margin:0;${role('body')}}
-.leo-stage:not(:last-child) .leo-stage__title::after{content:" →";color:var(--color-muted)}
+.leo-stage__title::before{content:counter(leo-stage,decimal-leading-zero);display:block;margin-bottom:4px;${role('caption')};color:var(--color-muted)}
 .leo-stage__body{margin-top:8px;${role('body-sm')};color:var(--color-secondary)}
 
 /* 타임라인 — 날짜 열 + 내용 열. 진행 중만 강조색 점 */
@@ -102,6 +103,11 @@ export const LEO_CSS = `
 @media (max-width:640px){
   .leo-milestone,.leo-adr__item{grid-template-columns:1fr;row-gap:8px}
   .leo-milestone>.leo-flow{grid-column:1}
+  /* 파이프라인: 좁으면 세로로. 왼쪽 선이 단계를 잇고, 마지막 단계는 점에서 끝난다 */
+  .leo-pipeline{grid-template-columns:1fr;row-gap:0}
+  .leo-stage{border-top:0;border-left:2px solid var(--color-fg);padding:0 0 ${gap} ${gap}}
+  .leo-stage:last-child{border-left-color:transparent;padding-bottom:0}
+  .leo-stage::before{top:4px;left:-6px}
 }
 
 /* 코드 */

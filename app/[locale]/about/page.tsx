@@ -127,8 +127,6 @@ export default async function AboutPage({ params }: Props) {
               <dd><a href={c.href} className="link-hover text-link underline">{c.text}</a></dd>
             </div>
           ))}
-          <dt className="mt-3.5 text-muted sm:mt-0">{t.location}</dt>
-          <dd>{t.locationValue}</dd>
         </dl>
       </Section>
     </Container>

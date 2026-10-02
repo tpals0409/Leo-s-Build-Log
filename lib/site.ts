@@ -12,7 +12,7 @@ export const SITE = {
 };
 
 // 소개 페이지의 경력 데이터. 화면 문구(제목·버튼 등)는 lib/i18n.ts의 DICT.about.
-// 기술 숙련도는 본인이 매긴 5단계(이력서 그대로, 보수적으로). 이력서에 없던 NestJS·Next.js·Docker·파인튜닝은 같은 기준으로 매김(2026-10-02).
+// 기술 숙련도는 본인이 매긴 5단계(이력서 그대로, 보수적으로). 이력서에 없던 NestJS·Next.js·Docker·파인튜닝·Java와 풀스택 묶음 값은 본인이 다시 매김(2026-10-02).
 export const PROFILE = {
   skills: [
     {
@@ -31,12 +31,13 @@ export const PROFILE = {
       group: 'backend',
       items: [
         [{ ko: 'Python', en: 'Python' }, 4],
-        [{ ko: 'TypeScript', en: 'TypeScript' }, 3],
-        [{ ko: 'FastAPI', en: 'FastAPI' }, 3],
-        [{ ko: 'NestJS', en: 'NestJS' }, 3],
-        [{ ko: 'Next.js', en: 'Next.js' }, 3],
-        [{ ko: 'RabbitMQ', en: 'RabbitMQ' }, 3],
-        [{ ko: 'Redis', en: 'Redis' }, 3],
+        [{ ko: 'Java', en: 'Java' }, 3],
+        [{ ko: 'TypeScript', en: 'TypeScript' }, 2],
+        [{ ko: 'FastAPI', en: 'FastAPI' }, 2],
+        [{ ko: 'NestJS', en: 'NestJS' }, 2],
+        [{ ko: 'Next.js', en: 'Next.js' }, 2],
+        [{ ko: 'RabbitMQ', en: 'RabbitMQ' }, 2],
+        [{ ko: 'Redis', en: 'Redis' }, 2],
         [{ ko: 'PostgreSQL', en: 'PostgreSQL' }, 2],
       ],
     },

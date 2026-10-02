@@ -60,6 +60,18 @@ export async function getPost(slug: string, locale: Locale) {
   return post;
 }
 
+// 글 아래 이전(더 오래된)·다음(더 새로운) 글. 같은 시각이면 id로 순서를 정한다
+export async function getAdjacent(post: Post, locale: Locale) {
+  await ready();
+  const [prev] = await sql<PostCard[]>`
+    select ${cardCols} from ${fromLocale(locale)} where p.published and (p.created_at, p.id) < (${post.created_at}, ${post.id})
+    order by p.created_at desc, p.id desc limit 1`;
+  const [next] = await sql<PostCard[]>`
+    select ${cardCols} from ${fromLocale(locale)} where p.published and (p.created_at, p.id) > (${post.created_at}, ${post.id})
+    order by p.created_at, p.id limit 1`;
+  return { prev, next };
+}
+
 // sitemap용: 발행된 글 주소와 수정일
 export async function listSlugs() {
   await ready();

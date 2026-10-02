@@ -32,7 +32,7 @@ export default function Header({ locale }: { locale: Locale }) {
         <div className="hidden md:block"><LocaleSwitch locale={locale} /></div>
       </Container>
       {/* 좁은 화면: 메뉴 + 언어 전환을 둘째 줄로 (첫 줄은 로고·검색만) */}
-      <Container className="flex gap-6 pb-3 t-body-sm md:hidden">
+      <Container className="flex items-center gap-6 pb-3 t-body-sm md:hidden">
         {nav.map((n) => <Link key={n.href} href={n.href} className="tap link-hover">{n.label}</Link>)}
         <span className="ml-auto"><LocaleSwitch locale={locale} /></span>
       </Container>

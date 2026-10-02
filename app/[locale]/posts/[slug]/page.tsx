@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import PostBody from '@/components/PostBody';
+import PostToc from '@/components/PostToc';
 import Container from '@/components/ui/Container';
 import Eyebrow from '@/components/ui/Eyebrow';
 import Thumb from '@/components/ui/Thumb';
-import { getPost } from '@/lib/db';
+import PostCard from '@/components/PostCard';
+import { getAdjacent, getPost } from '@/lib/db';
 import { DICT, fmtDate } from '@/lib/i18n';
 import { localeOf, pageMeta } from '@/lib/page';
 import { getProject } from '@/lib/projects';
@@ -26,6 +28,8 @@ export default async function PostPage({ params }: Props) {
   const post = await getPost(slug, locale);
   if (!post) notFound();
   const project = post.project ? getProject(post.project) : undefined;
+  const { prev, next } = await getAdjacent(post, locale);
+  const t = DICT[locale].posts;
 
   return (
     <article className="pb-20">
@@ -54,6 +58,16 @@ export default async function PostPage({ params }: Props) {
         </header>
       </Container>
       <PostBody html={post.html} locale={locale} />
+      <PostToc label={t.toc} />
+      {(prev || next) && (
+        <Container>
+          {/* 본문 끝: 가는 선 아래 글 카드 2개(목록 카드와 같은 모양). 이전 = 더 오래된 글(왼쪽), 다음 = 더 새로운 글(오른쪽) */}
+          <nav aria-label={t.nav} className="mt-6 grid gap-5 border-t border-line pt-10 sm:grid-cols-2">
+            {prev ? <PostCard post={prev} locale={locale} label={`← ${t.prev}`} /> : <span className="max-sm:hidden" />}
+            {next && <PostCard post={next} locale={locale} label={`${t.next} →`} labelEnd />}
+          </nav>
+        </Container>
+      )}
     </article>
   );
 }

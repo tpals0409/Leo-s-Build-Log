@@ -15,7 +15,6 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="알고수는"><p>제가 혼자 만든 알고리즘 스터디 플랫폼입니다. 문제 배정, 코드 제출, AI 코드 리뷰를 자동화했고, 개발은 역할을 나눈 AI 에이전트 12명과 함께 했습니다. 저는 무엇을 만들지 정하고 결과를 검수했고, 구현은 에이전트들이 나눠 맡았습니다.</p></leo-callout>
 <h2>AI가 쓴 코드를 바로 배포하면 어떻게 될까?</h2>
 <p>한번은 AI가 생성한 코드를 커밋하고, git push를 눌렀습니다. 코드 자체는 멀쩡했어요. 테스트도 통과했고, 린트도 깨끗했습니다. 그런데 한 가지 문제가 있었습니다 — <code>git commit --amend</code>로 커밋을 수정한 뒤 force-push를 했거든요.</p>
 <p>CI가 돌았지만, <strong>아무것도 빌드되지 않았습니다.</strong> 변경된 파일이 분명 있는데, CI는 "변경 없음"으로 판단했습니다. 바뀐 파일 경로를 보고 어느 서비스가 변경됐는지 가려내는 GitHub Action <code>dorny/paths-filter</code>가 force-push된 커밋의 diff를 정상적으로 감지하지 못한 거예요. 배포 파이프라인의 첫 번째 관문인 변경 감지가 뚫리면, 그 뒤의 모든 체크는 실행조차 되지 않습니다.</p>

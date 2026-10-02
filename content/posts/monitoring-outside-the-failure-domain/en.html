@@ -15,7 +15,6 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="About PinLog"><p>PinLog is a place-journaling service: you save places along with why they mattered, and find them again in natural language. It was a team project, and I handled infrastructure and DevOps.</p></leo-callout>
 <p>Once monitoring is installed on a server and alerts are connected, it can feel as though the system is ready to watch for failures. But change one question and a gap appears: <strong>if the server itself stops, rather than just the application, who sends the alert?</strong></p>
 <p>PinLog ran its k3s control plane and application workloads together on a single AWS node. k3s is a lightweight Kubernetes distribution, and the control plane is the set of components that manages the cluster.</p>
 <p>Prometheus, which collects metrics, and Alertmanager, which handles alerts, ran on that node too. Both the system collecting service state and the system reporting it depended on the survival of the very server they watched.</p>

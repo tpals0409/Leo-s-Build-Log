@@ -15,7 +15,6 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="About AlgoSu"><p>AlgoSu is an algorithm study platform I built on my own. It automates problem assignment, code submission, and AI code review, and I developed it together with twelve AI agents, each with its own role. I decided what to build and reviewed the results; the agents split the implementation among themselves.</p></leo-callout>
 <leo-adr>
   <leo-problem><p>Even for a solo-built service, a monolith meant one agent had to understand the entire codebase — and accuracy dropped as its context widened.</p></leo-problem>
   <leo-decision><p>Split services by data ownership so they line up with agent responsibility boundaries; humans decide service boundaries, communication, auth, and deployment, and AI executes.</p></leo-decision>

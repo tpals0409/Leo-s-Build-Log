@@ -15,7 +15,6 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="About PinLog"><p>PinLog is a place-journaling service: you save places along with why they mattered, and find them again in natural language. It was a team project, and I handled infrastructure and DevOps. This post is about adding AI to Sentinel, the component that receives PinLog's incident alerts and passes them on.</p></leo-callout>
 <p>When adding AI to incident notifications, I had a question to settle before worrying about good prose: <strong>which decisions should AI be allowed to make?</strong> Turning an alert into readable text is not the same as notifying an entire channel. Changing a sentence and changing a mention policy carry different weight.</p>
 <p>In PinLog, Sentinel, which receives and forwards alerts, uses Hermes, an AI agent tool, to process alert payloads (the raw data an alert carries). But the AI's output is not automatically the final message. Trusted code revalidates mentions, URLs, and formatting.</p>
 <leo-adr>

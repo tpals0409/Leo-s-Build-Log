@@ -15,8 +15,6 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="About AlgoSu"><p>AlgoSu is an algorithm study platform I built on my own. It automates problem assignment, code submission, and AI code review, and I developed it together with twelve AI agents, each with its own role. I decided what to build and reviewed the results; the agents split the implementation among themselves. This post is about the control structure that kept those twelve working steadily.</p></leo-callout>
-
 <leo-adr>
   <leo-problem><p>Running 12 agents as a team broke down without control. Who verifies whose code, who mediates conflicts, and how do shared rules stay consistent?</p></leo-problem>
   <leo-decision><p>Three things. Narrow communication to a single channel, the lead agent Oracle; split the agents into three priority tiers (echelons); and gather the shared rules into one file (<code>persona-base.md</code>).</p></leo-decision>

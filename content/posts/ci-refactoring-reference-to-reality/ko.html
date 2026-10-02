@@ -15,7 +15,6 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="알고수는"><p>제가 혼자 만든 알고리즘 스터디 플랫폼입니다. 문제 배정, 코드 제출, AI 코드 리뷰를 자동화했고, 개발은 역할을 나눈 AI 에이전트 12명과 함께 했습니다. 저는 무엇을 만들지 정하고 결과를 검수했고, 구현은 에이전트들이 나눠 맡았습니다.</p></leo-callout>
 <h2>"참고만 하다가 직접 해본 이야기"</h2>
 <p>채널톡의 <a href="https://channel.io/ko/team/blog/articles/backend-ci-refactoring-73fca77d">「Backend CI Refactoring」</a> 글을 처음 읽었을 때, 즉각 "알고수에도 이렇게 하면 되겠다"는 생각이 들었습니다. 36.6분짜리 CI를 15분 38초로 줄인 이야기. 방법이 구체적이고 원리가 명확했습니다.</p>
 <p>그런데 그대로 따라할 수 없었습니다. 알고수는 채널톡과 다릅니다. <strong>1인 개발자가 여러 AI 에이전트를 지휘하는 구조</strong>이고, 빌드는 모두 Docker 안에서만 돌며, 총괄 에이전트가 다른 에이전트에게 작업을 나눠 주는 방식으로 일합니다. 레퍼런스의 원리는 차용할 수 있었지만, 그 원리를 <strong>알고수 맥락에 맞게 번역</strong>하는 과정이 필요했습니다.</p>

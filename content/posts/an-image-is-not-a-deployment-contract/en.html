@@ -15,7 +15,6 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="About PinLog"><p>PinLog is a place-journaling service: you save places along with why they mattered, and find them again in natural language. It was a team project, and I handled infrastructure and DevOps.</p></leo-callout>
 <p>My job on PinLog was deploying each team&#x27;s services to Kubernetes, connecting their dependencies, observing their health, and handling recovery.</p>
 <p>Before development started, the team agreed in writing on structure, conventions, and who was responsible for what. This article is about how that agreement took shape in deployment.</p>
 <p>An image lets you start a container. Its address alone does not tell you which port to connect to, what counts as healthy, or which configuration and external services it needs. A team deployment required that information as well.</p>

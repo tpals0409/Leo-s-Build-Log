@@ -15,7 +15,6 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="About PinLog"><p>PinLog is a place-journaling service: you save places along with why they mattered, and find them again in natural language. It was a team project, and I handled infrastructure and DevOps. This post is about how Pico, an AI agent that ran on the AI agent tool Hermes and helped operate PinLog's infrastructure, remembered and read operational information.</p></leo-callout>
 <p>As the infrastructure owner for PinLog, I worked with information that carried different time horizons. The branch that Argo CD, our deployment tool, deploys from is configuration. Whether a Pod (the unit Kubernetes runs) was Ready is a state observed at one particular moment.</p>
 <p>Pico, our operational AI, needed both kinds of knowledge. But they could not be trusted in the same way. Reading yesterday's healthy status as today's can lead to a wrong operational decision, even when the record itself is accurate.</p>
 <leo-adr>

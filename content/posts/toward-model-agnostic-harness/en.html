@@ -15,7 +15,6 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="About AlgoSu"><p>AlgoSu is an algorithm study platform I built on my own. It automates problem assignment, code submission, and AI code review, and I developed it together with twelve AI agents, each with its own role, and later added one more seat: Critic, a review agent that checks code with an AI model from a different company. I decided what to build and reviewed the results; the agents split the implementation among themselves. This post is about which AI models those agents run on.</p></leo-callout>
 <p>One thing up front: all twelve agents run on Anthropic's Claude models.</p>
 <p>Code review was no different. An agent for security and contracts and the lead agent for planning and decision records split the reviews between them, but both were from the same Claude model family. The same model misses the same things, so they couldn't catch each other's blind spots.</p>
 <p>Around then, OpenAI released a tool that let you call its coding model, Codex, from inside Claude Code. That opened a way to bring in the eyes of a different model family.</p>

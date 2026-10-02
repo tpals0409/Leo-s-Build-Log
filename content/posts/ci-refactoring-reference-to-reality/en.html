@@ -15,7 +15,6 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="About AlgoSu"><p>AlgoSu is an algorithm study platform I built on my own. It automates problem assignment, code submission, and AI code review, and I developed it together with twelve AI agents, each with its own role. I decided what to build and reviewed the results; the agents split the implementation among themselves.</p></leo-callout>
 <h2>From Reading a Reference to Doing It Myself</h2>
 <p>The first time I read Channel.io's post <a href="https://channel.io/ko/team/blog/articles/backend-ci-refactoring-73fca77d">“Backend CI Refactoring”</a> — Channel.io being a Korean SaaS company — my immediate reaction was: "I could do this for AlgoSu." Their story of cutting a 36.6-minute CI run down to 15 minutes and 38 seconds. The method was concrete, the principles clear.</p>
 <p>But I couldn't follow it directly. AlgoSu is different from Channel.io. It's <strong>one developer directing a team of AI agents</strong>, every build runs inside Docker, and a lead agent hands tasks out to the other agents. I could borrow the underlying principles — but I still had to <strong>translate those principles into AlgoSu's context</strong>.</p>

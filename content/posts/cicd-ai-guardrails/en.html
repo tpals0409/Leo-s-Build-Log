@@ -15,7 +15,6 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="About AlgoSu"><p>AlgoSu is an algorithm study platform I built on my own. It automates problem assignment, code submission, and AI code review, and I developed it together with twelve AI agents, each with its own role. I decided what to build and reviewed the results; the agents split the implementation among themselves.</p></leo-callout>
 <h2>What Happens If You Deploy AI-Written Code Directly?</h2>
 <p>Once, I committed AI-generated code and hit git push. The code itself was fine. Tests passed, lint was clean. But there was one problem — I had amended the commit with <code>git commit --amend</code> and force-pushed.</p>
 <p>CI ran, but <strong>nothing got built.</strong> Files had clearly changed, yet CI determined there were "no changes." <code>dorny/paths-filter</code>, a GitHub Action that looks at changed file paths to tell which services changed, couldn't properly detect the diff from a force-pushed commit. When the first gate of the deployment pipeline — change detection — is breached, every subsequent check doesn't even execute.</p>

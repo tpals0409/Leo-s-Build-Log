@@ -15,7 +15,6 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="About PinLog"><p>PinLog is a place-journaling service: you save places along with why they mattered, and find them again in natural language. It was a team project, and I handled infrastructure and DevOps.</p></leo-callout>
 <p>When working with Kubernetes storage, it is easy to stop at “we attached a PVC, so the data persists.” But persists after what? A container restarting, a PVC being deleted, and a server losing its disk are different events. That distinction was what mattered when I examined PinLog’s storage configuration.</p>
 <p>PinLog ran its k3s control plane and workloads together on a single AWS node. k3s is a lightweight Kubernetes distribution.</p>
 <leo-adr>

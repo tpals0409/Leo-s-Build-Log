@@ -15,8 +15,6 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="알고수는"><p>제가 혼자 만든 알고리즘 스터디 플랫폼입니다. 문제 배정, 코드 제출, AI 코드 리뷰를 자동화했고, 개발은 역할을 나눈 AI 에이전트 12명과 함께 했습니다. 저는 무엇을 만들지 정하고 결과를 검수했고, 구현은 에이전트들이 나눠 맡았습니다. 이 글은 그 12명을 흔들림 없이 굴러가게 만든 통제 구조에 대한 기록입니다.</p></leo-callout>
-
 <leo-adr>
   <leo-problem><p>12명을 팀으로 운영하려니 통제가 무너졌다. 누가 누구의 코드를 검증하고, 충돌은 누가 중재하며, 공통 규칙은 어떻게 유지하나?</p></leo-problem>
   <leo-decision><p>세 가지를 했다. 소통 창구를 총괄 에이전트 Oracle 하나로 좁혔고, 에이전트를 우선순위 3단계(Echelon)로 나눴고, 공통 규칙을 파일 하나(<code>persona-base.md</code>)에 모았다.</p></leo-decision>

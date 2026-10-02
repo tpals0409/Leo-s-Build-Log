@@ -8,7 +8,7 @@
   "featured": false,
   "ko": {
     "title": "서버가 죽으면, 그 서버의 모니터링도 죽습니다.",
-    "summary": "단일 노드의 내부 알림만으로는 노드 전체 장애를 지켜볼 수 없습니다. PinLog에서 내부 관측 경로와 외부 HTTPS/TLS 점검 경로를 나눈 이유와 남은 한계를 정리합니다."
+    "summary": "단일 노드의 내부 알림만으로는 노드 전체 장애를 지켜볼 수 없습니다. 핀로그에서 내부 관측 경로와 외부 HTTPS/TLS 점검 경로를 나눈 이유와 남은 한계를 정리합니다."
   },
   "en": {
     "title": "When the Server Dies, Its Monitoring Dies Too",

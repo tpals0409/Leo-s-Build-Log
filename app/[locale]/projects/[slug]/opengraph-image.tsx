@@ -12,5 +12,5 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
   const locale = await localeOf(params);
   const project = getProject((await params).slug);
   if (!project) notFound();
-  return renderOg({ locale, title: project.name, label: DICT[locale].projects.title });
+  return renderOg({ locale, title: project.name[locale], label: DICT[locale].projects.title });
 }

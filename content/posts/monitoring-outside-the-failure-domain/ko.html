@@ -15,9 +15,9 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="PinLog는"><p>장소와 함께 저장한 이유와 경험을 남기고, 자연어로 다시 찾는 장소 기록 서비스입니다. 팀 프로젝트로 만들었고, 저는 인프라·DevOps를 맡았습니다.</p></leo-callout>
+<leo-callout type="note" title="핀로그는"><p>장소와 함께 저장한 이유와 경험을 남기고, 자연어로 다시 찾는 장소 기록 서비스입니다. 팀 프로젝트로 만들었고, 저는 인프라·DevOps를 맡았습니다.</p></leo-callout>
 <p>서버 안에 모니터링을 설치하고 알림까지 연결하면, 장애를 지켜볼 준비가 끝난 것처럼 보입니다. 하지만 질문을 하나 바꾸면 빈틈이 드러납니다. <strong>애플리케이션이 아니라 서버 자체가 멈추면, 누가 알림을 보내줄까요?</strong></p>
-<p>PinLog는 AWS의 단일 노드에서 k3s 컨트롤 플레인과 애플리케이션을 함께 운영하는 구조였습니다. k3s는 가볍게 만든 Kubernetes 배포판이고, 컨트롤 플레인은 클러스터를 관리하는 구성요소입니다.</p>
+<p>핀로그는 AWS의 단일 노드에서 k3s 컨트롤 플레인과 애플리케이션을 함께 운영하는 구조였습니다. k3s는 가볍게 만든 Kubernetes 배포판이고, 컨트롤 플레인은 클러스터를 관리하는 구성요소입니다.</p>
 <p>지표를 모으는 Prometheus와 알림을 처리하는 Alertmanager도 그 노드 위에 있었습니다. 서비스 상태를 수집하는 쪽과 그 상태를 전달하는 쪽이, 감시 대상과 같은 서버의 생존에 기대고 있었죠.</p>
 <leo-adr>
   <leo-problem><p>Prometheus·Alertmanager와 호스트의 알림 수신기 Sentinel이 모두 감시 대상과 같은 단일 AWS 노드에 있었다. 노드 전체가 멈추면 알림 경로도 함께 멈출 수 있었다.</p></leo-problem>
@@ -28,7 +28,7 @@ blockquote p{margin:0}
 <p>이 문제를 설명하는 말이 장애 도메인(failure domain)입니다. 하나의 장애로 함께 영향을 받는 범위를 뜻합니다. 애플리케이션과 모니터링이 서로 다른 Pod에 있고 별도 namespace로 관리되더라도, 같은 노드가 멈추면 둘 다 실행할 수 없습니다. 논리적인 분리와 장애에 대한 독립성은 다른 이야기입니다.</p>
 <p>내부 모니터링이 쓸모없다는 뜻은 아닙니다. 노드가 동작하는 동안에는 리소스와 워크로드 상태를 보고 문제의 단서를 모을 수 있습니다. 다만 노드 전체 장애를 알리는 마지막 수단까지 내부 경로에 맡기면, 알림을 보내야 할 순간에 알림 시스템도 함께 사라질 수 있어요.</p>
 <h2>내부 경로는 그대로, 관측 위치는 하나 더</h2>
-<p>PinLog의 내부 알림은 Prometheus가 수집한 지표와 규칙 평가에서 시작해 Alertmanager를 거칩니다. 그다음 호스트(클러스터 바깥, 노드의 운영체제)에서 도는 수신기 Sentinel Receiver가 받아 팀 메신저 Mattermost로 전달하는 구조입니다. 아래는 알림이 이동하는 순서입니다.</p>
+<p>핀로그의 내부 알림은 Prometheus가 수집한 지표와 규칙 평가에서 시작해 Alertmanager를 거칩니다. 그다음 호스트(클러스터 바깥, 노드의 운영체제)에서 도는 수신기 Sentinel Receiver가 받아 팀 메신저 Mattermost로 전달하는 구조입니다. 아래는 알림이 이동하는 순서입니다.</p>
 <leo-pipeline>
   <leo-stage title="Prometheus">클러스터 내부 지표 수집·규칙 평가</leo-stage>
   <leo-stage title="Alertmanager">발생한 알림 처리</leo-stage>

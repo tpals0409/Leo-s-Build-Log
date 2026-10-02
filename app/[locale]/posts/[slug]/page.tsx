@@ -34,7 +34,7 @@ export default async function PostPage({ params }: Props) {
         <h1 className="mb-4 mt-3 t-section">{post.title}</h1>
         <p className="t-body-sm text-muted">
           <time dateTime={post.created_at.toISOString()}>{fmtDate(post.created_at, locale)}</time>
-          {project && <> · <Link href={`/${locale}/projects/${project.slug}`} className="tap text-link">{project.name}</Link></>}
+          {project && <> · <Link href={`/${locale}/projects/${project.slug}`} className="tap text-link">{project.name[locale]}</Link></>}
         </p>
         {post.tags.length > 0 && (
           <ul className="mt-4 flex flex-wrap justify-center gap-2">

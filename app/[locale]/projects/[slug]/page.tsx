@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const locale = await localeOf(params);
   const project = getProject(slug);
-  return project ? pageMeta(locale, `/projects/${slug}`, { title: project.name, description: project.summary[locale] }) : {};
+  return project ? pageMeta(locale, `/projects/${slug}`, { title: project.name[locale], description: project.summary[locale] }) : {};
 }
 
 export default async function ProjectPage({ params }: Props) {
@@ -29,7 +29,7 @@ export default async function ProjectPage({ params }: Props) {
 
   return (
     <Container className="pb-20">
-      <h1 className="pb-4 pt-12 t-section">{project.name}</h1>
+      <h1 className="pb-4 pt-12 t-section">{project.name[locale]}</h1>
       <p className="mb-8 t-body text-secondary">{project.summary[locale]}</p>
       <Thumb src={project.image} className="mb-12 aspect-[2.1/1] rounded-panel" />
       <SectionHeader title={t.posts} />

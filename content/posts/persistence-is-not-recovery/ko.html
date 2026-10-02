@@ -15,11 +15,11 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="PinLog는"><p>장소와 함께 저장한 이유와 경험을 남기고, 자연어로 다시 찾는 장소 기록 서비스입니다. 팀 프로젝트로 만들었고, 저는 인프라·DevOps를 맡았습니다.</p></leo-callout>
-<p>쿠버네티스에서 데이터를 다루다 보면 “PVC를 붙였으니 남는다”는 말로 설명을 끝내기 쉽습니다. 하지만 무엇이 사라진 뒤에도 남는다는 뜻일까요? 컨테이너가 다시 뜨는 상황과 PVC를 지우는 상황, 서버의 디스크를 잃는 상황은 서로 다릅니다. PinLog의 저장 구성을 살펴보면서 중요하게 본 것도 이 구분이었습니다.</p>
-<p>PinLog는 AWS의 단일 노드에서 k3s의 제어 영역과 워크로드를 함께 실행하고 있었습니다. k3s는 가볍게 만든 Kubernetes 배포판입니다.</p>
+<leo-callout type="note" title="핀로그는"><p>장소와 함께 저장한 이유와 경험을 남기고, 자연어로 다시 찾는 장소 기록 서비스입니다. 팀 프로젝트로 만들었고, 저는 인프라·DevOps를 맡았습니다.</p></leo-callout>
+<p>쿠버네티스에서 데이터를 다루다 보면 “PVC를 붙였으니 남는다”는 말로 설명을 끝내기 쉽습니다. 하지만 무엇이 사라진 뒤에도 남는다는 뜻일까요? 컨테이너가 다시 뜨는 상황과 PVC를 지우는 상황, 서버의 디스크를 잃는 상황은 서로 다릅니다. 핀로그의 저장 구성을 살펴보면서 중요하게 본 것도 이 구분이었습니다.</p>
+<p>핀로그는 AWS의 단일 노드에서 k3s의 제어 영역과 워크로드를 함께 실행하고 있었습니다. k3s는 가볍게 만든 Kubernetes 배포판입니다.</p>
 <leo-adr>
-  <leo-problem><p>“PVC를 붙였으니 남는다”는 설명은 Pod 재시작, PVC 삭제, 노드 손실을 구분하지 않았다. PinLog는 단일 노드에서 PostgreSQL의 data·backup PVC를 같은 로컬 저장소에 두고 있었다.</p></leo-problem>
+  <leo-problem><p>“PVC를 붙였으니 남는다”는 설명은 Pod 재시작, PVC 삭제, 노드 손실을 구분하지 않았다. 핀로그는 단일 노드에서 PostgreSQL의 data·backup PVC를 같은 로컬 저장소에 두고 있었다.</p></leo-problem>
   <leo-decision><p>저장 구성을 세 상황으로 나눠 읽었다. StorageClass 이름 대신 PV의 실제 reclaim policy를 보고, 삭제 정책과 복구 절차를 따로 확인했다.</p></leo-decision>
   <leo-result><p>Retain은 PVC 삭제 뒤 자동 정리만 막을 뿐, 같은 노드의 backup PVC로는 노드 손실에 대비할 수 없다는 점을 확인했다. 호스트 밖 사본과 복구 절차는 별도로 설계하고 확인해야 할 다음 단계로 남았다.</p></leo-result>
 </leo-adr>

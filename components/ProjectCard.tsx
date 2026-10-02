@@ -9,7 +9,7 @@ export default function ProjectCard({ project, locale }: { project: Project; loc
       <div className="mb-3 overflow-hidden rounded-card">
         <Thumb src={project.image} className="thumb-zoom aspect-5/2" />
       </div>
-      <h3 className="t-body">{project.name}</h3>
+      <h3 className="t-body">{project.name[locale]}</h3>
       <p className="t-body-sm text-muted">{project.summary[locale]}</p>
     </Link>
   );

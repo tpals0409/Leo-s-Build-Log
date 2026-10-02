@@ -11,7 +11,7 @@
   "thumbnail": "thumbnail.webp",
   "ko": {
     "title": "기능을 안전하게 지우는 법 — 블로그의 관계 그래프와 검색을 걷어내며",
-    "summary": "기능을 지우는 건 추가하는 것보다 무섭습니다. 무엇이 따라 깨질지 모르니까요. AlgoSu의 블로그에서 결정 기록(ADR)을 보여주던 관계 그래프와 검색 기능을 지우며 배운 것은, 안전하게 지우는 데도 방법이 있다는 것이었습니다."
+    "summary": "기능을 지우는 건 추가하는 것보다 무섭습니다. 무엇이 따라 깨질지 모르니까요. 알고수의 블로그에서 결정 기록(ADR)을 보여주던 관계 그래프와 검색 기능을 지우며 배운 것은, 안전하게 지우는 데도 방법이 있다는 것이었습니다."
   },
   "en": {
     "title": "How to Remove Features Safely — Taking Out a Blog’s Relation Graph and Search",

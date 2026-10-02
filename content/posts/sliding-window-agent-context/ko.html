@@ -15,9 +15,9 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="AlgoSu는"><p>제가 혼자 만든 알고리즘 스터디 플랫폼입니다. 문제 배정, 코드 제출, AI 코드 리뷰를 자동화했고, 개발은 역할을 나눈 AI 에이전트 12명과 함께 했습니다. 이 글은 그 에이전트들에게 매 세션 무엇을 읽힐지 정한 이야기예요.</p></leo-callout>
+<leo-callout type="note" title="알고수는"><p>제가 혼자 만든 알고리즘 스터디 플랫폼입니다. 문제 배정, 코드 제출, AI 코드 리뷰를 자동화했고, 개발은 역할을 나눈 AI 에이전트 12명과 함께 했습니다. 이 글은 그 에이전트들에게 매 세션 무엇을 읽힐지 정한 이야기예요.</p></leo-callout>
 <h2>152번째 스프린트, 차곡차곡 쌓인 결정 기록들</h2>
-<p>AlgoSu는 스프린트(짧은 작업 주기)를 수백 번 돌렸고, 이 글을 쓴 건 152번째 스프린트 때입니다. 처음부터 스프린트마다 결정 기록(ADR: 무엇을 왜 그렇게 정했는지 남기는 문서)을 쓴 건 아니었어요. 62번째 스프린트 무렵부터 매 스프린트의 결정과 회고를 한 파일로 묶기 시작했습니다. 그 뒤로 <a href="https://github.com/tpals0409/AlgoSu/tree/main/docs/adr/sprints"><code>docs/adr/sprints/</code></a> 폴더에 <code>sprint-62.md</code>부터 <code>sprint-151.md</code>까지, 지금은 90개 가까이 쌓였어요.</p>
+<p>알고수는 스프린트(짧은 작업 주기)를 수백 번 돌렸고, 이 글을 쓴 건 152번째 스프린트 때입니다. 처음부터 스프린트마다 결정 기록(ADR: 무엇을 왜 그렇게 정했는지 남기는 문서)을 쓴 건 아니었어요. 62번째 스프린트 무렵부터 매 스프린트의 결정과 회고를 한 파일로 묶기 시작했습니다. 그 뒤로 <a href="https://github.com/tpals0409/AlgoSu/tree/main/docs/adr/sprints"><code>docs/adr/sprints/</code></a> 폴더에 <code>sprint-62.md</code>부터 <code>sprint-151.md</code>까지, 지금은 90개 가까이 쌓였어요.</p>
 <p>에이전트가 읽는 문서는 이것만이 아닙니다.</p>
 <ul><li><a href="https://github.com/tpals0409/AlgoSu/blob/main/CLAUDE.md"><code>CLAUDE.md</code></a>: 에이전트가 매 세션 자동으로 읽는 프로젝트 규칙 파일</li><li><a href="https://github.com/tpals0409/AlgoSu/tree/main/.claude/commands/agents"><code>.claude/commands/agents/</code></a>: 에이전트 12명 각각의 역할과 금지사항을 적은 파일(페르소나)들</li><li><code>MEMORY.md</code>: 스프린트마다 갱신하는, 지난 작업의 요약 메모</li></ul>
 <p>기록이 남아 있다는 건 좋은 일이에요. 그런데 동시에 위험한 일이기도 합니다.</p>
@@ -28,7 +28,7 @@ blockquote p{margin:0}
 <p>사람이 그래요. 6개월 전에 왜 이 enum을 추가했는지, 왜 이 마이그레이션을 따로 배포했는지, 왜 이 함수 이름이 이렇게 어색한지, 시간이 지나면 잊습니다. 코드를 다시 읽어도 "왜"는 나오지 않아요. 코드는 "무엇을"만 보여주거든요.</p>
 <p>에이전트는 더 심합니다.</p>
 <p>에이전트는 매 세션 빈 컨텍스트로 시작해요. 이전 대화에서 합의한 것, 어제 고친 회귀 패턴, 지난주에 정한 기준값의 위치를 다음 세션의 에이전트는 모릅니다. 새로 온 사람과 같은 상태예요. 사람은 며칠 쉬어도 어렴풋이 기억하지만, 에이전트는 정확히 0입니다.</p>
-<p>그래서 AlgoSu에서는 일찍부터 문서화에 공을 들였어요. 잊혀선 안 될 것들을 한곳에 모으기 시작했습니다.</p>
+<p>그래서 알고수에서는 일찍부터 문서화에 공을 들였어요. 잊혀선 안 될 것들을 한곳에 모으기 시작했습니다.</p>
 <ul><li>결정과 그 배경은 스프린트별 결정 기록으로</li><li>변하지 않는 규약은 <a href="https://github.com/tpals0409/AlgoSu/blob/main/CLAUDE.md"><code>CLAUDE.md</code></a>로</li><li>각 에이전트의 역할은 <a href="https://github.com/tpals0409/AlgoSu/tree/main/.claude/commands/agents"><code>.claude/commands/agents/</code></a>의 페르소나 파일로</li></ul>
 <h2>문서화는 진짜로 효과가 있었습니다</h2>
 <p>작은 사례 하나만 볼게요.</p>

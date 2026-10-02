@@ -15,7 +15,7 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<leo-callout type="note" title="AlgoSu는"><p>제가 혼자 만든 알고리즘 스터디 플랫폼입니다. 문제 배정, 코드 제출, AI 코드 리뷰를 자동화했고, 개발은 역할을 나눈 AI 에이전트 12명과 함께 했습니다.</p></leo-callout>
+<leo-callout type="note" title="알고수는"><p>제가 혼자 만든 알고리즘 스터디 플랫폼입니다. 문제 배정, 코드 제출, AI 코드 리뷰를 자동화했고, 개발은 역할을 나눈 AI 에이전트 12명과 함께 했습니다.</p></leo-callout>
 <h2>AI가 쓴 코드를 바로 배포하면 어떻게 될까?</h2>
 <p>한번은 AI가 생성한 코드를 커밋하고, git push를 눌렀습니다. 코드 자체는 멀쩡했어요. 테스트도 통과했고, 린트도 깨끗했습니다. 그런데 한 가지 문제가 있었습니다 — <code>git commit --amend</code>로 커밋을 수정한 뒤 force-push를 했거든요.</p>
 <p>CI가 돌았지만, <strong>아무것도 빌드되지 않았습니다.</strong> 변경된 파일이 분명 있는데, CI는 "변경 없음"으로 판단했습니다. 바뀐 파일 경로를 보고 어느 서비스가 변경됐는지 가려내는 GitHub Action <code>dorny/paths-filter</code>가 force-push된 커밋의 diff를 정상적으로 감지하지 못한 거예요. 배포 파이프라인의 첫 번째 관문인 변경 감지가 뚫리면, 그 뒤의 모든 체크는 실행조차 되지 않습니다.</p>
@@ -26,7 +26,7 @@ blockquote p{margin:0}
   <leo-result><p>시크릿·품질·테스트·의존성·이미지 취약점·배포 경로를 모두 통과해야 프로덕션에 닿는다. 실제로 겪은 사고마다 규칙을 하나씩 더했다.</p></leo-result>
 </leo-adr>
 <h2>CI 15 jobs 전체 맵</h2>
-<p>AlgoSu의 CI 파이프라인은 15개의 job으로 구성되어 있습니다. 이 job들은 독립적으로 실행되는 게 아니라, 엄격한 의존관계를 가지고 있어요. 하나라도 실패하면 후속 단계가 차단되는 구조입니다.</p>
+<p>알고수의 CI 파이프라인은 15개의 job으로 구성되어 있습니다. 이 job들은 독립적으로 실행되는 게 아니라, 엄격한 의존관계를 가지고 있어요. 하나라도 실패하면 후속 단계가 차단되는 구조입니다.</p>
 <leo-steps>
   <leo-step title="Trigger"><p>push / PR → main</p></leo-step>
   <leo-step title="Security Gate"><p>gitleaks · paths-filter · .env 차단</p></leo-step>
@@ -67,7 +67,7 @@ blockquote p{margin:0}
 <p><code>.env</code> 파일은 <code>.gitignore</code>에 들어있어야 하지만, 실수로 <code>git add -A</code>를 하거나 <code>.gitignore</code>를 수정하면 슬쩍 들어갈 수 있습니다. 이 체크는 Git 인덱스에 <code>.env</code> 파일이 존재하는지를 명시적으로 검사합니다. <code>.env.example</code>은 허용하고, 나머지는 모두 차단합니다.</p>
 <p>왜 이게 <code>secret-scan</code>과 별도로 필요할까요? <code>gitleaks</code>는 파일 내용의 패턴을 검사하지만, <code>.env</code> 파일 자체의 존재 여부는 검사하지 않습니다. 환경변수 파일이 커밋되면 시크릿이 들어있든 없든 위험하기 때문에, 파일 존재 자체를 차단하는 것입니다.</p>
 <h2>2단계: 변경 감지 — detect-changes</h2>
-<p>AlgoSu는 모노레포입니다. 6개 백엔드 서비스 + 1개 프론트엔드 + 1개 블로그가 한 레포에 있어요. 매번 모든 서비스를 빌드하면 비용이 낭비되니까, 앞서 말한 <code>dorny/paths-filter</code>로 실제로 변경된 서비스만 감지합니다.</p>
+<p>알고수는 모노레포입니다. 6개 백엔드 서비스 + 1개 프론트엔드 + 1개 블로그가 한 레포에 있어요. 매번 모든 서비스를 빌드하면 비용이 낭비되니까, 앞서 말한 <code>dorny/paths-filter</code>로 실제로 변경된 서비스만 감지합니다.</p>
 <pre><code class="language-yaml">filters: |
   gateway:
     - 'services/gateway/**'
@@ -148,7 +148,7 @@ blockquote p{margin:0}
 <p>CRITICAL과 HIGH 수준의 취약점이 발견되면 exit code 1을 반환해서 파이프라인을 차단합니다. <code>--ignore-unfixed</code>로 아직 패치가 나오지 않은 취약점은 제외합니다. 결과는 정적 분석 결과의 표준 형식인 SARIF로도 생성되어 GitHub Security 탭에 업로드됩니다.</p>
 <h2>8단계: GitOps 락 — 배포 설정 저장소</h2>
 <p>GitOps 락이란, 배포 설정 저장소를 거쳐야만 배포가 일어나도록 묶어 둔 구조를 말합니다.</p>
-<p>모든 스캔을 통과한 이미지만 배포됩니다. 그런데 AlgoSu에서 "배포"란 이미지를 서버에 직접 올리는 게 아닙니다.</p>
+<p>모든 스캔을 통과한 이미지만 배포됩니다. 그런데 알고수에서 "배포"란 이미지를 서버에 직접 올리는 게 아닙니다.</p>
 <pre><code class="language-yaml">deploy:
   needs:
     - secret-scan
@@ -207,7 +207,7 @@ done</code></pre>
 <pre><code class="language-yaml">permissions: {}</code></pre>
 <p>기본 권한을 <strong>제로</strong>로 설정하고, 각 job에서 필요한 권한만 명시적으로 선언합니다. <code>secret-scan</code>은 <code>contents: read</code>만, <code>build-services</code>는 <code>contents: read</code>와 <code>packages: write</code>만. 이렇게 하면 특정 job이 탈취되더라도 피해 범위가 제한됩니다.</p>
 <h2>AI와 CI의 균형</h2>
-<p>AlgoSu 프로젝트에서 AI는 코드의 대부분을 생성했습니다. 12개의 에이전트가 역할을 나누어 작업했고, 총괄 에이전트 Oracle이 전체를 조율했습니다. 하지만 아무리 정교한 에이전트 체계를 갖추어도, 최종 검증은 사람이 아닌 <strong>자동화된 파이프라인</strong>이 맡아야 했습니다.</p>
+<p>알고수 프로젝트에서 AI는 코드의 대부분을 생성했습니다. 12개의 에이전트가 역할을 나누어 작업했고, 총괄 에이전트 Oracle이 전체를 조율했습니다. 하지만 아무리 정교한 에이전트 체계를 갖추어도, 최종 검증은 사람이 아닌 <strong>자동화된 파이프라인</strong>이 맡아야 했습니다.</p>
 <p>15개의 CI job은 AI가 생성한 코드에 대해 이런 질문들을 던졌습니다:</p>
 <ol><li><strong>시크릿이 유출되었나?</strong> (secret-scan)</li><li><strong>코드 품질이 기준을 충족하나?</strong> (quality-nestjs, quality-python, quality-frontend)</li><li><strong>테스트가 통과하나?</strong> (test-node, test-ai-analysis, test-frontend)</li><li><strong>의존성에 취약점이 있나?</strong> (audit-npm)</li><li><strong>빌드된 이미지에 취약점이 있나?</strong> (trivy-scan)</li><li><strong>배포 경로가 안전한가?</strong> (deploy → 배포 설정 저장소 → ArgoCD)</li></ol>
 <p>이 모든 관문을 통과해야 코드가 프로덕션에 도달할 수 있었습니다.</p>

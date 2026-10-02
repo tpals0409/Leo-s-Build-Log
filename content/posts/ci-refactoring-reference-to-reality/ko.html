@@ -26,7 +26,7 @@ blockquote p{margin:0}
 </leo-adr>
 <h2>왜 레퍼런스가 필요했나</h2>
 <p>시작 시점의 상태를 정직하게 기록하면 이렇습니다.</p>
-<p><strong>Before — 세 가지 문제:</strong></p>
+<p><strong>Before: 세 가지 문제</strong></p>
 <ul><li>의존성 업데이트 PR을 자동으로 만들어 주는 GitHub 봇 Dependabot의 PR이 매주 쌓여, 일일이 손으로 병합해야 하는 <strong>대기 PR 30건</strong></li><li>Node 준비 단계(<code>setup-node + cache + npm ci</code>)가 잡·서비스 조합마다 3~4벌 복사돼 있음</li><li>테스트 커버리지를 측정은 했지만 기준에 못 미쳐도 <strong>PR을 막지 않음</strong> (측정만 있고 게이트 없음)</li></ul>
 <leo-metrics>
   <leo-metric value="30" unit="건" note="매주 생성, 수동 squash-merge 누적" label="Dependabot 대기 PR"></leo-metric>
@@ -35,10 +35,10 @@ blockquote p{margin:0}
 </leo-metrics>
 <p>이 세 문제는 독립적으로 보이지만 공통 원인이 있었습니다. <strong>"지금 당장 동작하면 됐다"는 관성.</strong> CI가 통과하면 배포했고, 반복 코드 정리는 늘 다음으로 밀렸습니다.</p>
 <p>채널톡 글에서 차용한 원리는 세 가지입니다.</p>
-<ol><li><strong>작은 범위 파일럿 → 확산</strong> — 전체 서비스에 한 번에 적용하지 않고 가장 단순한 서비스에서 먼저 검증한 뒤 확장한다</li><li><strong>워크플로 + 저장소 설정 결합</strong> — GitHub Actions 파일만 만들면 반쪽이다. 저장소 설정이 뒷받침되어야 실효된다</li><li><strong>중복 제거는 목적이 아니라 결과</strong> — 중복을 없애려고 공통 모듈을 만드는 게 아니라, 좋은 추상이 자연스럽게 중복을 없앤다</li></ol>
+<ol><li><strong>작은 범위 파일럿 → 확산</strong>: 전체 서비스에 한 번에 적용하지 않고 가장 단순한 서비스에서 먼저 검증한 뒤 확장한다</li><li><strong>워크플로 + 저장소 설정 결합</strong>: GitHub Actions 파일만 만들면 반쪽이다. 저장소 설정이 뒷받침되어야 실효된다</li><li><strong>중복 제거는 목적이 아니라 결과</strong>: 중복을 없애려고 공통 모듈을 만드는 게 아니라, 좋은 추상이 자연스럽게 중복을 없앤다</li></ol>
 <p>차용하지 <strong>않은</strong> 원리도 있습니다. 채널톡 글의 두 기법, 즉 준비 단계 결과를 S3에 올려 두고 폴링해 초기화를 겹치는 방식과 테스트를 동적 큐로 나눠 돌리는 방식은 알고수에는 과했습니다. GitHub Actions(GHA)의 artifact로 충분했고, 테스트가 적어서, 나눠 돌리는 비용이 얻는 이득보다 컸습니다. 레퍼런스를 번역할 때는 차용하지 않을 것을 고르는 것도 작업입니다.</p>
 <p>알고수만의 사정이 하나 더 있었습니다. 총괄 에이전트가 작업을 나눠 주는 구조라서, "파일럿 후 확산"을 스프린트 단위로 적용하면서도 매 스프린트 시작 전에 <strong>어느 에이전트에게 맡길지</strong>를 다시 확인해야 했습니다. 첫 스프린트에서 CI 작업을 인증·보안 담당 에이전트에게 잘못 맡겼다가 인프라 담당 에이전트로 바꾼 일이 있었습니다. 여러 에이전트와 일할 때 역할 경계 확인은 코드 작성만큼 중요합니다.</p>
-<h2>4스프린트 로드맵 — 전체 그림</h2>
+<h2>4스프린트 로드맵: 전체 그림</h2>
 <p>채널톡 글을 읽고 세운 로드맵은 4스프린트(S102~S105)였고, 실제로는 남은 항목을 처리하는 S106이 추가됐습니다. 각 스프린트의 목적과 실제 산출물은 다음과 같습니다.</p>
 <leo-steps>
   <leo-step title="S102 · 운영 자동화"><p>Dependabot 그룹화 + Auto-merge + Branch Protection(main 병합 조건 설정)</p></leo-step>
@@ -48,7 +48,7 @@ blockquote p{margin:0}
   <leo-step title="S106 · 이월 처리"><p>Coverage 70% 달성 (실구현) + L2 캐시·빌드 최적화는 사전 검토로 조기 종결</p></leo-step>
 </leo-steps>
 <p>각 스프린트는 독립적이었지만, 앞 스프린트의 교훈이 다음 설계로 이어졌습니다. "CI를 고친 PR은 자기 효과를 측정하지 못한다"는 교훈은 전체 서비스를 강제로 다시 빌드하는 옵션(rebuild_all)의 사용 규칙으로 이어졌고, 구현 전에 다른 에이전트에게 먼저 필요성을 묻는 <strong>사전 검토</strong> 습관이 마지막 스프린트의 "구현 0줄" 결론을 가능하게 했습니다.</p>
-<h2>S102 — Auto-merge와 Branch Protection</h2>
+<h2>S102: Auto-merge와 Branch Protection</h2>
 <p>첫 번째 문제는 Dependabot 대기 PR 30건이었습니다. 매주 생성되는 patch/minor 업데이트를 손으로 검토하고 병합하는 일이 밀린 결과였습니다.</p>
 <p>해결 방향은 두 단계였습니다: <strong>dependabot.yml 그룹화</strong>로 개별 PR 수를 줄이고, 조건을 통과하면 PR을 자동으로 병합하는 <strong>auto-merge 워크플로</strong>로 patch/minor를 처리한다.</p>
 <h3>Dependabot 그룹화</h3>
@@ -97,7 +97,7 @@ jobs:
         run: |
           echo "Major update detected — skipping auto-merge."
           exit 0</code></pre>
-<p>여기서 중요한 결정이 있었습니다. <code>pull_request</code> 대신 <strong><code>pull_request_target</code></strong>을 트리거로 선택했습니다. Dependabot이 만드는 PR은 포크 PR과 유사한 컨텍스트를 가지며, secrets에 접근하려면 <code>pull_request_target</code>이 필요합니다. 단, 코드 인젝션 위험을 막기 위해 <code>actions/checkout</code>을 완전히 제거했습니다 — PR 코드를 실행하는 단계가 없으면 인젝션 경로도 없습니다.</p>
+<p>여기서 중요한 결정이 있었습니다. <code>pull_request</code> 대신 <strong><code>pull_request_target</code></strong>을 트리거로 선택했습니다. Dependabot이 만드는 PR은 포크 PR과 유사한 컨텍스트를 가지며, secrets에 접근하려면 <code>pull_request_target</code>이 필요합니다. 단, 코드 인젝션 위험을 막기 위해 <code>actions/checkout</code>을 완전히 제거했습니다. PR 코드를 실행하는 단계가 없으면 인젝션 경로도 없습니다.</p>
 <p>job-level <code>if: github.actor == 'dependabot[bot]'</code>, step-level metadata type 검증, <code>actions/checkout</code> 제거의 <strong>3중 방어</strong>입니다.</p>
 <h3>저장소 설정 결합</h3>
 <p>워크플로를 만들고 나서 auto-merge가 동작하지 않았습니다. 이유를 찾아보니 저장소 설정에 있었습니다.</p>
@@ -115,14 +115,14 @@ allow_force_pushes: false
 allow_deletions: false
 required_conversation_resolution: true</code></pre>
 <p>required checks를 최소화한 이유가 있습니다. <code>quality-nestjs</code>, <code>test-node</code> 같은 잡은 변경된 서비스가 없으면 skip됩니다. skip 상태를 required check에 등록하면 해당 잡이 실행되지 않을 때 PR이 merge되지 않습니다. 항상 실행되는 <code>Secret &amp; Env Scan</code>과 <code>Detect Changed Services</code>만 등록했습니다.</p>
-<p>결과: Dependabot 대기 PR <strong>30건 → 2건</strong>. 28건이 그룹 PR 7개로 재편되어 auto-merge 예약됐습니다. 예상치 못한 보너스도 있었습니다 — dependabot이 grouping을 감지하자 기존 개별 PR을 자동으로 close하고 그룹 PR로 재생성했습니다. 수동으로 close할 필요도 없었습니다.</p>
+<p>결과: Dependabot 대기 PR <strong>30건 → 2건</strong>. 28건이 그룹 PR 7개로 재편되어 auto-merge 예약됐습니다. 예상치 못한 보너스도 있었습니다. dependabot이 grouping을 감지하자 기존 개별 PR을 자동으로 close하고 그룹 PR로 재생성했습니다. 수동으로 close할 필요도 없었습니다.</p>
 <p>이 작업 PR의 검증 결과:</p>
-<table><thead><tr><th>검증 항목</th><th>결과</th></tr></thead><tbody><tr><td>작업 PR CI 전체</td><td>✅ 26 success / 10 skipped / 0 failure (매트릭스로 펼친 잡 수 기준)</td></tr><tr><td>Auto-merge 워크플로 실행</td><td>✅ 7/7 success (그룹 PR 7개)</td></tr><tr><td>실제 자동 병합 실증</td><td>✅ github-worker 그룹 PR(업데이트 3건) — <code>app/github-actions</code>가 병합한 것 확인</td></tr><tr><td>Branch Protection 실효</td><td>✅ main 직접 push 차단, strict 모드에서 최신 base 요구</td></tr></tbody></table>
+<table><thead><tr><th>검증 항목</th><th>결과</th></tr></thead><tbody><tr><td>작업 PR CI 전체</td><td>✅ 26 success / 10 skipped / 0 failure (매트릭스로 펼친 잡 수 기준)</td></tr><tr><td>Auto-merge 워크플로 실행</td><td>✅ 7/7 success (그룹 PR 7개)</td></tr><tr><td>실제 자동 병합 실증</td><td>✅ github-worker 그룹 PR(업데이트 3건), <code>app/github-actions</code>가 병합한 것 확인</td></tr><tr><td>Branch Protection 실효</td><td>✅ main 직접 push 차단, strict 모드에서 최신 base 요구</td></tr></tbody></table>
 <leo-callout type="note" title="핵심 교훈: 워크플로 ≠ 기능"><p>Auto-merge 워크플로만 만들면 반쪽입니다. <code>allow_auto_merge: true</code> + required status checks가 함께 있어야 실효됩니다. "코드는 맞는데 왜 안 되지?"의 원인이 저장소 설정일 수 있습니다. CI 자동화는 파일 하나로 끝나지 않습니다.</p></leo-callout>
-<h2>S103~S104 — Composite Action과 파일럿→확산</h2>
+<h2>S103~S104: Composite Action과 파일럿→확산</h2>
 <p>두 번째 문제는 <code>setup-node + cache + npm ci</code> 3단계 반복이었습니다. 해법은 composite action, 즉 여러 단계를 하나로 묶어 재사용하는 GitHub Actions 기능입니다. <code>quality-nestjs</code>, <code>audit-npm</code>, <code>test-node</code> 3개 잡의 5개 서비스 매트릭스마다 동일한 준비 단계가 반복됐습니다.</p>
 <p>채널톡 레퍼런스의 "작은 서비스에서 먼저 검증 후 확산" 원리를 스프린트 단위로 적용했습니다. <strong>S103에서 github-worker 한 곳에만 파일럿, S104에서 전 서비스로 확산.</strong></p>
-<h3>S103 — Composite Action 파일럿</h3>
+<h3>S103: Composite Action 파일럿</h3>
 <p>github-worker를 파일럿 서비스로 고른 이유는 명확합니다. 5개 Node 서비스 중 가장 단순한 구조(순수 Node.js, NestJS 미사용)라서 패턴 변경의 부작용을 최소 범위에서 검증할 수 있었습니다.</p>
 <pre><code class="language-yaml"># .github/actions/setup-node-service/action.yml
 name: 'Setup Node Service'
@@ -162,7 +162,7 @@ runs:
       working-directory: ${{ inputs.service-path }}</code></pre>
 <p>중요한 설계 결정이 하나 있었습니다: <strong><code>actions/checkout</code>을 composite에 포함하지 않았습니다.</strong> checkout은 각 잡의 공통 첫 단계이고 서비스 경로와 무관하게 항상 동일합니다. composite는 "서비스별 분기점"인 setup-node + cache + install만 추출했습니다.</p>
 <p>이 결정으로 composite의 범용성이 높아졌습니다. 각 잡에서 checkout 방식(예: sparse-checkout)을 자유롭게 선택할 수 있고, composite은 그 결과물(체크아웃된 파일)을 그냥 사용합니다. audit-npm 잡에서는 <code>install-command: 'npm ci --ignore-scripts'</code>를 전달해 보안 스캔 정책을 유지했습니다.</p>
-<h3>S103 — Coverage Gate</h3>
+<h3>S103: Coverage Gate</h3>
 <p>Coverage 측정은 이미 하고 있었지만, 임계치 미달 시 PR을 막지 않았습니다. <code>scripts/check-coverage.mjs</code>를 새로 작성해서 이 공백을 채웠습니다.</p>
 <pre><code class="language-js">// scripts/check-coverage.mjs (핵심 로직 발췌)
 import { readdirSync, readFileSync, existsSync } from 'fs';
@@ -189,7 +189,7 @@ if (!existsSync(coverageDir)) {
 function findLcovFiles(dir) { /* ... */ }</code></pre>
 <p>외부 npm 패키지 없이 직접 작성해 공급망(supply chain) 위험을 없앴습니다. 로직도 단순합니다: 모든 lcov.info를 재귀 탐색 → 줄(LH/LF)과 분기(BRH/BRF)의 '통과 수/전체 수' 합산 → lines AND branches 동시 검증 → 임계치 미달 시 exit 1.</p>
 <p>글로벌 60% 임계치로 시작했습니다. 각 서비스의 줄(lines) 커버리지 기준(Node 97~98%, Python 98%, Frontend 83%)가 이미 60%를 크게 초과하므로, 글로벌 60%는 "새 서비스 추가 시 바닥 방어"용이었습니다.</p>
-<h3>S104 — 전 서비스 확산</h3>
+<h3>S104: 전 서비스 확산</h3>
 <p>확산은 단순했습니다. <code>matrix.service != 'github-worker'</code> 조건을 제거하고 전 서비스가 composite를 경유하도록 했습니다.</p>
 <pre><code class="language-yaml"># ci.yml (확산 후 — 이 패턴이 quality-nestjs / audit-npm / test-node 3개 잡에 모두 적용)
 - name: Setup Node service
@@ -200,7 +200,7 @@ function findLcovFiles(dir) { /* ... */ }</code></pre>
     # install-command: 'npm ci --ignore-scripts'</code></pre>
 <p>inline 3스텝(Setup Node + Cache + Install) × 3잡 = <strong>ci.yml 67줄 삭제</strong>, 약 25% 압축. 성능 측정보다 먼저 체감할 수 있는 유지보수성 개선이었습니다.</p>
 <leo-callout type="warn" title="함정: 인프라 PR은 자기 자신의 실측을 만들지 못한다"><p>파일럿 PR과 확산 PR은 둘 다 <code>.github/workflows/ci.yml</code>만 수정했습니다. 바뀐 파일 경로로 실행할 잡을 고르는 <code>detect-changes</code>(path-filter)가 <code>services/github-worker/**</code> 변경을 보지 못해 서비스 잡이 전부 skip됐습니다. composite action을 넣었지만 그 action이 실제로 실행된 런이 없었습니다. 변경 후(Post) 측정 표본 0건, 실측 불가. 이 공백은 다음 스프린트로 넘어갔습니다.</p></leo-callout>
-<h2>S105 — 측정 규칙과 commitlint 자동화</h2>
+<h2>S105: 측정 규칙과 commitlint 자동화</h2>
 <p>S105는 4스프린트 로드맵의 <strong>마감 스프린트</strong>였습니다. 세 가지 과제를 묶었습니다.</p>
 <h3>[A] rebuild_all 운영 규칙</h3>
 <p>앞의 함정(CI를 고친 PR은 자기 실측을 만들지 못함)의 해결책은 이미 ci.yml에 있었습니다. 수동 실행 때 전체 서비스를 강제로 다시 빌드하는 옵션 <code>workflow_dispatch.inputs.rebuild_all=true</code>입니다. 파일럿 때부터 있었지만 언제, 누가, 어떻게 쓰는지 규칙이 없었습니다.</p>
@@ -208,12 +208,12 @@ function findLcovFiles(dir) { /* ... */ }</code></pre>
 <p>발동 조건 3개를 명문화했습니다:</p>
 <ol><li><code>.github/workflows/*.yml</code> 단독 변경 PR</li><li><code>.github/actions/**</code> composite 변경 PR</li><li><code>scripts/check-coverage.mjs</code> 등 CI 공통 스크립트 변경 PR</li></ol>
 <p>런북이 의미 있으려면 작성 직후 리허설이 필요합니다. [A] 런북은 머지 2시간 내에 [B] 실측에서 실제로 사용됐습니다.</p>
-<h3>[B] github-worker 실측 — 사전 검토로 N=1</h3>
+<h3>[B] github-worker 실측: 사전 검토로 N=1</h3>
 <p>먼저 실측을 어떻게 할지가 문제였습니다. 원안은 변경 후 표본 5건이었습니다. 실행하기 전에 다른 에이전트에게 이 측정 계획의 통계 검토를 먼저 맡겼습니다. 이 글에서 <strong>사전 검토</strong>라고 부르는 단계입니다. 이후 사전 검토는 늘 이 에이전트(이하 분석 담당)가 맡았습니다.</p>
 <p>아래 답변의 MDE는 검출 가능한 최소 차이, 즉 이 표본으로 "달라졌다"고 말할 수 있는 가장 작은 시간 차이입니다. 분석 담당의 답변 핵심: "Welch-Satterthwaite 공식에서 Pre n=4가 자유도(df)를 4로 고정합니다. Post n을 2→6으로 늘려도 MDE 개선이 0.8s에 불과합니다. 원안 N=5는 오버엔지니어링입니다. N=1로 충분합니다." 쉽게 말해, 변경 전 표본이 4건뿐이라 변경 후 표본을 늘려도 검출력이 거의 오르지 않는다는 뜻입니다.</p>
 <p>CI 실행 시간(runner-minutes) 낭비를 미리 막은 것입니다. 한 PR에 더미 주석을 넣어 <code>detect-changes</code>가 github-worker를 감지하게 했고, 그렇게 생긴 런 2건과 <code>rebuild_all=true</code>로 돌린 런 1건을 합쳐 변경 후 표본 n=3을 확보했습니다.</p>
 <p>결과:</p>
-<table><thead><tr><th>잡</th><th>Before (n=4)</th><th>After (n=3)</th><th>차이</th></tr></thead><tbody><tr><td>Quality — github-worker</td><td>22.2s (σ 5.8s)</td><td>22.3s (σ 2.5s)</td><td>+0.1s (+0.4%)</td></tr><tr><td>Audit — github-worker</td><td>19.8s (σ 3.7s)</td><td>18.0s (σ 3.0s)</td><td>-1.8s (-8.9%)</td></tr><tr><td>Test GitHub Worker</td><td>19.2s (σ 1.9s)</td><td>20.0s (σ 1.0s)</td><td>+0.8s (+3.9%)</td></tr></tbody></table>
+<table><thead><tr><th>잡</th><th>Before (n=4)</th><th>After (n=3)</th><th>차이</th></tr></thead><tbody><tr><td><code>Quality — github-worker</code></td><td>22.2s (σ 5.8s)</td><td>22.3s (σ 2.5s)</td><td>+0.1s (+0.4%)</td></tr><tr><td><code>Audit — github-worker</code></td><td>19.8s (σ 3.7s)</td><td>18.0s (σ 3.0s)</td><td>-1.8s (-8.9%)</td></tr><tr><td>Test GitHub Worker</td><td>19.2s (σ 1.9s)</td><td>20.0s (σ 1.0s)</td><td>+0.8s (+3.9%)</td></tr></tbody></table>
 <p>3개 잡 모두 ±10% 실용 임계 이내. Welch t-test 결과 <code>|t_obs| &lt; 0.7</code> (t_crit=2.776). composite action 확산은 github-worker 개별 잡 런타임에 측정 가능한 영향을 미치지 않음이 확인됐습니다.</p>
 <p>사전 검토 덕분에 계획보다 적은 실행으로 결론을 낼 수 있었습니다. "계획 승인 → 즉시 실행"이 항상 최적이 아니라는 것을 처음으로 체감했습니다.</p>
 <h3>[C] commitlint 동적 scope-enum</h3>
@@ -258,10 +258,10 @@ export default {
   },
 };</code></pre>
 <p>이제 <code>services/</code>에 새 디렉토리를 만들면 scope가 자동으로 등록됩니다. 반복됐던 "새 디렉토리 추가 시 scope-enum도 함께 등록하세요" 피드백이 구조적으로 해소됐습니다. <strong>사람 의존 피드백을 시스템 자동화로 승격</strong>한 사례입니다.</p>
-<h2>S106 — "구현 0줄"의 의사결정</h2>
+<h2>S106: "구현 0줄"의 의사결정</h2>
 <p>마지막 스프린트는 그동안 넘어온 세 항목을 처리했습니다. 아래 표에서는 각 과제를 트랙이라 부릅니다. 결과적으로 3 트랙 중 <strong>하나만 실구현</strong>됐고, <strong>둘은 구현 없이 종결</strong>됐습니다.</p>
 <table><thead><tr><th>트랙</th><th>내용</th><th>결과</th></tr></thead><tbody><tr><td>[A] Coverage 70% 상향</td><td>Frontend branches 69.55% → 71%+ 달성 + 글로벌 게이트 70%</td><td>✅ 실구현 (PR 2개)</td></tr><tr><td>[B] L2 캐시 레이어</td><td>Docker 빌드 40% 단축 목표</td><td>❌ 미도입 (사전 검토에서 중단)</td></tr><tr><td>[C] Frontend 빌드 최적화</td><td><code>swcMinify</code> · <code>optimizePackageImports</code> · <code>sourceMaps</code> 3개</td><td>❌ 미도입 (사전 검토에서 중단)</td></tr></tbody></table>
-<h3>[A] Coverage 70% — 병목은 Frontend branches 단독</h3>
+<h3>[A] Coverage 70%: 병목은 Frontend branches 단독</h3>
 <p>글로벌 coverage-gate를 60%에서 70%로 올리려면 먼저 병목을 찾아야 했습니다. 전 서비스 weighted 집계 branches는 약 82%로 이미 70%를 초과하고 있었습니다. 그런데 왜 70% 게이트를 올리지 못하고 있었을까요?</p>
 <p>사전 검토에서 구조적 이유가 드러났습니다. <code>check-coverage.mjs</code>는 path-filter로 감지된 서비스의 lcov.info만 집계합니다. <strong>frontend-only PR에서는 frontend 단독 branches만 집계</strong>됩니다. 그리고 frontend branches는 69.55%였습니다.</p>
 <p>"전 서비스 통합 branches = 82%, 글로벌 게이트 70% → 통과"라는 직관이 틀립니다. frontend-only PR을 내면 69.55%만 집계되어 70% 게이트에서 막힙니다. path-filter 기반 CI 설계에서 coverage-gate는 "어떤 lcov 셋으로 동작하는가"를 PR 범위별로 명시해야 합니다.</p>
@@ -275,7 +275,7 @@ export default {
   <leo-metric value="76.42" unit="%" note="목표 71% 대비 +5.42pp 초과 달성" label="Frontend branches (After)"></leo-metric>
 </leo-metrics>
 <p>그리고 별도의 게이트 PR에서 <code>ci.yml</code>의 coverage threshold를 <code>60 → 70</code>으로 바꿨습니다. 여기서는 순서가 중요했습니다. <strong>테스트 PR이 CI를 통과해 먼저 머지된 뒤에만</strong> 게이트 PR을 머지해야 합니다. 게이트 PR을 먼저 머지하면 그 즉시 frontend-only PR이 coverage-gate에서 막힙니다. 분석 담당의 이 경고를 게이트 PR 본문에 적어 순서를 강제했습니다.</p>
-<h3>[B] L2 캐시 — Docker buildkit이 이미 L2였다</h3>
+<h3>[B] L2 캐시: Docker buildkit이 이미 L2였다</h3>
 <p>계획은 빌드 결과물을 GHA 캐시에 한 번 더 저장하는 추가 캐시 층(L2 캐시)을 두는 것이었습니다. 이번에도 구현 전에 분석 담당에게 먼저 물었습니다.</p>
 <p>분석 담당의 발견은 충격적이었습니다. <code>docker/build-push-action</code>에 이미 <code>--cache-from=type=gha,mode=max</code>가 설정되어 있고, <code>mode=max</code>는 빌더 스테이지의 <strong>모든 중간 레이어</strong>를 GHA cache에 저장합니다.</p>
 <pre><code># NestJS 빌드 레이어 — mode=max 캐시 커버 범위
@@ -288,7 +288,7 @@ Layer 5: RUN npm run build   ← dist/ 생성       → Layer 4 MISS 시 재실�
 <p>추가 발견도 있었습니다. <code>ci.yml</code>에 <code>Frontend .next/cache</code> GHA 캐시 단계가 이미 있었는데, 이것도 동작하지 않던 코드였습니다. <code>build-frontend</code> 잡은 host-side <code>npm run build</code> 없이 Docker 빌드만 하기 때문에, <code>.next/cache</code>가 host filesystem에 생성되지 않습니다. restore해도 save할 게 없고, save해도 빈 디렉토리만 저장되는 구조였습니다. Docker 전용 파이프라인 전환 이전 유산이었습니다.</p>
 <p>더 근본적인 발견: <strong>전 빌드 잡에서 host filesystem에서 <code>npm run build</code>를 실행하는 잡이 단 하나도 없었습니다.</strong> 모든 TypeScript/Next.js 컴파일은 Docker 컨테이너 내부에서만 발생합니다. GHA 파일시스템 캐시는 host filesystem에만 적용되므로, 현 Docker 전용 아키텍처에서는 활용 경로 자체가 없었습니다.</p>
 <p>결론: L2 캐시 도입 중단. 코드 변경 없음. 동작하지 않던 단계는 별도 PR로 제거.</p>
-<h3>[C] Frontend 최적화 — 세 항목 모두 "이미 처리됨"</h3>
+<h3>[C] Frontend 최적화: 세 항목 모두 "이미 처리됨"</h3>
 <p>세 가지 Next.js 최적화 옵션을 적용하려 했습니다. [C]에는 빌드 단계 시간을 기록하는 작업도 있었지만, 빌드가 모두 Docker 안에서만 돌아 따로 잴 대상이 없었습니다. 분석 담당이 <code>node_modules/</code>를 직접 확인한 결과:</p>
 <table><thead><tr><th>항목</th><th>계획</th><th>실측 결과</th><th>판정</th></tr></thead><tbody><tr><td><code>swcMinify: true</code></td><td>명시 설정</td><td>Next.js 15.5.15 <code>config-schema.js</code>에서 완전 제거 (<code>z.strictObject</code> 위반)</td><td><strong>HARD BLOCK</strong></td></tr><tr><td><code>optimizePackageImports</code></td><td><code>@radix-ui/react-*</code>, <code>lucide-react</code> 추가</td><td>와일드카드 미지원 + <code>lucide-react</code> 기본 포함 목록에 이미 존재</td><td><strong>제외</strong></td></tr><tr><td><code>productionBrowserSourceMaps: false</code></td><td>명시 설정</td><td><code>config-schema.js</code>에서 기본값이 이미 <code>false</code></td><td><strong>제외</strong></td></tr></tbody></table>
 <p><code>swcMinify</code>는 Next.js 14.x 기준으로 플랜을 작성할 때는 유효한 옵션이었습니다. 그러나 15.5.15에서 config 스키마에서 완전 제거됐고, <code>z.strictObject()</code> 검증 때문에 추가하면 빌드가 깨집니다. 플랜 수립 후 라이브러리 버전이 올라간 경우, 공식 문서만으로는 부족합니다. <code>node_modules/</code> 소스 레벨 직접 실측이 정확도 보증의 유일한 방법입니다.</p>
@@ -308,20 +308,20 @@ Layer 5: RUN npm run build   ← dist/ 생성       → Layer 4 MISS 시 재실�
 <h3>(iii) 인프라 PR은 자기 자신의 실측을 만들지 못한다</h3>
 <p>composite action 파일럿과 확산에서 빠진 함정입니다. CI 파이프라인을 수정하는 PR은 그 파이프라인의 실측 데이터를 만들지 못합니다. path-filter가 서비스 코드 변경을 감지하지 못하면 서비스 잡 전체가 skip됩니다.</p>
 <p>이 구조적 공백의 해결책은 <code>rebuild_all=true workflow_dispatch</code>였습니다. 이것을 써야 하는 조건을 문서로 정한 것이 S105 [A]의 핵심이었습니다. 코드 변경 없이 런북 하나로 두 스프린트 동안 쌓인 측정 공백을 메웠습니다.</p>
-<h3>(iv) 사전 검토는 "구현 필요성 게이트"다 — 구현 0줄도 결론이 된다</h3>
+<h3>(iv) 사전 검토는 "구현 필요성 게이트"다. 구현 0줄도 결론이 된다</h3>
 <leo-callout type="tip" title="마지막 스프린트의 진짜 성과"><p>3 트랙 중 2개가 "구현 0줄"로 끝났습니다. 이것은 실패가 아닙니다. 두 번의 사전 검토가 잘못된 방향에 들어서기 전에 멈추게 해 줬습니다. L2 캐시 도입을 시도했다면 composite action + 파일럿 + 전 서비스 확산 + 실측의 과정을 거쳤을 것입니다. 그 모든 과정이 불필요했음을 사전에 확인한 것 자체가 투자 대비 최대 수익입니다.</p></leo-callout>
 <h2>끝나지 않은 이야기</h2>
 <p>5스프린트가 끝났지만, 한 가지 구조적 제약이 해소되지 않았습니다. <strong>알고수의 모든 빌드 잡은 Docker 전용</strong>입니다. host-side에서 <code>npm run build</code>를 실행하는 잡이 단 하나도 없습니다.</p>
 <p>이 제약이 마지막 스프린트에서 L2 캐시([B])와 빌드 타이밍 측정([C])을 함께 막았습니다. 두 항목이 같은 근본 원인에서 나왔다는 발견이 다음 방향을 정하는 핵심 단서입니다.</p>
 <p>앞으로의 길:</p>
-<table><thead><tr><th>방안</th><th>설명</th><th>예상 효과</th></tr></thead><tbody><tr><td><strong>Blog host-side SSG 빌드</strong></td><td>CI에서 <code>out/</code> 빌드 on host → GHA cache → Docker는 COPY 전용</td><td>캐시가 없을 때(캐시 미스) 40~60% 단축</td></tr><tr><td><strong>Frontend host-side 빌드</strong></td><td><code>.next/standalone</code> on host → GHA cache → Docker COPY only</td><td>캐시가 없을 때(캐시 미스) 40~60% 단축</td></tr><tr><td><strong>서비스별 독립 coverage 게이트</strong></td><td><code>check-coverage.mjs</code> per-service threshold — path-filter 오해 구조 해소</td><td>가시성 향상</td></tr></tbody></table>
+<table><thead><tr><th>방안</th><th>설명</th><th>예상 효과</th></tr></thead><tbody><tr><td><strong>Blog host-side SSG 빌드</strong></td><td>CI에서 <code>out/</code> 빌드 on host → GHA cache → Docker는 COPY 전용</td><td>캐시가 없을 때(캐시 미스) 40~60% 단축</td></tr><tr><td><strong>Frontend host-side 빌드</strong></td><td><code>.next/standalone</code> on host → GHA cache → Docker COPY only</td><td>캐시가 없을 때(캐시 미스) 40~60% 단축</td></tr><tr><td><strong>서비스별 독립 coverage 게이트</strong></td><td><code>check-coverage.mjs</code> per-service threshold, path-filter 오해 구조 해소</td><td>가시성 향상</td></tr></tbody></table>
 <p>host-side 빌드 전환은 단순 최적화 PR이 아닙니다. Dockerfile과 ci.yml 양쪽을 동시에 수정해야 하는 아키텍처 의사결정입니다. 채널톡이 준비 단계를 S3로 분리한 것처럼, 알고수도 빌드 단계를 host-side로 분리하는 방향으로 나아가고 있습니다. 다만 그 결정을 섣불리 하지 않고, 현재 아키텍처의 한계를 먼저 명확히 이해하는 것이 이번 5스프린트의 진짜 기여입니다.</p>
 <p>5스프린트를 정리하면 이렇습니다.</p>
 <leo-metrics>
-  <leo-metric value="30" unit="→ 2" note="S102 — 그룹화 + auto-merge" label="Dependabot PR"></leo-metric>
-  <leo-metric value="-67줄" note="S103~S104 — Composite action" label="CI 중복 코드"></leo-metric>
-  <leo-metric value="69.55" unit="→ 76.42%" note="S106 — 77개 테스트 추가" label="Frontend branches"></leo-metric>
-  <leo-metric value="2" unit="건" note="S106 — 사전 검토로 조기 종결" label="미구현 결정"></leo-metric>
+  <leo-metric value="30" unit="→ 2" note="S102: 그룹화 + auto-merge" label="Dependabot PR"></leo-metric>
+  <leo-metric value="-67줄" note="S103~S104: Composite action" label="CI 중복 코드"></leo-metric>
+  <leo-metric value="69.55" unit="→ 76.42%" note="S106: 77개 테스트 추가" label="Frontend branches"></leo-metric>
+  <leo-metric value="2" unit="건" note="S106: 사전 검토로 조기 종결" label="미구현 결정"></leo-metric>
 </leo-metrics>
 <p>채널톡의 <a href="https://channel.io/ko/team/blog/articles/backend-ci-refactoring-73fca77d">「Backend CI Refactoring」</a> 글을 다시 읽어보면, 그 글이 정답을 알려준 게 아니라 <strong>질문을 던진 것</strong>이었습니다. "알고수 파이프라인에서는 무엇을 고칠 수 있지?" 그 질문을 알고수 맥락으로 옮겨 걸어 본 길이 이 다섯 스프린트였습니다.</p>
 <p>레퍼런스는 방향을 가리켰고, 나머지는 직접 걸었습니다.</p>

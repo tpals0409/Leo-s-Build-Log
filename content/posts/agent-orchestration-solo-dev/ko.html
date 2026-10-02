@@ -86,7 +86,7 @@ blockquote p{margin:0}
 <leo-callout type="tip" title="에이전트가 사고를 막은 순간"><p>Librarian의 Expand-Contract 규칙이 단순 rename을 3단계 배포로 바꿔 놓았습니다. 번거롭지만, 운영 중 다운타임은 0이었습니다. 혼자였다면 절대 이 과정을 밟지 않았을 겁니다.</p></leo-callout>
 <h3>보안 담당이 잡아낸 보안 잔재</h3>
 <p>인증 로직을 리팩터링하면서, 토큰을 브라우저 localStorage에 저장하는 코드가 남아 있었습니다. 자바스크립트로 읽을 수 없는 httpOnly 쿠키로 바꾼 뒤에도, 옛 방식의 흔적이 곳곳에 숨어 있었죠. 인증·보안 담당 Gatekeeper의 규칙이 이를 잡아냈습니다.</p>
-<blockquote><p>SSE 인증: <code>EventSource(url, { withCredentials: true })</code> — httpOnly Cookie 환경에서 localStorage 토큰 사용 불가.<br>민감 정보 절대 금지: JWT 원문, X-Internal-Key, OAuth 토큰.</p></blockquote>
+<blockquote><p>SSE 인증: <code>EventSource(url, { withCredentials: true })</code>. httpOnly Cookie 환경에서 localStorage 토큰 사용 불가.<br>민감 정보 절대 금지: JWT 원문, X-Internal-Key, OAuth 토큰.</p></blockquote>
 <p>(X-Internal-Key는 서비스끼리만 쓰는 내부 인증 키입니다.) 이 규칙 때문에 localStorage에서 토큰을 읽던 코드가 위반으로 걸렸습니다.</p>
 <p>사람이라면 "예전에 고쳤으니 됐겠지" 하고 넘어갈 수 있는 부분입니다. 에이전트는 매번 전체를 검사합니다.</p>
 <h3>맥락이 사라지지 않는다는 것</h3>

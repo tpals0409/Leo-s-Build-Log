@@ -11,11 +11,11 @@
   "publishedAt": "2026-05-22",
   "thumbnail": "thumbnail.webp",
   "ko": {
-    "title": "AI는 읽는데 나는 읽지 않는 문서 — 결정 기록을 HTML로 보여주기",
+    "title": "AI만 읽던 결정 기록을 HTML로 보여주기",
     "summary": "AI 에이전트가 읽는 Markdown 결정 기록(ADR)과 사람이 읽는 HTML 버전을 나누면서 배운 것."
   },
   "en": {
-    "title": "Documents the AI Reads but I Don’t — Showing Decision Records as HTML",
+    "title": "Showing Decision Records Only the AI Read as HTML",
     "summary": "What I learned by splitting decision records (ADRs) into Markdown for AI agents and HTML for people."
   }
 }

@@ -15,7 +15,7 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<p>When you add code, the result is visible. A component appears on screen, tests pass, the build succeeds — you know it worked.</p>
+<p>When you add code, the result is visible. A component appears on screen, tests pass, the build succeeds, and you know it worked.</p>
 <p>Deletion is different. You remove a file, run <code>tsc --noEmit</code> (the type check) and fix the errors. The build succeeds. The PR merges. Only when you close out the sprint do you find out CI was broken. A script at the repository root was referencing the file you deleted, and you only ran grep inside a subfolder, so you never saw it.</p>
 <p>I removed blog features from AlgoSu twice. AlgoSu has run through hundreds of sprints (short work cycles), and both removals happened shortly after the 190th:</p>
 <ul><li><strong>The ADR relationship graph:</strong> a diagram (drawn with mermaid) showing how decision records link to each other, with its own graph page plus a small graph beside each record's detail page. Built in the 189th sprint, removed in the 193rd.</li><li><strong>ADR search:</strong> a search box in the blog header for finding decision records by title or content. It built a search index file (<code>search-index.json</code>) at build time and searched it in the browser. Built in the 157th sprint, removed in the 201st.</li></ul>
@@ -23,14 +23,14 @@ blockquote p{margin:0}
 <leo-adr>
   <leo-problem><p>Every deletion carries unknown consequences. Is there a method for removing features safely?</p></leo-problem>
   <leo-decision><p>Safe deletion is three steps: classify with grep before starting, remove dead fields along with the feature, and search the whole repository for hidden connections.</p></leo-decision>
-  <leo-result><p>Deleting the graph followed all three principles — clean result. Deleting search broke the third — main broke. The difference between the two cases shows what the principles are worth.</p></leo-result>
+  <leo-result><p>Deleting the graph followed all three principles, with a clean result. Deleting search broke the third, and main broke. The difference between the two cases shows what the principles are worth.</p></leo-result>
 </leo-adr>
-<h2>Principle 1: Grep Before You Delete — Owned vs. Shared</h2>
+<h2>Principle 1: Grep Before You Delete (Owned vs. Shared)</h2>
 <p>The first thing to do before deleting a feature is to <strong>use grep to separate what only that feature uses from what other parts of the code also use</strong>. Get that wrong, and the deletion quietly breaks something next to it.</p>
-<p>Before removing search, I started by sorting the i18n keys — the names the UI uses to look up its Korean and English text — with grep:</p>
+<p>Before removing search, I started by sorting the i18n keys (the names the UI uses to look up its Korean and English text) with grep:</p>
 <leo-compare>
-  <leo-side label="Search-only (safe to delete)"><p><code>searchPlaceholder</code>, <code>searchEmpty</code>, and so on — used only by the search box component (<code>SearchBox</code>)</p></leo-side>
-  <leo-side label="Shared (must keep)"><p><code>kindPermanent</code>, <code>metaSprint</code>, and so on — also used by the ADR cards, category tabs, sprint timeline, and sidebar</p></leo-side>
+  <leo-side label="Search-only (safe to delete)"><p><code>searchPlaceholder</code>, <code>searchEmpty</code>, and so on. Used only by the search box component (<code>SearchBox</code>)</p></leo-side>
+  <leo-side label="Shared (must keep)"><p><code>kindPermanent</code>, <code>metaSprint</code>, and so on. Also used by the ADR cards, category tabs, sprint timeline, and sidebar</p></leo-side>
 </leo-compare>
 <p>Functions were the same. Functions like <code>toSearchDoc</code>, which builds documents for the search index, and the <code>SearchDoc</code> type were search-only, so they went. But functions like <code>buildUrl</code> and <code>groupByKind</code> were still used to render ADR pages, so they stayed.</p>
 <p>Removing the graph followed the same pattern. Graph-building functions such as <code>buildGraph</code> and <code>getSubgraph</code> were graph-only, so they were removed. But the CSS tokens for the graph's background and grid (<code>--diagram-bg</code>, <code>--grid</code>) could also be used by diagrams in blog posts and did no harm left in place, so they stayed. The "Related ADR" text links in the sidebar (<code>RelatedLinks</code>) were a component completely separate from the graph, so they were left alone.</p>
@@ -47,7 +47,7 @@ blockquote p{margin:0}
 <p>The PR merged.</p>
 <p>And <code>main</code> was broken.</p>
 <p><code>scripts/check-adr-links.mjs</code>, at the repository root, is a script that checks the ADR blog for broken links. It turned out it also checked that <code>search-index.json</code> existed in the build output. Since the index file was no longer generated, the check failed (exit code 2), and the CI job that builds the blog as static pages (Build Blog (SSG)) actually failed.</p>
-<p>And yet the merge went through. GitHub's branch protection lets you mark certain checks as required — "this must pass before anything can merge" — and this job wasn't one of them. So even though it failed, it couldn't block the (squash) merge.</p>
+<p>And yet the merge went through. GitHub's branch protection lets you mark certain checks as required ("this must pass before anything can merge"), and this job wasn't one of them. So even though it failed, it couldn't block the (squash) merge.</p>
 <p>What caught it was the checks run by the sprint stop command, <code>/stop</code>. At the end of each sprint it runs <code>check-adr-links.mjs</code> locally, and that run exposed the failure. I had to open a follow-up PR that removed the index-file check from <code>check-adr-links.mjs</code>, leaving only the link check.</p>
 <p>The lesson: <strong>code that references the file you deleted may live outside the folder where that file lived.</strong> The script that generated <code>search-index.json</code> was in <code>blog/scripts/</code>, but the script that checked for it was in the root <code>scripts/</code>. Limit grep to <code>blog/</code> and that connection is invisible.</p>
 <p>When you delete a feature, grep across the whole repository. A <code>git grep</code> for a name finds every reference, wherever it lives. "It's probably only in this folder" is an assumption, not a check.</p>
@@ -59,7 +59,7 @@ blockquote p{margin:0}
 <p>Later, when I removed search, I followed the second principle (<code>searchDocs</code> removed) but broke the third. grep was limited to <code>blog/</code>, so the file the root check script depended on was invisible. <code>main</code> merged broken, the <code>/stop</code> checks caught it, and a follow-up PR fixed it.</p>
 <p>The contrast between the two cases shows what the principles are for.</p>
 <p>If adding code asks "is this needed?", deleting code asks "where is this used?" Removing a feature means discovering that it was never fully on its own. Follow the dependencies grep turns up, and the boundary appears between code that belongs only to the feature and code tied to something else.</p>
-<p>Cutting precisely along that boundary — that's the art of deletion.</p>
+<p>Cut precisely along that boundary. That's the art of deletion.</p>
 <h2>Three Principles</h2>
 <leo-steps>
   <leo-step title="Grep before you delete"><p>Separate what only the feature uses from what is shared, and leave the shared parts alone.</p></leo-step>

@@ -56,7 +56,7 @@ export const PROFILE = {
       date: '2026.09',
       title: { ko: '신입 개발자 대상 AX 교육 보조강사', en: 'Assistant instructor, AX training for new developers' },
       body: {
-        ko: '약 50명 대상 Claude Code 기반 AI Agent 실습 지원 — 하네스·스킬·훅 실습, AI가 쓴 코드의 신뢰성 질문 응대',
+        ko: '약 50명 대상 Claude Code 기반 AI Agent 실습 지원. 하네스·스킬·훅 실습을 돕고, AI가 쓴 코드의 신뢰성 질문에 답했습니다.',
         en: 'Supported about 50 trainees in hands-on AI agent practice with Claude Code: harness, skills, and hooks, plus questions on how far to trust AI-written code.',
       },
     },

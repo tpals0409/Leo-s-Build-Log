@@ -12,11 +12,11 @@
   "thumbnail": "thumbnail.webp",
   "featured": false,
   "ko": {
-    "title": "PVC를 보존하면 데이터도 안전할까? — 단일 노드 k3s의 복구 한계",
+    "title": "PVC를 보존하면 데이터도 안전할까?",
     "summary": "단일 노드 k3s의 local-path와 local-path-retain을 살펴보며, Pod 재시작·PVC 삭제·노드 손실에 서로 다른 답이 필요하다는 것을 정리했습니다."
   },
   "en": {
-    "title": "If the PVC Is Kept, Is the Data Safe? — Recovery Limits of Single-Node k3s",
+    "title": "If the PVC Is Kept, Is the Data Safe?",
     "summary": "Looking at local-path and local-path-retain on a single-node k3s cluster, I separated three questions: Pod restarts, PVC deletion, and recovery after losing the node."
   }
 }

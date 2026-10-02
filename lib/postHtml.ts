@@ -61,7 +61,7 @@ export async function toShadowHtml(doc: string, locale: Locale): Promise<string>
   // 블로그 스타일 상속 끊기 (iframe처럼 빈 문서에서 시작). 그다음 컴포넌트 스타일, 마지막에 글 스타일(글이 덮어쓸 수 있게).
   // 본문 글꼴은 Pretendard(사용자 지정): 본문 안에서 --font-sans를 바꿔 글 CSS·<leo-*>가 그대로 따라온다.
   // 굵기는 DESIGN.md 원래 값 — Gmarket엔 400·600이 없어 500·700으로 올렸던 것을 Pretendard에선 되돌린다.
-  const reset = '<style>:host{all:initial;display:block;--font-sans:var(--font-post);--fw-display:600;--fw-section:600;--fw-tile:400;--fw-body:400;--fw-body-sm:400;--fw-caption:400}</style>';
+  const reset = '<style>:host{all:initial;display:block;--font-sans:var(--font-post);--fw-display:600;--fw-section:600;--fw-tile:400;--fw-body:400;--fw-body-sm:400;--fw-caption:400}.post-root>:first-child{margin-top:0}</style>'; // 첫 요소의 위 여백은 빼고, 제목 영역과의 간격은 페이지가 정한다
   const out = `<template shadowrootmode="open">${reset}<style>${LEO_CSS}</style>${styleLinks.join('')}${headStyles.join('')}<div class="post-root">${content}</div></template>${fontLinks.join('')}`;
   if (cache.size >= 200) cache.delete(cache.keys().next().value!);
   cache.set(key, out);

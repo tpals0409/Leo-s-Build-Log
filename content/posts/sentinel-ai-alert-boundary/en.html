@@ -22,7 +22,7 @@ blockquote p{margin:0}
   <leo-decision><p>Hermes processes the alert payload, and trusted code revalidates mentions, URLs, and formatting. Notification and repeat policies by severity and state, and the place of the closing one-line summary, are fixed as policy.</p></leo-decision>
   <leo-result><p>The broad question “do we trust AI?” became the concrete question “which parts of its output must code check?” Correct format still does not guarantee correct content.</p></leo-result>
 </leo-adr>
-<h2>An alert explains a situation—and calls for attention</h2>
+<h2>An alert explains a situation and calls for attention</h2>
 <p>The person receiving an operational alert needs to know what happened, whether it is still happening, and what to do now. That is why a payload is turned into something a person can read. A message contains more than an explanation, though. A mention requests someone's attention, and a URL points to the next place to look.</p>
 <p>I did not want to treat all of these as free-form text generation. If freedom to rephrase also meant freedom to change who gets notified or which message rules apply, operational policy would depend on generated output. Before getting a plausible message for each alert, I wanted <strong>the same policy to apply to the same state</strong>.</p>
 <h2>Hermes processes the payload; code owns the final boundary</h2>

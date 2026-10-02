@@ -32,7 +32,7 @@ export default async function PostPage({ params }: Props) {
       <div aria-hidden className="read-progress fixed inset-x-0 top-0 z-20 h-0.5 bg-primary" />
       {/* 썸네일을 살짝 흐리게 깔고 흰 막(60%)을 얹어 그 위에 제목 (사용자 지정 2026-10-02).
           이미지 위 글자는 전부 fg(가장 어두운 썸네일에서도 6:1), 링크는 fg+밑줄 — AGENTS.md '이미지 위 글자' 규칙. 높이는 글자에 맞춤 → 모바일에서도 첫 문단이 첫 화면에 */}
-      <Container className={post.thumbnail ? 'pb-8 pt-8' : 'pb-8 pt-14'}>
+      <Container className={post.thumbnail ? 'pb-14 pt-8' : 'pb-14 pt-14'}>
         <header className={post.thumbnail ? 'relative isolate overflow-hidden rounded-panel px-6 py-14 text-center' : 'text-center'}>
           {post.thumbnail && (
             <>

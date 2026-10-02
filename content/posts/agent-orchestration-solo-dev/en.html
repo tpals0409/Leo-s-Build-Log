@@ -86,7 +86,7 @@ blockquote p{margin:0}
 <leo-callout type="tip" title="The moment an agent prevented an incident"><p>Librarian's Expand-Contract rule turned a simple rename into a 3-phase deployment. Tedious, but zero downtime in production. Without the agent, I never would have followed this process.</p></leo-callout>
 <h3>The Security Leftovers Gatekeeper Caught</h3>
 <p>While refactoring the authentication logic, some code was still storing tokens in the browser's localStorage. Even after switching to httpOnly cookies (which JavaScript can't read), traces of the old approach were hiding all over the codebase. The rules of Gatekeeper, the auth and security agent, caught them.</p>
-<blockquote><p>SSE authentication: <code>EventSource(url, { withCredentials: true })</code> — localStorage tokens cannot be used in an httpOnly Cookie environment.<br>Sensitive data strictly prohibited: raw JWT, X-Internal-Key, OAuth tokens.</p></blockquote>
+<blockquote><p>SSE authentication: <code>EventSource(url, { withCredentials: true })</code>. localStorage tokens cannot be used in an httpOnly Cookie environment.<br>Sensitive data strictly prohibited: raw JWT, X-Internal-Key, OAuth tokens.</p></blockquote>
 <p>(X-Internal-Key is an internal auth key used only between services.) Because of this rule, the code that still read tokens from localStorage was flagged as a violation.</p>
 <p>A person might think "I already fixed that, it's probably fine" and move on. An agent checks everything, every time.</p>
 <h3>Context That Doesn't Disappear</h3>

@@ -12,6 +12,6 @@
   },
   "en": {
     "title": "I Added AI to Incident Alerts and Verified Its Output with Code",
-    "summary": "PinLog's Sentinel uses Hermes to process alert payloads, while trusted code revalidates mentions, URLs, and the final format. Critical, Warning, and RESOLVED policies—and a closing one-line summary—make that division of responsibility concrete."
+    "summary": "PinLog's Sentinel uses Hermes to process alert payloads, while trusted code revalidates mentions, URLs, and the final format. Critical, Warning, and RESOLVED policies, plus a closing one-line summary, make that division of responsibility concrete."
   }
 }

@@ -22,10 +22,10 @@ blockquote p{margin:0}
 <p>At first I also saw this debate as just a question of output format. Markdown or HTML. Conciseness or readability. Token efficiency or user experience.</p>
 <p>But when I thought about AlgoSu's decision records, I realized the same problem was already happening inside my own project.</p>
 <h2>The Decision Records Existed, But I Wasn't Reading Them</h2>
-<p>AlgoSu keeps accumulating decision records (ADRs — Architecture Decision Records, documents that note what was decided and why).</p>
+<p>AlgoSu keeps accumulating decision records (ADRs: Architecture Decision Records, documents that note what was decided and why).</p>
 <p>As I built features, changed structures, ran into failures, and fixed them, I recorded the important decisions as ADRs.</p>
 <p>These documents were never meant for humans alone. If anything, the main goal was to keep the AI agents from losing the project's context, since an agent doesn't remember earlier conversations once a session ends.</p>
-<p>Which decision was made and why, which structure we stopped using, which constraint the next task must respect — this is what agents need when they pick up the next piece of work.</p>
+<p>Which decision was made and why, which structure we stopped using, which constraint the next task must respect: this is what agents need when they pick up the next piece of work.</p>
 <p>So Markdown was a pretty good fit.</p>
 <ul><li>It's text-based, so it's easy to manage in Git.</li><li>The diffs are clean.</li><li>There's little unnecessary decoration for an agent to read.</li><li>It's more token-efficient than HTML.</li><li>It's easy to keep as a structured document.</li></ul>
 <p>But there was a problem. I had almost stopped reading those documents myself.</p>

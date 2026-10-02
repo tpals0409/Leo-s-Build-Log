@@ -4,6 +4,7 @@
   "tags": ["observability", "alerting", "hermes", "ai-agent"],
   "publishedAt": "2026-07-21",
   "published": true,
+  "thumbnail": "thumbnail.webp",
   "featured": false,
   "ko": {
     "title": "장애 알림에 AI를 붙이고, 출력은 코드로 검증했습니다",

@@ -8,6 +8,7 @@
   ],
   "publishedAt": "2026-07-22",
   "published": true,
+  "thumbnail": "thumbnail.webp",
   "featured": false,
   "ko": {
     "title": "서버 운영 AI의 기억과 실제 서버 상태를 구분하기",

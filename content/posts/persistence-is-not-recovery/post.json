@@ -9,6 +9,7 @@
   ],
   "publishedAt": "2026-07-22",
   "published": true,
+  "thumbnail": "thumbnail.webp",
   "featured": false,
   "ko": {
     "title": "PVC를 보존하면 데이터도 안전할까? — 단일 노드 k3s의 복구 한계",

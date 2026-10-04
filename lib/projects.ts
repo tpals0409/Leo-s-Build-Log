@@ -16,7 +16,7 @@ export type ProjectDetail = {
   answers: Item[];
   mine: { intro: T; items: Item[] };
   fixes: Item[];
-  screens: { src: string; video?: string; label: T }[];
+  screens: { src: string; video?: string; label: T; size?: [number, number] }[]; // size: PC 캡처(맥 창 테두리 포함)의 픽셀 크기
   stack: { label: T; value: string }[];
 };
 
@@ -207,14 +207,14 @@ const PINLOG: ProjectDetail = {
     },
   ],
   screens: [
-    { src: `${P}/natural-search-poster.webp`, video: `${P}/natural-search.mp4`, label: { ko: '자연어 검색', en: 'Natural-language search' } },
-    { src: `${P}/search-result-1200.webp`, label: { ko: '검색 결과', en: 'Search results' } },
-    { src: `${P}/add-place-image-poster.webp`, video: `${P}/add-place-image.mp4`, label: { ko: '장소 추가 (사진)', en: 'Add a place (photo)' } },
-    { src: `${P}/add-place-text-poster.webp`, video: `${P}/add-place-text.mp4`, label: { ko: '장소 추가 (검색)', en: 'Add a place (search)' } },
-    { src: `${P}/map-marker-poster.webp`, video: `${P}/map-marker.mp4`, label: { ko: '지도 → 레코드', en: 'Map → record' } },
-    { src: `${P}/record-detail-1200.webp`, label: { ko: '레코드 상세', en: 'Record detail' } },
-    { src: `${P}/feed-poster.webp`, video: `${P}/feed.mp4`, label: { ko: '피드', en: 'Feed' } },
-    { src: `${P}/library-poster.webp`, video: `${P}/library.mp4`, label: { ko: '라이브러리', en: 'Library' } },
+    { src: `${P}/natural-search-mac.webp`, video: `${P}/natural-search-mac.mp4`, label: { ko: '자연어 검색', en: 'Natural-language search' }, size: [960, 574] },
+    { src: `${P}/search-result-mac.webp`, label: { ko: '검색 결과', en: 'Search results' }, size: [1200, 795] },
+    { src: `${P}/add-place-image-mac.webp`, video: `${P}/add-place-image-mac.mp4`, label: { ko: '장소 추가 (사진)', en: 'Add a place (photo)' }, size: [960, 636] },
+    { src: `${P}/add-place-text-mac.webp`, video: `${P}/add-place-text-mac.mp4`, label: { ko: '장소 추가 (검색)', en: 'Add a place (search)' }, size: [960, 574] },
+    { src: `${P}/map-marker-mac.webp`, video: `${P}/map-marker-mac.mp4`, label: { ko: '지도 → 레코드', en: 'Map → record' }, size: [960, 636] },
+    { src: `${P}/record-detail-mac.webp`, label: { ko: '레코드 상세', en: 'Record detail' }, size: [1200, 795] },
+    { src: `${P}/feed-mac.webp`, video: `${P}/feed-mac.mp4`, label: { ko: '피드', en: 'Feed' }, size: [960, 574] },
+    { src: `${P}/library-mac.webp`, video: `${P}/library-mac.mp4`, label: { ko: '라이브러리', en: 'Library' }, size: [960, 574] },
   ],
   stack: [
     { label: { ko: '인프라', en: 'Infra' }, value: 'k3s · Helm · Argo CD · GitHub Actions · Cloudflare · Traefik' },

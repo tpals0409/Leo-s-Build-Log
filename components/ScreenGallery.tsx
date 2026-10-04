@@ -3,7 +3,7 @@ import { useRef, useState } from 'react';
 import { DICT, type Locale } from '@/lib/i18n';
 import LoopVideo from './LoopVideo';
 
-type Screen = { src: string; video?: string; label: string };
+type Screen = { src: string; video?: string; label: string; size?: [number, number] };
 export type Device = 'phone' | 'desktop';
 
 const SWIPE = 40; // 이만큼(px) 가로로 끌면 다음/이전 화면 (FeaturedHero와 같음)
@@ -67,22 +67,30 @@ export default function ScreenGallery({ screens, locale, device = 'phone' }: { s
   );
 }
 
-// 캡처 한 장. 크게 볼 때는 닫기·아래 줄을 뺀 남는 공간에 맞춘다(휴대폰은 높이, PC 화면은 폭 기준). 움직이는 화면은 LoopVideo.
-// PC 캡처는 1200×753(16:10)이 대부분이고 16:9 녹화는 같은 칸 안에 맞춰 넣는다(object-contain).
-const SIZE = {
-  phone: { w: 352, h: 692, small: 'aspect-[352/692] w-full', big: 'aspect-[352/692] h-full w-auto max-w-full' },
-  desktop: { w: 1200, h: 753, small: 'aspect-[1200/753] w-full object-contain', big: 'aspect-[1200/753] max-h-full w-full max-w-6xl object-contain' },
-};
-// 휴대폰 녹화: mp4엔 투명도가 없어 원본 GIF의 투명한 바깥(모서리·그림자)이 흰색으로 남는다 → 휴대폰 테두리에 맞춰 잘라 낸다.
-// FINCH 원본 340×668 실측: 테두리 위 8·오른쪽 20·아래 25·왼쪽 19px, 모서리 반지름 31px. 다른 휴대폰 캡처를 넣으면 다시 잴 것
-const FRAME = 'inset(1.2% 5.9% 3.7% 5.6% round 9.1% / 4.6%)';
+// 캡처 한 장. 움직이는 화면은 LoopVideo.
+// 휴대폰(FINCH): 세로 352×692. 크게 볼 때는 닫기·아래 줄을 뺀 남는 높이에 맞춘다.
+// PC(PinLog): 맥 창 테두리를 입힌 캡처라 장마다 비율이 조금 다르다(16:10·16:9 + 제목 줄) → 목록에선 같은 칸(1200×795) 가운데에, 크게 볼 땐 폭과 남는 높이 중 작은 쪽에 맞춘다.
+const PHONE = { small: 'aspect-[352/692] w-full', big: 'aspect-[352/692] h-full w-auto max-w-full' };
+const CHROME = 'calc(100dvh - 10rem)'; // 크게 볼 때 닫기·아래 줄·여백을 뺀 높이
+// mp4엔 투명도가 없어 원본의 투명한 바깥(휴대폰 모서리·그림자, 맥 창 둥근 모서리)이 채워져 보인다 → 테두리 모양대로 잘라 낸다.
+// 휴대폰: FINCH 원본 340×668 실측 — 테두리 위 8·오른쪽 20·아래 25·왼쪽 19px, 모서리 반지름 31px. 다른 휴대폰 캡처를 넣으면 다시 잴 것
+const PHONE_FRAME = 'inset(1.2% 5.9% 3.7% 5.6% round 9.1% / 4.6%)';
+// 맥 창: 모서리 반지름 = 폭 × 0.0115 (테두리를 만든 스크립트와 같은 값)
+const macFrame = ([w, h]: [number, number]) => { const r = Math.round(w * 0.0115); return `inset(0 round ${(r / w) * 100}% / ${(r / h) * 100}%)`; };
 
 function Media({ s, device, big }: { s: Screen; device: Device; big?: boolean }) {
-  const z = SIZE[device];
-  const c = big ? z.big : z.small;
-  return s.video
-    ? <LoopVideo key={s.src} src={s.video} poster={s.src} label={s.label} className={c} style={device === 'phone' ? { clipPath: FRAME } : undefined} />
-    : <img src={s.src} alt={s.label} width={z.w} height={z.h} loading={big ? 'eager' : 'lazy'} decoding="async" className={c} />;
+  if (device === 'phone') {
+    const c = big ? PHONE.big : PHONE.small;
+    return s.video
+      ? <LoopVideo key={s.src} src={s.video} poster={s.src} label={s.label} className={c} style={{ clipPath: PHONE_FRAME }} />
+      : <img src={s.src} alt={s.label} width={352} height={692} loading={big ? 'eager' : 'lazy'} decoding="async" className={c} />;
+  }
+  const [w, h] = s.size ?? [1200, 795];
+  const style = { aspectRatio: `${w} / ${h}`, width: big ? `min(100%, calc(${CHROME} * ${w / h}))` : '100%' };
+  const m = s.video
+    ? <LoopVideo key={s.src} src={s.video} poster={s.src} label={s.label} style={{ ...style, clipPath: macFrame([w, h]) }} />
+    : <img src={s.src} alt={s.label} width={w} height={h} loading={big ? 'eager' : 'lazy'} decoding="async" style={style} />;
+  return big ? m : <div className="flex aspect-[1200/795] w-full items-center justify-center">{m}</div>;
 }
 
 function Icon({ d, className = '' }: { d: string; className?: string }) {

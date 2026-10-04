@@ -48,23 +48,14 @@ export default async function ProjectPage({ params }: Props) {
   );
 }
 
-// 케이스 스터디: 소개 페이지와 같은 칸(왼쪽 제목 + 오른쪽 내용). 팀이 한 것(어떻게 풀었나)과 내 몫(내가 맡은 일)을 칸으로 나눈다.
+// 케이스 스터디: 소개 페이지와 같은 칸(왼쪽 제목 + 오른쪽 내용). 팀이 한 것(어떻게 풀었나)과 내 몫(내가 맡은 일·운영하며 고친 것)을 칸으로 나눈다.
+// 처음 보는 사람이 앱 모습부터 보도록 화면을 개요 바로 다음에. 항목은 쉬운 말이 먼저, 기술 세부(tech)는 그 아래 작게.
 function CaseStudy({ d, locale }: { d: ProjectDetail; locale: Locale }) {
   const t = DICT[locale].projects;
   return (
     <div className="mb-16 flex flex-col gap-10">
       <Section title={t.overview}>
         <Facts rows={d.facts.map((f) => [f.label[locale], f.value[locale]])} />
-      </Section>
-      <Section title={t.problem}>
-        <p className="t-body text-secondary">{d.problem[locale]}</p>
-      </Section>
-      <Section title={t.answers}>
-        <Numbered items={d.answers} locale={locale} />
-      </Section>
-      <Section title={t.mine}>
-        <p className="mb-6 t-body">{d.mine.intro[locale]}</p>
-        <Numbered items={d.mine.items} locale={locale} />
       </Section>
       {/* 화면만 제목을 위로: 휴대폰 화면 8장이 본문 폭 전체를 쓴다(넓으면 4열, 좁으면 2열). 캡처에 휴대폰 테두리가 있어 상자로 감싸지 않음 */}
       <section className="flex flex-col gap-6 border-t border-line pt-8">
@@ -80,6 +71,19 @@ function CaseStudy({ d, locale }: { d: ProjectDetail; locale: Locale }) {
           ))}
         </ul>
       </section>
+      <Section title={t.problem}>
+        <p className="t-body text-secondary">{d.problem[locale]}</p>
+      </Section>
+      <Section title={t.answers}>
+        <Numbered items={d.answers} locale={locale} />
+      </Section>
+      <Section title={t.mine}>
+        <p className="mb-6 t-body">{d.mine.intro[locale]}</p>
+        <Numbered items={d.mine.items} locale={locale} />
+      </Section>
+      <Section title={t.fixes}>
+        <Numbered items={d.fixes} locale={locale} />
+      </Section>
       <Section title={t.stack}>
         <Facts rows={d.stack.map((s) => [s.label[locale], s.value])} />
       </Section>
@@ -101,7 +105,7 @@ function Facts({ rows }: { rows: [string, string][] }) {
   );
 }
 
-// 소개 페이지 'AI와 일하는 방식'과 같은 번호 목록
+// 소개 페이지 'AI와 일하는 방식'과 같은 번호 목록 (+ 기술 세부 한 줄)
 function Numbered({ items, locale }: { items: ProjectDetail['answers']; locale: Locale }) {
   return (
     <ol className="flex flex-col gap-5">
@@ -111,6 +115,7 @@ function Numbered({ items, locale }: { items: ProjectDetail['answers']; locale: 
           <div className="flex flex-col gap-1.5">
             <strong className="t-body">{w.title[locale]}</strong>
             <span className="t-body-sm text-secondary">{w.body[locale]}</span>
+            {w.tech && <span className="t-caption text-muted">{w.tech[locale]}</span>}
           </div>
         </li>
       ))}

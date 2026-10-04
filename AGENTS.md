@@ -19,6 +19,8 @@ Next.js 16 (App Router) + PostgreSQL + Tailwind v4, Podman으로 자체 호스�
 - **홈:** 대표 글 슬라이드(`post.json`의 `featured: true` 글 중 최신 5편, 5초마다 자동 전환 — 2026-10-02) → 최신 글 3개(3열, 대표 글 제외) → 프로젝트 카드 4개(4열).
   대표 글은 카테고리로 자동 선택하지 않고 직접 고른다(지금은 회고 중심).
 - **프로젝트:** AlgoSu, FINCH, Janus, PinLog. 프로젝트별 페이지에 소개와 관련 글 목록. 글은 프로젝트에 연결될 수 있다.
+  `lib/projects.ts`에 `detail`이 있으면 케이스 스터디(개요 → 문제 → 어떻게 풀었나 → 내가 맡은 일 → 화면 → 기술)를 그린다(2026-10-04, 지금은 FINCH만).
+  팀이 한 것과 내 몫을 칸으로 나눈다. 자료는 프로젝트 저장소 README에서 가져오되 배지·mermaid는 옮기지 않는다(강조색 하나·상자 금지). 이미지는 `public/projects/<slug>/`(webp, 움짤은 mp4).
 - **연락:** 소개 페이지에만. 푸터는 두지 않는다(2026-10-01 삭제). 메뉴 항목으로도 두지 않는다.
 - **챗봇(나에 대한 질의응답):** 예정. 위치는 만들 때 정한다. 미리 메뉴 자리를 만들지 않는다.
 
@@ -55,7 +57,7 @@ DESIGN.md보다 우선하는 사용자 지정은 넷뿐: **레오 팔레트**(�
   새로 누를 수 있는 것을 만들면 이 중 하나를 붙인다. 글 본문(Shadow DOM) 안은 `lib/leo/style.ts`에 같은 값으로 있다(본문 링크·코드 복사 버튼).
 - **등장 움직임도 정해진 셋만** (사용자 지정, 2026-10-01): `reveal`(카드 — `ui/Reveal`로 감싸면 화면 아래쪽 것만 스크롤 시 떠오름) ·
   `page-enter`(페이지 이동 시, `app/[locale]/template.tsx`) · `read-progress`(글 상단 읽기 진행 막대). 들어오는 것만, 나가는 효과 없음.
-  글 본문·페이지 맨 위 제목에는 등장 효과를 쓰지 않는다. 시간·곡선은 토큰(`--duration-hover|reveal`, `--ease-standard`)만.
+  글 본문·페이지 맨 위 제목에는 등장 효과를 쓰지 않는다. 프로젝트 화면 녹화(`LoopVideo`)는 UI 움직임이 아니라 내용이라 예외 — 보일 때만 소리 없이 반복, 움직임 줄이기면 첫 장면만. 시간·곡선은 토큰(`--duration-hover|reveal`, `--ease-standard`)만.
   움직임 줄이기 설정을 존중하고, 키보드 포커스 표시는 유지.
 - **대표 글 슬라이드** (사용자 지정, 2026-10-02): `slide-fade`(겹친 슬라이드끼리 교차 페이드, `FeaturedHero`). 5초 간격, 마우스·포커스가 있으면 멈춤,
   점·좌우 화살표(넓은 화면만)를 누르거나 가로로 끌면(스와이프·드래그) 자동 전환 끔, 움직임 줄이기 설정이면 자동 전환 안 함. 슬라이드를 한 칸에 겹쳐 높이가 바뀌지 않게 한다.
@@ -111,7 +113,7 @@ DESIGN.md보다 우선하는 사용자 지정은 넷뿐: **레오 팔레트**(�
 ### 컴포넌트
 있는 것부터 쓴다. 새로 만들기 전에 `components/ui`, `components`를 확인.
 - `ui/Button`, `ui/ButtonLink` — `variant: primary|outline`, `size: lg(44px)|sm(36px)` · `ui/Arrow`(호버 시 움직이는 →)
-- `ui/Container` `ui/Eyebrow` `ui/SectionHeader` `ui/Thumb` `ui/Reveal`(스크롤 등장)
+- `ui/Container` `ui/Eyebrow` `ui/SectionHeader` `ui/Section`(왼쪽 제목 + 오른쪽 내용 칸, 소개·프로젝트) `ui/Thumb` `ui/Reveal`(스크롤 등장)
 - `Header` `LocaleSwitch` `FeaturedHero` `PostCard(size: md|sm)` `PostGrid(cols: 3|4)` `ProjectCard` `ProjectGrid` `PostBody` `PostEnhancer`(차트 값 툴팁·코드 복사·데모 높이)
 - 도메인 컴포넌트는 `locale` prop을 받아 링크(`/${locale}/…`)와 문구를 만든다.
 

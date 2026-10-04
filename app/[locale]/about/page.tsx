@@ -1,5 +1,6 @@
 import { ButtonLink } from '@/components/ui/Button';
 import Container from '@/components/ui/Container';
+import Section from '@/components/ui/Section';
 import { DICT } from '@/lib/i18n';
 import { localeOf, pageMeta } from '@/lib/page';
 import { PROFILE, SITE } from '@/lib/site';
@@ -12,16 +13,6 @@ type Props = { params: Promise<{ locale: string }> };
 export async function generateMetadata({ params }: Props) {
   const locale = await localeOf(params);
   return pageMeta(locale, '/about', { title: DICT[locale].about.title, description: DICT[locale].about.intro });
-}
-
-// 칸마다 왼쪽 제목 + 오른쪽 내용(좁으면 위아래). 칸 구분은 가는 선과 여백만.
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="flex flex-wrap gap-x-10 gap-y-5 border-t border-line pt-8">
-      <h2 className="w-[220px] shrink-0 t-tile">{title}</h2>
-      <div className="min-w-0 flex-[1_1_480px]">{children}</div>
-    </section>
-  );
 }
 
 // 날짜 + 내용 한 줄 (활동·교육)

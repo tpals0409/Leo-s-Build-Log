@@ -9,6 +9,7 @@ type Item = { title: T; body: T; tech?: T }; // title·body는 쉬운 말, tech�
 // screens: 화면 캡처. video가 있으면 움직이는 화면(mp4, src는 첫 장면 — 움직임 줄이기 설정이면 이것만 보임)
 export type ProjectDetail = {
   banner: string;
+  device: 'phone' | 'desktop'; // 화면 캡처 종류 (ScreenGallery)
   facts: { label: T; value: T }[];
   links: { label: T; href: string }[];
   problem: T;
@@ -27,6 +28,7 @@ const F = '/projects/finch';
 
 const FINCH: ProjectDetail = {
   banner: `${F}/banner-2240.webp`,
+  device: 'phone',
   facts: [
     { label: { ko: '기간', en: 'Period' }, value: { ko: '2026.08 – 2026.09 (6주)', en: 'Aug – Sep 2026 (6 weeks)' } },
     { label: { ko: '팀', en: 'Team' }, value: { ko: '5명 · 프론트엔드 2, 백엔드 1, AI 1, 인프라 1', en: '5 people · 2 frontend, 1 backend, 1 AI, 1 infra' } },
@@ -128,6 +130,101 @@ const FINCH: ProjectDetail = {
   ],
 };
 
+const P = '/projects/pinlog';
+
+// 화면·소개 출처: 팀 저장소(Team-PinLog)와 프론트엔드 담당 팀원의 케이스 스터디. 인프라(본인 몫)는 Team-PinLog/infra README
+const PINLOG: ProjectDetail = {
+  banner: `${P}/home-1200.webp`,
+  device: 'desktop',
+  facts: [
+    { label: { ko: '기간', en: 'Period' }, value: { ko: '2026.07 – 2026.08 (5주)', en: 'Jul – Aug 2026 (5 weeks)' } },
+    { label: { ko: '팀', en: 'Team' }, value: { ko: '6명 · SSAFY 공통 프로젝트', en: '6 people · SSAFY team project' } },
+    { label: { ko: '역할', en: 'Role' }, value: { ko: '인프라 리드', en: 'Infra lead' } },
+  ],
+  links: [
+    { label: { ko: '시연 영상', en: 'Demo video' }, href: 'https://youtu.be/lD5MbHL9TZ8' },
+    { label: { ko: 'GitHub', en: 'GitHub' }, href: 'https://github.com/Team-PinLog/infra' },
+  ],
+  problem: {
+    ko: '장소를 저장해도 이름이 떠오르지 않으면 다시 찾기 어렵고, 저장한 이유와 경험은 남지 않음. 인프라는 클라우드 권한 없이 주어진 서버 한 대 위에서 여러 서비스를 배포·운영해야 했음.',
+    en: 'Saved places are hard to find again once you forget the name, and why you saved them is lost. On the infra side, several services had to be deployed and run on a single given server without cloud API access.',
+  },
+  answers: [
+    {
+      title: { ko: '저장한 맥락을 자연어로 검색', en: 'Natural-language search over your own context' },
+      body: { ko: '장소와 함께 저장한 이유·경험을 기록하고, 장소 이름 대신 문장으로 다시 찾음', en: 'Places are saved with the reason and experience behind them, and found again by a sentence instead of a name.' },
+    },
+    {
+      title: { ko: '익명 컬렉션으로 발견', en: 'Discovery through anonymous collections' },
+      body: { ko: '신원과 맥락 원문을 드러내지 않는 공개 컬렉션에서 다른 사람의 취향을 발견하고, 발견한 장소에 나만의 맥락을 더함', en: 'Public collections that hide identity and original notes let you discover others\' taste, then add your own context to what you find.' },
+    },
+    {
+      title: { ko: '서버 한 대에서 GitOps 배포', en: 'GitOps on a single server' },
+      body: { ko: '모든 서비스를 공용 Helm 차트로 배포하고, Git에 선언한 상태를 Argo CD가 k3s에 반영', en: 'Every service ships through a shared Helm chart, and Argo CD applies the state declared in Git to k3s.' },
+    },
+  ],
+  mine: {
+    intro: {
+      ko: 'k3s 기반 배포·운영 인프라 설계·구축 총괄. 배포 자동화, 자원 분리, 관측, AI 운영 알림, 백업·복구 담당',
+      en: 'Led the design and build of the k3s deployment and operations platform: deploy automation, resource isolation, observability, AI-assisted alerts, and backup and recovery.',
+    },
+    items: [
+      {
+        title: { ko: '검증된 이미지만 배포', en: 'Only verified images ship' },
+        body: { ko: '서비스 CI 성공과 레지스트리 digest를 확인한 뒤 배포 변경 PR 자동 생성, 병합 직전 커밋 재확인. 롤백도 Git revert로 기록', en: 'Deploy PRs are opened only after CI success and the registry digest are verified, the commit is rechecked before merge, and rollbacks are recorded as Git reverts.' },
+        tech: { ko: 'GitHub Actions · private GHCR · full commit SHA + image digest 고정 · Helm · Argo CD ApplicationSet', en: 'GitHub Actions · private GHCR · pinned full commit SHA + image digest · Helm · Argo CD ApplicationSet' },
+      },
+      {
+        title: { ko: '서버 한 대의 자원 분리', en: 'Splitting one server\'s resources' },
+        body: { ko: '개발·운영 영역 분리와 자원 상한, 관측 도구 용량 제한으로 서비스끼리의 자원 경쟁 방지', en: 'Separate dev and prod areas, resource ceilings and capped observability storage keep services from starving each other.' },
+        tech: { ko: 'namespace 분리 · 자원 예산 · NetworkPolicy · Pod Security Admission', en: 'Namespaces · resource budgets · NetworkPolicy · Pod Security Admission' },
+      },
+      {
+        title: { ko: 'AI 운영 알림', en: 'AI-assisted alerts' },
+        body: { ko: '경보와 관련된 메트릭·로그를 제한된 범위에서 조회해 한국어 알림으로 정리. AI가 실패하거나 근거가 부족하면 규칙 기반 알림으로 대체, 클러스터는 자동 변경하지 않음', en: 'Alerts are summarized in Korean from a limited set of related metrics and logs. If the AI fails or evidence is thin, a rule-based alert goes out instead, and nothing in the cluster is changed automatically.' },
+        tech: { ko: 'Alertmanager → Sentinel Receiver(민감정보 제거 · 허용 필드 JSON) → AI API → 출력 검증 → Mattermost', en: 'Alertmanager → Sentinel Receiver (redaction · allow-listed JSON) → AI API → output validation → Mattermost' },
+      },
+      {
+        title: { ko: '관측과 외부 감시', en: 'Observability and external probes' },
+        body: { ko: '메트릭·로그 수집과 대시보드 구성. 서버 전체가 멈춰도 알 수 있도록 외부 HTTPS·TLS 확인 경로를 별도 운영', en: 'Metrics, logs and dashboards, plus a separate external HTTPS/TLS probe so a full server outage is still reported.' },
+        tech: { ko: 'Prometheus · Loki · Alloy · Grafana · GitHub-hosted 외부 probe', en: 'Prometheus · Loki · Alloy · Grafana · GitHub-hosted external probe' },
+      },
+      {
+        title: { ko: '시크릿과 접근 권한', en: 'Secrets and access' },
+        body: { ko: '시크릿은 암호화해 Git에 보관하고, 배포 자동화 토큰은 저장소별 최소 권한으로 분리', en: 'Secrets are encrypted in Git, and deploy automation tokens are scoped per repository with least privilege.' },
+        tech: { ko: 'Sealed Secrets · 최소 권한 토큰 · Cloudflare Tunnel · Traefik', en: 'Sealed Secrets · least-privilege tokens · Cloudflare Tunnel · Traefik' },
+      },
+    ],
+  },
+  fixes: [
+    {
+      title: { ko: '컨테이너 런타임이 CPU를 계속 점유하던 문제', en: 'Container runtime eating CPU' },
+      body: { ko: 'Docker와 cri-dockerd 경로에서 Kubelet의 반복 조회가 CPU를 점유하던 문제를 K3s 내장 containerd로 전환해 해결. DB 백업·설정 보존·롤백 경로를 갖춘 절차로 전환', en: 'Kubelet polling through Docker and cri-dockerd kept the CPU busy; switching to K3s embedded containerd removed that layer, using a procedure with DB backup, preserved config and a rollback path.' },
+    },
+    {
+      title: { ko: '깨진 백업이 최신 복구 지점이 될 수 있던 문제', en: 'A broken backup could become the latest restore point' },
+      body: { ko: 'dump 생성 후 archive를 검사하고, 검증한 파일만 latest.dump로 원자적으로 반영하도록 변경', en: 'Dumps are now checked as archives, and only verified files are atomically promoted to latest.dump.' },
+    },
+  ],
+  screens: [
+    { src: `${P}/natural-search-poster.webp`, video: `${P}/natural-search.mp4`, label: { ko: '자연어 검색', en: 'Natural-language search' } },
+    { src: `${P}/search-result-1200.webp`, label: { ko: '검색 결과', en: 'Search results' } },
+    { src: `${P}/add-place-image-poster.webp`, video: `${P}/add-place-image.mp4`, label: { ko: '장소 추가 (사진)', en: 'Add a place (photo)' } },
+    { src: `${P}/add-place-text-poster.webp`, video: `${P}/add-place-text.mp4`, label: { ko: '장소 추가 (검색)', en: 'Add a place (search)' } },
+    { src: `${P}/map-marker-poster.webp`, video: `${P}/map-marker.mp4`, label: { ko: '지도 → 레코드', en: 'Map → record' } },
+    { src: `${P}/record-detail-1200.webp`, label: { ko: '레코드 상세', en: 'Record detail' } },
+    { src: `${P}/feed-poster.webp`, video: `${P}/feed.mp4`, label: { ko: '피드', en: 'Feed' } },
+    { src: `${P}/library-poster.webp`, video: `${P}/library.mp4`, label: { ko: '라이브러리', en: 'Library' } },
+  ],
+  stack: [
+    { label: { ko: '인프라', en: 'Infra' }, value: 'k3s · Helm · Argo CD · GitHub Actions · Cloudflare · Traefik' },
+    { label: { ko: '관측', en: 'Observability' }, value: 'Prometheus · Loki · Alloy · Grafana · Alertmanager' },
+    { label: { ko: '백엔드', en: 'Backend' }, value: 'Spring Boot · PostgreSQL + pgvector · Redis' },
+    { label: { ko: 'AI', en: 'AI' }, value: 'FastAPI · pgvector' },
+    { label: { ko: '프론트엔드', en: 'Frontend' }, value: 'React 19 · TypeScript · Vite · TanStack Router/Query' },
+  ],
+};
+
 export const PROJECTS: Project[] = [
   { slug: 'algosu', name: { ko: '알고수', en: 'AlgoSu' }, image: null, summary: TBD },
   {
@@ -136,7 +233,11 @@ export const PROJECTS: Project[] = [
     detail: FINCH,
   },
   { slug: 'janus', name: { ko: 'Janus', en: 'Janus' }, image: null, summary: TBD },
-  { slug: 'pinlog', name: { ko: '핀로그', en: 'PinLog' }, image: null, summary: TBD },
+  {
+    slug: 'pinlog', name: { ko: '핀로그', en: 'PinLog' }, image: `${P}/home-1200.webp`,
+    summary: { ko: '장소 이름이 기억나지 않아도 경험과 감정으로 다시 찾는 AI 장소 기록 서비스', en: 'An AI place journal that finds places again by experience and feeling, even when you forget the name' },
+    detail: PINLOG,
+  },
 ];
 
 export const getProject = (slug: string) => PROJECTS.find((p) => p.slug === slug);

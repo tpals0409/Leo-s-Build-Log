@@ -57,7 +57,7 @@ function CaseStudy({ d, locale }: { d: ProjectDetail; locale: Locale }) {
       {/* 화면만 제목을 위로: 휴대폰 화면 8장이 본문 폭 전체를 쓴다(넓으면 4열, 좁으면 2열). 캡처에 휴대폰 테두리가 있어 상자로 감싸지 않음. 누르면 크게 보고 좌우로 넘김 */}
       <section className="flex flex-col gap-6 border-t border-line pt-8">
         <h2 className="t-tile">{t.screens}</h2>
-        <ScreenGallery screens={d.screens.map((s) => ({ src: s.src, video: s.video, label: s.label[locale] }))} locale={locale} />
+        <ScreenGallery screens={d.screens.map((s) => ({ src: s.src, video: s.video, label: s.label[locale] }))} locale={locale} device={d.device} />
       </section>
       <Section title={t.overview}>
         <Facts rows={d.facts.map((f) => [f.label[locale], f.value[locale]])} />

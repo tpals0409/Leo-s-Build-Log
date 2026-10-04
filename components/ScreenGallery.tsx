@@ -44,36 +44,34 @@ export default function ScreenGallery({ screens, locale }: { screens: Screen[]; 
           startX.current = null;
           if (Math.abs(dx) > SWIPE) (swiped.current = true), go(dx < 0 ? 1 : -1);
         }}
-        className="fixed inset-0 m-0 size-full max-h-none max-w-none touch-pan-y bg-fg/90 p-0 text-surface"
+        className="fixed inset-0 m-0 size-full max-h-none max-w-none touch-pan-y bg-fg p-0 text-surface"
       >
-        {s && (
-          <div data-backdrop className="flex size-full flex-col items-center justify-center gap-4 px-4 py-14">
-            <Media s={s} big />
-            <p className="t-body-sm">{s.label} <span className="opacity-70">{i! + 1} / {screens.length}</span></p>
-          </div>
-        )}
-        {([[-1, t.prevScreen, 'left-0', 'M15 6l-6 6 6 6', 'arrow-back'], [1, t.nextScreen, 'right-0', 'M9 6l6 6-6 6', 'arrow']] as const).map(([d, label, side, path, move]) => (
-          <button key={d} type="button" onClick={() => go(d)} aria-label={label}
-            className={`group absolute inset-y-0 flex w-16 items-center justify-center sm:w-24 ${side}`}>
-            <Icon d={path} className={move} />
+        {/* 위: 닫기 / 가운데: 캡처(남는 높이를 다 씀) / 아래: ‹ 이름 n/8 › 한 줄. 컨트롤을 캡처 위에 겹치지 않는다(좁은 화면에서도) */}
+        <div data-backdrop className="flex size-full flex-col items-center px-4 pb-4 pt-2">
+          <button type="button" onClick={() => ref.current?.close()} aria-label={t.close} className="press self-end p-3">
+            <Icon d="M6 6l12 12M18 6L6 18" />
           </button>
-        ))}
-        {/* 닫기는 화살표 영역(세로 전체) 위에 오도록 마지막에 */}
-        <button type="button" onClick={() => ref.current?.close()} aria-label={t.close} className="press absolute right-3 top-3 p-3">
-          <Icon d="M6 6l12 12M18 6L6 18" />
-        </button>
+          <div data-backdrop className="flex min-h-0 w-full flex-1 items-center justify-center py-2">
+            {s && <Media s={s} big />}
+          </div>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={() => go(-1)} aria-label={t.prevScreen} className="group p-3"><Icon d="M15 6l-6 6 6 6" className="arrow-back" /></button>
+            <p aria-live="polite" className="min-w-36 text-center t-body-sm">{s?.label} <span className="opacity-70">{i === null ? '' : `${i + 1} / ${screens.length}`}</span></p>
+            <button type="button" onClick={() => go(1)} aria-label={t.nextScreen} className="group p-3"><Icon d="M9 6l6 6-6 6" className="arrow" /></button>
+          </div>
+        </div>
       </dialog>
     </>
   );
 }
 
-// 캡처 한 장. 크게 볼 때는 화면 높이에 맞춘다(휴대폰 세로 화면). 움직이는 화면은 LoopVideo.
+// 캡처 한 장. 크게 볼 때는 닫기·아래 줄을 뺀 남는 높이에 맞춘다(휴대폰 세로 화면). 움직이는 화면은 LoopVideo.
 // mp4엔 투명도가 없어 원본 GIF의 투명한 바깥(모서리·그림자)이 흰색으로 남는다 → 휴대폰 테두리에 맞춰 잘라 낸다.
 // 원본 340×668 실측: 테두리 위 8·오른쪽 20·아래 25·왼쪽 19px, 모서리 반지름 31px. 다른 캡처를 넣으면 다시 잴 것
 const FRAME = 'inset(1.2% 5.9% 3.7% 5.6% round 9.1% / 4.6%)';
 
 function Media({ s, big }: { s: Screen; big?: boolean }) {
-  const c = big ? 'aspect-[352/692] h-full max-h-[calc(100dvh-9rem)] w-auto max-w-full' : 'aspect-[352/692] w-full';
+  const c = big ? 'aspect-[352/692] h-full w-auto max-w-full' : 'aspect-[352/692] w-full';
   return s.video
     ? <LoopVideo key={s.src} src={s.video} poster={s.src} label={s.label} className={c} style={{ clipPath: FRAME }} />
     : <img src={s.src} alt={s.label} width={352} height={692} loading={big ? 'eager' : 'lazy'} decoding="async" className={c} />;

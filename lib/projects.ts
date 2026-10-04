@@ -38,8 +38,8 @@ const FINCH: ProjectDetail = {
     { label: { ko: 'GitHub', en: 'GitHub' }, href: 'https://github.com/Team-FINCH/finch-docs' },
   ],
   problem: {
-    ko: '주식 앱은 "얼마가 됐는지"는 보여 주지만 "왜 그렇게 됐는지"는 알려 주지 않음. LLM에 그대로 물으면 숫자를 지어내거나 투자를 권유할 수 있음.',
-    en: 'Stock apps show how much you made or lost, but not why. Asking an LLM directly is worse: it makes up numbers and gives investment advice. In a financial service, both are fatal.',
+    ko: '주식 앱의 시세·뉴스·공시는 누구에게나 같은 정보라, 내 포트폴리오에 어떤 의미인지는 직접 찾아봐야 함. 보유 종목과 거래 내역을 기준으로 개인화된 정보를 제공하되, LLM이 숫자를 지어내거나 투자를 권유하지 않아야 함.',
+    en: 'Prices, news and filings in stock apps are the same for everyone, so you have to work out what they mean for your own portfolio. The goal: personalized information based on your holdings and trades, without the LLM making up numbers or giving investment advice.',
   },
   answers: [
     {
@@ -61,28 +61,28 @@ const FINCH: ProjectDetail = {
   ],
   mine: {
     intro: {
-      ko: 'AI 파트 리드. AI 서버(FastAPI)의 브리핑·채팅·분석 기능과 출력 검사, 자료 수집 구현',
-      en: 'AI lead. I built the AI server (FastAPI): briefing, chat and analysis features, output checks and data collection.',
+      ko: 'AI 서버(FastAPI) 설계·구현 총괄. 브리핑·채팅·종목 분석·포트폴리오 진단 기능과 이를 받치는 출력 검사, 자료 수집·검색 담당',
+      en: 'Led the design and build of the AI server (FastAPI): briefing, chat, stock analysis and portfolio diagnosis, plus the output checks and data collection and search behind them.',
     },
     items: [
     {
-      title: { ko: '숫자 치환', en: 'Number substitution' },
-      body: { ko: 'LLM이 숫자 대신 키를 쓰면 서버가 계산 엔진 값으로 바꿔 넣는 구조 구현', en: 'The LLM writes keys instead of numbers, and the server replaces them with engine values.' },
+      title: { ko: '숫자 치환 구조', en: 'Number substitution' },
+      body: { ko: 'LLM은 허용된 키만 쓰고 서버가 계산 엔진 값으로 치환. 계산되지 않은 숫자가 답변에 들어갈 경로 차단', en: 'The LLM writes only allowed keys and the server fills in engine values, so no uncomputed number can reach an answer.' },
       tech: { ko: 'LLM은 허용된 키로 {{return_005930}}처럼 쓰고 서버가 계산 엔진 값(+2.48%)으로 치환 · 응답은 텍스트·수치 segments로 분리', en: 'The LLM writes allowed keys like {{return_005930}}; the server substitutes engine values (+2.48%) · responses split into text/number segments' },
     },
     {
       title: { ko: '출력 검사 10종', en: 'Ten output checks' },
-      body: { ko: '검사에 걸린 답변은 사유를 붙여 다시 생성하고, 두 번째도 걸리면 차단', en: 'An answer that fails a check is regenerated with the reason attached, and blocked if it fails a second time.' },
+      body: { ko: '숫자·출처·금지 표현 등을 검사해 위반 시 사유를 붙여 재생성, 재실패 시 차단', en: 'Numbers, sources and banned phrases are checked; a failing answer is regenerated with the reason attached and blocked if it fails again.' },
       tech: { ko: '원시 숫자 · 엔진 값 불일치 · 인용 무결성 · 금지 표현 · 스키마 등', en: 'Raw numbers · engine mismatch · citation integrity · banned phrases · schema, and more' },
     },
     {
-      title: { ko: '채팅 에이전트', en: 'Chat agent' },
-      body: { ko: '질문에 따라 계좌, 수익률, 시세, 뉴스, 공시 조회 도구를 골라 호출한 뒤 답변 작성', en: 'It picks tools for the account, returns, prices, news and filings depending on the question, then writes the answer.' },
+      title: { ko: '도구 기반 채팅 에이전트', en: 'Tool-using chat agent' },
+      body: { ko: '질문에 맞는 조회 도구(계좌·수익률·시세·뉴스·공시)를 골라 호출하고, 조회 결과만으로 답변 작성', en: 'Picks the lookup tools a question needs (account, returns, prices, news, filings) and answers only from what they return.' },
       tech: { ko: '도구 선택 → 서술 2단계 · 도구 7종 병렬 호출, 최대 3턴·12호출 · 작업 큐(Postgres SKIP LOCKED)', en: 'Tool selection → narration · 7 tools in parallel, max 3 turns / 12 calls · job queue (Postgres SKIP LOCKED)' },
     },
     {
       title: { ko: '뉴스·공시 수집과 검색', en: 'News and filing collection and search' },
-      body: { ko: '뉴스, 공시, 시세를 정해진 시각에 수집하고, 답변과 데일리 브리핑에 쓸 자료 검색', en: 'News, filings and prices are collected on a schedule and searched for answers and the daily briefing.' },
+      body: { ko: '뉴스·공시·시세 정기 수집, 답변과 데일리 브리핑의 근거 자료 검색', en: 'Scheduled collection of news, filings and prices, searched as evidence for answers and the daily briefing.' },
       tech: { ko: '네이버 뉴스 · DART 공시 → 청크 · 임베딩(text-embedding-3-small) → pgvector + 어휘 검색, RRF 융합', en: 'Naver News · DART filings → chunking · embeddings (text-embedding-3-small) → pgvector + lexical search, RRF fusion' },
     },
     {

@@ -113,13 +113,13 @@ const FINCH: ProjectDetail = {
     },
   ],
   screens: [
-    { src: `${F}/home.webp`, label: { ko: '홈', en: 'Home' } },
-    { src: `${F}/briefing.webp`, label: { ko: '데일리 브리핑', en: 'Daily briefing' } },
+    { src: `${F}/home-704.webp`, label: { ko: '홈', en: 'Home' } },
+    { src: `${F}/briefing-704.webp`, label: { ko: '데일리 브리핑', en: 'Daily briefing' } },
     { src: `${F}/stock.webp`, video: `${F}/stock.mp4`, label: { ko: '종목 상세', en: 'Stock detail' } },
-    { src: `${F}/stock-ai.webp`, label: { ko: 'AI 종목 분석', en: 'AI stock analysis' } },
+    { src: `${F}/stock-ai-704.webp`, label: { ko: 'AI 종목 분석', en: 'AI stock analysis' } },
     { src: `${F}/order-check.webp`, video: `${F}/order-check.mp4`, label: { ko: '주문 전 AI 점검', en: 'AI pre-order check' } },
-    { src: `${F}/diagnosis.webp`, label: { ko: 'AI 포트폴리오 진단', en: 'AI portfolio diagnosis' } },
-    { src: `${F}/returns-factor.webp`, label: { ko: '수익률 분석', en: 'Return analysis' } },
+    { src: `${F}/diagnosis-704.webp`, label: { ko: 'AI 포트폴리오 진단', en: 'AI portfolio diagnosis' } },
+    { src: `${F}/returns-factor-704.webp`, label: { ko: '수익률 분석', en: 'Return analysis' } },
     { src: `${F}/chat-answer.webp`, video: `${F}/chat-answer.mp4`, label: { ko: 'AI 채팅', en: 'AI chat' } },
   ],
   stack: [

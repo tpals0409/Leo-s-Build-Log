@@ -175,3 +175,6 @@
   &[data-on] { opacity: 1; visibility: visible; } /* ui/ClampTitle이 마우스 올림·키보드 포커스에 켠다(body에 portal) */
   @media (prefers-reduced-motion: reduce) { transition: none; }
 }
+
+/* 화면 크게 보기(<dialog>, ScreenGallery)가 열려 있는 동안 뒤 페이지가 스크롤되지 않게 */
+html:has(dialog[open]) { overflow: hidden; }

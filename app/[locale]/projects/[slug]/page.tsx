@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
-import LoopVideo from '@/components/LoopVideo';
 import PostGrid from '@/components/PostGrid';
+import ScreenGallery from '@/components/ScreenGallery';
 import { ButtonLink } from '@/components/ui/Button';
 import Container from '@/components/ui/Container';
 import Section from '@/components/ui/Section';
@@ -49,28 +49,19 @@ export default async function ProjectPage({ params }: Props) {
 }
 
 // 케이스 스터디: 소개 페이지와 같은 칸(왼쪽 제목 + 오른쪽 내용). 팀이 한 것(어떻게 풀었나)과 내 몫(내가 맡은 일·운영하며 고친 것)을 칸으로 나눈다.
-// 처음 보는 사람이 앱 모습부터 보도록 화면을 개요 바로 다음에. 항목은 쉬운 말이 먼저, 기술 세부(tech)는 그 아래 작게.
+// 처음 보는 사람이 앱 모습부터 보도록 화면을 배너 바로 아래(맨 위)에. 항목은 쉬운 말이 먼저, 기술 세부(tech)는 그 아래 작게.
 function CaseStudy({ d, locale }: { d: ProjectDetail; locale: Locale }) {
   const t = DICT[locale].projects;
   return (
     <div className="mb-16 flex flex-col gap-10">
+      {/* 화면만 제목을 위로: 휴대폰 화면 8장이 본문 폭 전체를 쓴다(넓으면 4열, 좁으면 2열). 캡처에 휴대폰 테두리가 있어 상자로 감싸지 않음. 누르면 크게 보고 좌우로 넘김 */}
+      <section className="flex flex-col gap-6 border-t border-line pt-8">
+        <h2 className="t-tile">{t.screens}</h2>
+        <ScreenGallery screens={d.screens.map((s) => ({ src: s.src, video: s.video, label: s.label[locale] }))} locale={locale} />
+      </section>
       <Section title={t.overview}>
         <Facts rows={d.facts.map((f) => [f.label[locale], f.value[locale]])} />
       </Section>
-      {/* 화면만 제목을 위로: 휴대폰 화면 8장이 본문 폭 전체를 쓴다(넓으면 4열, 좁으면 2열). 캡처에 휴대폰 테두리가 있어 상자로 감싸지 않음 */}
-      <section className="flex flex-col gap-6 border-t border-line pt-8">
-        <h2 className="t-tile">{t.screens}</h2>
-        <ul className="grid grid-cols-2 gap-x-5 gap-y-8 lg:grid-cols-4">
-          {d.screens.map((s) => (
-            <li key={s.src} className="flex flex-col items-center gap-3">
-              {s.video
-                ? <LoopVideo src={s.video} poster={s.src} label={s.label[locale]} className="aspect-[352/692] w-full" />
-                : <img src={s.src} alt={s.label[locale]} width={352} height={692} loading="lazy" decoding="async" className="aspect-[352/692] w-full" />}
-              <span className="t-body-sm text-secondary">{s.label[locale]}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
       <Section title={t.problem}>
         <p className="t-body text-secondary">{d.problem[locale]}</p>
       </Section>

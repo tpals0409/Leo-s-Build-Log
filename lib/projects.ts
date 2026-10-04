@@ -30,9 +30,7 @@ const FINCH: ProjectDetail = {
   facts: [
     { label: { ko: '기간', en: 'Period' }, value: { ko: '2026.08 – 2026.09 (6주)', en: 'Aug – Sep 2026 (6 weeks)' } },
     { label: { ko: '팀', en: 'Team' }, value: { ko: '5명 · 프론트엔드 2, 백엔드 1, AI 1, 인프라 1', en: '5 people · 2 frontend, 1 backend, 1 AI, 1 infra' } },
-    { label: { ko: '맡은 일', en: 'My role' }, value: { ko: 'AI 서버 (finch-ai 커밋의 75%)', en: 'AI server (75% of finch-ai commits)' } },
-    { label: { ko: '규모', en: 'Scale' }, value: { ko: '커밋 1,400+ · 자동화 테스트 1,300+', en: '1,400+ commits · 1,300+ automated tests' } },
-    { label: { ko: '운영', en: 'Running' }, value: { ko: '실서비스 배포 (k3s, Cloudflare Tunnel, 설치형 PWA)', en: 'Live service (k3s, Cloudflare Tunnel, installable PWA)' } },
+    { label: { ko: '역할', en: 'Role' }, value: { ko: 'AI 파트 리드', en: 'AI lead' } },
   ],
   links: [
     { label: { ko: '서비스', en: 'Live service' }, href: 'https://finchapp.org' },
@@ -63,8 +61,8 @@ const FINCH: ProjectDetail = {
   ],
   mine: {
     intro: {
-      ko: 'AI 서버(FastAPI) 담당. 브리핑·채팅·분석 기능과 출력 검사, 자료 수집 구현. finch-ai 커밋의 75% 작성',
-      en: 'I built the AI server (FastAPI): briefing, chat and analysis features, output checks and data collection. I wrote 75% of the finch-ai commits.',
+      ko: 'AI 파트 리드. AI 서버(FastAPI)의 브리핑·채팅·분석 기능과 출력 검사, 자료 수집 구현',
+      en: 'AI lead. I built the AI server (FastAPI): briefing, chat and analysis features, output checks and data collection.',
     },
     items: [
     {

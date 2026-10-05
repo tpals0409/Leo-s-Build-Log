@@ -1,0 +1,20 @@
+{
+  "category": "retrospective",
+  "project": "janus",
+  "tags": [
+    "local-llm",
+    "harness",
+    "agent",
+    "mlx"
+  ],
+  "publishedAt": "2026-10-05T09:00:00+09:00",
+  "thumbnail": "thumbnail.webp",
+  "ko": {
+    "title": "코드를 밖으로 보낼 수 없을 때: 로컬 LLM 에이전트 IDE 야누스",
+    "summary": "보안 때문에 외부 AI를 쓰기 어려운 곳을 보며, 로컬 27B 모델로 코딩 에이전트를 돌려 보기로 했습니다. 약한 모델의 한계를 하네스로 얼마나 메울 수 있었는지에 대한 기록."
+  },
+  "en": {
+    "title": "When Code Can't Leave the Building: Janus, a Local LLM Agent IDE",
+    "summary": "Seeing teams that can't use external AI for security reasons, I tried running a coding agent on a local 27B model. A record of how much a harness could make up for a weaker model."
+  }
+}

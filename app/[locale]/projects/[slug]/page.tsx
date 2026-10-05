@@ -40,7 +40,7 @@ export default async function ProjectPage({ params }: Props) {
           {d.links.map((l) => <ButtonLink key={l.href} href={l.href} variant="outline" size="sm">{l.label[locale]}</ButtonLink>)}
         </div>
       )}
-      <Thumb src={d?.banner ?? project.image} eager className={`mb-12 rounded-panel ${d ? 'aspect-2/1' : 'aspect-[2.1/1]'}`} />
+      <Thumb src={(d?.banner ?? project.image)?.[locale]} eager className={`mb-12 rounded-panel ${d ? 'aspect-2/1' : 'aspect-[2.1/1]'}`} />
       {d && <CaseStudy d={d} locale={locale} />}
       <SectionHeader title={t.posts} />
       {posts.length ? <PostGrid posts={posts} locale={locale} /> : <p className="py-12 text-muted">{t.noPosts}</p>}
@@ -68,15 +68,60 @@ function CaseStudy({ d, locale }: { d: ProjectDetail; locale: Locale }) {
       <Section title={t.answers}>
         <Numbered items={d.answers} locale={locale} />
       </Section>
+      <Diagram title={t.architecture} {...d.architecture} locale={locale} />
+      <Diagram title={t.scenario} {...d.scenario} locale={locale} />
       <Section title={t.mine}>
         <Numbered items={d.mine} locale={locale} />
+      </Section>
+      <Section title={t.tech}>
+        <TechTable rows={d.tech} locale={locale} />
       </Section>
       <Section title={t.fixes}>
         <Numbered items={d.fixes} locale={locale} />
       </Section>
-      <Section title={t.stack}>
-        <Facts rows={d.stack.map((s) => [s.label[locale], s.value])} />
-      </Section>
+    </div>
+  );
+}
+
+// 아키텍처·사용자 시나리오: 포트폴리오에서 잘라 온 그림(본문 폭 전체) + 그 옆에 있던 ❶❷❸ 설명을 아래 3열로.
+// 그림 글자가 작아서 누르면 원본 크기로 연다(좁은 화면).
+function Diagram({ title, image, notes, locale }: ProjectDetail['architecture'] & { title: string; locale: Locale }) {
+  return (
+    <section className="flex flex-col gap-6 border-t border-line pt-8">
+      <h2 className="t-tile">{title}</h2>
+      <a href={image[locale]} target="_blank" rel="noopener" className="block cursor-zoom-in">
+        <img src={image[locale]} alt={title} loading="lazy" decoding="async" className="w-full" />
+      </a>
+      <ol className="grid gap-5 sm:grid-cols-3">
+        {notes.map((n, i) => (
+          <li key={n.title.en} className="flex gap-3">
+            <span className="w-7 shrink-0 pt-1 t-body-sm text-muted">{String(i + 1).padStart(2, '0')}</span>
+            <div className="flex flex-col gap-1.5">
+              <strong className="t-body">{n.title[locale]}</strong>
+              <span className="t-body-sm text-secondary">{n.body[locale]}</span>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+// 기술 사용 이유: 기술 | 문제 | 역할. 넓으면 세 칸 표, 좁으면 기술 아래 문제·역할을 쌓는다. 구분은 가는 선만
+function TechTable({ rows, locale }: { rows: ProjectDetail['tech']; locale: Locale }) {
+  const t = DICT[locale].projects;
+  return (
+    <div className="t-body-sm">
+      <div className="hidden grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.2fr)] gap-x-6 border-b border-fg pb-2 text-muted sm:grid">
+        <span>{t.techName}</span><span>{t.techProblem}</span><span>{t.techRole}</span>
+      </div>
+      {rows.map((r) => (
+        <div key={r.name} className="grid gap-x-6 gap-y-1 border-b border-line py-3.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.2fr)]">
+          <strong className="t-body">{r.name}</strong>
+          <span className="text-secondary">{r.problem[locale]}</span>
+          <span>{r.role[locale]}</span>
+        </div>
+      ))}
     </div>
   );
 }

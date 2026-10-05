@@ -7,6 +7,7 @@
     "prompt-engineering"
   ],
   "publishedAt": "2026-09-16T21:00:00+09:00",
+  "thumbnail": "thumbnail.webp",
   "ko": {
     "title": "AI 답변 검사가 멀쩡한 답까지 버리던 문제",
     "summary": "핀치는 LLM 설명을 내보내기 전에 자동 검사 10개를 거칩니다. 반려 사유를 세어 보니 상당수가 오탐이었고, 원인은 대부분 모델이 아니라 프롬프트와 검사의 어긋남이었습니다."

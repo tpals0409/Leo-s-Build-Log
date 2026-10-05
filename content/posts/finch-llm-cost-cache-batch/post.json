@@ -8,6 +8,7 @@
     "performance"
   ],
   "publishedAt": "2026-09-28T21:00:00+09:00",
+  "thumbnail": "thumbnail.webp",
   "ko": {
     "title": "LLM 비용을 줄인 캐시와 아침 배치 설계",
     "summary": "남은 크레딧이 1.6일치였던 상황에서 재생성·추론 토큰·호출 수를 줄인 과정과, 그 사이 의도와 다르게 동작한 캐시를 고친 기록입니다."

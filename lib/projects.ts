@@ -280,9 +280,11 @@ const JANUS: ProjectDetail = {
   ],
   screens: [
     { src: `${J}/task-mac.webp`, label: { ko: '작업과 하위 에이전트', en: 'Task and sub-agents' }, size: [1920, 1148] },
+    { src: `${J}/editor-mac.webp`, label: { ko: '코드 편집기', en: 'Code editor' }, size: [1920, 1148] },
     { src: `${J}/worker-mac.webp`, label: { ko: '워커 상세', en: 'Worker detail' }, size: [1920, 1148] },
     { src: `${J}/model-mac.webp`, label: { ko: '실행 모델 선택', en: 'Choosing the runner' }, size: [1920, 1148] },
     { src: `${J}/today-mac.webp`, label: { ko: '사람을 기다리는 작업', en: 'Tasks waiting on you' }, size: [1920, 1148] },
+    { src: `${J}/agents-mac.webp`, label: { ko: '에이전트 대시보드', en: 'Agent dashboard' }, size: [1920, 1148] },
   ],
   stack: [
     { label: { ko: '데스크톱', en: 'Desktop' }, value: 'Electron · React · TypeScript · Zustand' },

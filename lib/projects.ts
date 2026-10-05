@@ -247,7 +247,7 @@ const J = '/projects/janus';
 
 // 출처: tpals0409/Janus README·V1_AUDIT.md. 화면은 로컬 앱(v1.0.30, 라이트 모드)의 janus-qa-fixture 프로젝트에서 캡처
 const JANUS: ProjectDetail = {
-  banner: { ko: `${J}/banner-v2-2240.webp`, en: `${J}/banner-en-2240.webp` },
+  banner: { ko: `${J}/banner-v3-2240.webp`, en: `${J}/banner-en-v2-2240.webp` },
   device: 'desktop',
   facts: [
     { label: { ko: '기간', en: 'Period' }, value: { ko: '2026.08 – 현재 (개발 중)', en: 'Aug 2026 – present' } },
@@ -317,12 +317,12 @@ const JANUS: ProjectDetail = {
     },
   ],
   screens: [
-    { src: `${J}/task-mac.webp`, label: { ko: '작업과 하위 에이전트', en: 'Task and sub-agents' }, size: [1920, 1148] },
-    { src: `${J}/editor-mac.webp`, label: { ko: '코드 편집기', en: 'Code editor' }, size: [1920, 1148] },
-    { src: `${J}/worker-mac.webp`, label: { ko: '워커 상세', en: 'Worker detail' }, size: [1920, 1148] },
-    { src: `${J}/model-mac.webp`, label: { ko: '실행 모델 선택', en: 'Choosing the runner' }, size: [1920, 1148] },
-    { src: `${J}/today-mac.webp`, label: { ko: '사람을 기다리는 작업', en: 'Tasks waiting on you' }, size: [1920, 1148] },
-    { src: `${J}/agents-mac.webp`, label: { ko: '에이전트 대시보드', en: 'Agent dashboard' }, size: [1920, 1148] },
+    { src: `${J}/task-dark.webp`, label: { ko: '작업과 하위 에이전트', en: 'Task and sub-agents' }, size: [1920, 1148] },
+    { src: `${J}/editor-dark.webp`, label: { ko: '코드 편집기', en: 'Code editor' }, size: [1920, 1148] },
+    { src: `${J}/worker-dark.webp`, label: { ko: '워커 상세', en: 'Worker detail' }, size: [1920, 1148] },
+    { src: `${J}/model-dark.webp`, label: { ko: '실행 모델 선택', en: 'Choosing the runner' }, size: [1920, 1148] },
+    { src: `${J}/today-dark.webp`, label: { ko: '사람을 기다리는 작업', en: 'Tasks waiting on you' }, size: [1920, 1148] },
+    { src: `${J}/agents-dark.webp`, label: { ko: '에이전트 대시보드', en: 'Agent dashboard' }, size: [1920, 1148] },
   ],
   architecture: {
     image: { ko: `${J}/arch.webp`, en: `${J}/arch-en.webp` },
@@ -467,7 +467,7 @@ export const PROJECTS: Project[] = [
     detail: FINCH,
   },
   {
-    slug: 'janus', name: { ko: '야누스', en: 'Janus' }, image: { ko: `${J}/banner-v2-1120.webp`, en: `${J}/banner-en-1120.webp` },
+    slug: 'janus', name: { ko: '야누스', en: 'Janus' }, image: { ko: `${J}/banner-v3-1120.webp`, en: `${J}/banner-en-v2-1120.webp` },
     summary: { ko: '코딩 에이전트의 작업부터 검증, 리뷰, 커밋까지 이어지는 로컬 우선 에이전트 개발 환경', en: 'A local-first agent development environment that carries coding-agent work through verification, review and commit' },
     detail: JANUS,
   },

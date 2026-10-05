@@ -14,52 +14,48 @@ blockquote{margin:1.5em 0;padding-left:var(--space-cluster);border-left:2px soli
 blockquote p{margin:0}
 </style>
 </head>
-<body><p>FINCH's AI features are stock analysis, a daily briefing, portfolio diagnosis and chat. All of them call an LLM, and the LLM credits we could use were fixed. In mid-September the infra part counted what was left: 52,745 credits. At the rate we were spending, that was 24 analyses, or 1.6 days. The demo was on September 28.</p>
-<p>This post covers how we cut calls and tokens to make it to the demo. Along the way, the cache turned out to behave differently from what we intended, twice.</p>
+<body><p>FINCH is a simulated trading and AI investment assistant project. I was responsible for all AI features: stock analysis, a daily briefing, portfolio diagnosis and chat. All four used an LLM, but our credit budget was fixed. In mid-September the infrastructure team member counted what was left: 52,745 credits. At the rate we were spending, that was 24 analyses, or 1.6 days. The demo was on September 28.</p>
+<p>To stay within the remaining budget, I first needed to cut calls that repeatedly generated the same results. I reduced regeneration and reasoning tokens, then worked on response caching and the morning batch. Along the way, I found that some requests regenerated everything despite having a cache, while other cached results stayed around too long.</p>
 
-<h2>First, where the tokens went</h2>
-<p>The same count showed that 68% of tokens went to regeneration. FINCH checks LLM output automatically and regenerates with the reasons attached when a check fails. The regeneration limit and the cache lifetime were hardcoded, so tightening them meant a deploy. I moved both into settings and tightened them right away.</p>
+<h2>Reducing regeneration first</h2>
+<p>The same count showed that 68% of tokens went to regeneration. FINCH checks LLM output automatically and regenerates with the reasons attached when a check fails. The total generation-attempt limit and cache lifetime were hardcoded, so changing them required a deploy. I moved both into settings, then lowered the attempt limit and extended the cache lifetime.</p>
 <ul>
-  <li>Regeneration limit: 3 down to 2 (one first attempt plus one retry)</li>
+  <li>Total generation-attempt limit: 3 down to 2 (one first attempt plus one retry)</li>
   <li>Cache for shared stock analysis sections: 6 hours up to 24</li>
 </ul>
-<p>There was a request to go down to 1, but I kept 2. Those stats were from before a false-positive fix in the checks, so the rejection rate had likely dropped already, and with no retry a rejected section goes out empty. Since it's a setting now, it can go to 1 without a deploy once the new rejection rate is measured.</p>
+<p>There was a request to stop after one attempt, but I kept one retry. Those stats were from before a false-positive fix in the checks, so the rejection rate had likely dropped already, and with no retry a rejected section goes out empty. Since it's a setting now, it can go to 1 without a deploy once the new rejection rate is measured.</p>
 
-<h2>Cutting reasoning tokens</h2>
-<p>Next were reasoning tokens. A reasoning model spends tokens thinking before it answers, and the effort setting controls how much. With the same prompt, high took 28 seconds, medium 16 and low 4, and the output was the same. A 90-token answer came with 4,480 reasoning tokens.</p>
-<leo-metrics>
-  <leo-metric value="28" unit="s" label="effort high"></leo-metric>
-  <leo-metric value="16" unit="s" label="effort medium"></leo-metric>
-  <leo-metric value="4" unit="s" label="effort low"></leo-metric>
-</leo-metrics>
+<h2>Adjusting reasoning tokens and the output limit</h2>
+<p>Next were reasoning tokens. A reasoning model spends tokens thinking before it answers, and the effort setting controls how much. With the same prompt, high took 28 seconds, medium 16 and low 4, and the output was the same in that comparison. A 90-token answer came with 4,480 reasoning tokens.</p>
+<table><thead><tr><th>Reasoning effort</th><th>Response time for this prompt</th></tr></thead><tbody><tr><td>high</td><td>28 seconds</td></tr><tr><td>medium</td><td>16 seconds</td></tr><tr><td>low</td><td>4 seconds</td></tr></tbody></table>
 <p>The default went to low on every path, and the output limit went from 16,000 to 4,000 tokens. Personalized sections now reuse the earlier response for the same user, stock and ledger date, and the briefing batch only covers users active in the last 7 days instead of 30.</p>
 
 <h2>Two ways the cache didn't work as intended</h2>
 <p>Looking at production logs the same day, I found two problems in the cache itself.</p>
-<p><strong>One failed section wiped out the rest.</strong> Stock analysis builds seven sections in parallel. If one timed out, the whole request ended in a 504 and the finished sections were thrown away too. And if one section was empty because it failed a check, the cache lookup discarded the whole row, so that stock regenerated all seven sections on every request. Now a failed section comes back empty, and the cache takes the latest successful result for each section.</p>
-<p><strong>The cache never expired.</strong> Cache hits were also written to the response log, and the next lookup picked those entries up as "responses from the last 24 hours", so the expiry kept moving forward. In production, a Samsung Electronics analysis generated on September 14 with 0 sources had been copied for two days, and 94 documents ingested in the meantime went unused. Now only entries that were actually generated (cached=false) count as a cache source.</p>
+<h3>One failed section wiped out the rest.</h3>
+<p>Stock analysis builds seven sections in parallel. If one timed out, the whole request ended in a 504 and the finished sections were thrown away too. And if one section was empty because it failed a check, the cache lookup discarded the whole row, so that stock regenerated all seven sections on every request. Now a failed section comes back empty, and the cache takes the latest successful result for each section.</p>
+<h3>The cache never expired.</h3>
+<p>Cache hits were also written to the response log, and the next lookup picked those entries up as "responses from the last 24 hours", so the expiry kept moving forward. In production, a Samsung Electronics analysis generated on September 14 with 0 sources had been copied for two days, and 94 documents ingested in the meantime went unused. Now only entries that were actually generated (cached=false) count as a cache source.</p>
 
-<h2>Morning batch instead of user requests</h2>
+<h2>Moving generation and retries to the morning batch</h2>
 <p>Generating on request makes the user wait, and sometimes builds the same thing more than once. So the heavy generation moved to a batch that runs every morning at 9:20.</p>
-<leo-steps>
-  <leo-step title="Portfolio diagnosis"><p>Diagnosis was built on the first request, so the user waited, and the cache key (a fingerprint) included the current price, so it regenerated whenever prices moved during the day. The 7-day cache hit rate in production was 26%. Taking the price out of the fingerprint made it once a day, and the morning batch now builds diagnosis along with the briefing. Requests return the stored diagnosis; only a first-time user with nothing stored gets one built on request.</p></leo-step>
-  <leo-step title="Retrying failed sections"><p>When a batch-built stock analysis had a section that failed a check, that section was empty, and the first person to open the stock waited for the retry. Two sections retrying twice each took over ten seconds. The request path no longer rebuilds them; the next morning's batch retries instead.</p></leo-step>
-  <leo-step title="Daily batch token cap"><p>One pass over 30 stocks takes about 600k tokens. On September 16 a prompt change emptied the cache, the 2M daily cap ran out, and the batch stopped after 2 of 30 stocks. At low effort, 5M tokens cost about $1, so the cap went up to 5M.</p></leo-step>
-</leo-steps>
+
+  <h3>Portfolio diagnosis</h3><p>Diagnosis was built on the first request, so the user waited, and the cache key (a fingerprint) included the current price, so it regenerated whenever prices moved during the day. The 7-day cache hit rate in production was 26%. Removing the current price from the cache key stopped intraday price changes alone from triggering regeneration, and the morning batch now builds diagnosis along with the briefing. Requests return the stored diagnosis; only a first-time user with nothing stored gets one built on request.</p>
+  <h3>Retrying failed sections</h3><p>When a batch-built stock analysis had a section that failed a check, that section was empty, and the first person to open the stock waited for the retry. Two sections retrying twice each took over ten seconds. The request path no longer rebuilds them; the next morning's batch retries instead.</p>
+  <h3>Daily batch token cap</h3><p>One pass over 30 stocks takes about 600k tokens. On September 16 a prompt change emptied the cache, the 2M daily cap ran out, and the batch stopped after 2 of 30 stocks. Using the model and low-effort setting in use at the time, I estimated 5M tokens at about $1 and raised the cap to 5M.</p>
+
 
 <h2>When the cache hid a measurement</h2>
 <p>In late September, while looking into performance-attribution summaries being rejected by the checks, I ran each combination of effort and regeneration limit 3 times. Runs 2 and 3 hit the cache and never called the LLM. A result I read as 0/3 was really 0/1. Responses with a rejected summary were also cached for 10 minutes, so any attempt to reproduce the failure was immediately served from cache.</p>
 <p>At the time I got around it by overriding an internal function at runtime on the production pod, which isn't a proper way to check anything. So the function got an option to skip the cache. It's not exposed over HTTP, though: if users could force regeneration, it would be a way around the token budget.</p>
 
-<h2>The bottleneck was the number of calls, not the model</h2>
-<p>On the morning of the demo there was a request to make chat more responsive, so I measured it in production. "How's my portfolio?" took 13.8 seconds with 2 LLM calls. "Why did Hyundai Motor drop?" took 27.3 seconds with 3 calls and ended up blocked. The time came from the number of calls and the output length, not the model size.</p>
-<p>So instead of a bigger model, I switched to one with shorter time per call (gpt-6-luna) and turned off reasoning on the turns that pick tools. This model returns a 400 error when tools and reasoning are used together, so just changing the model name would have broken chat immediately. The final call that writes the answer keeps low effort.</p>
-<leo-metrics>
-  <leo-metric value="13.8 → 8.2" unit="s" label="How's my portfolio?"></leo-metric>
-  <leo-metric value="27.3 → 8.4" unit="s" label="Why did Hyundai Motor drop? (blocked → answered)"></leo-metric>
-</leo-metrics>
+<h2>Improving chat responses on demo day</h2>
+<p>On the morning of the demo there was a request to make chat more responsive, so I measured it in production. "How's my portfolio?" took 13.8 seconds with 2 LLM calls. "Why did Hyundai Motor drop?" took 27.3 seconds with 3 calls and ended up blocked. After inspecting the call flow for these two requests, I decided to change the model and reduce reasoning during tool selection.</p>
+<p>I switched to a model with shorter time per call (gpt-6-luna) and turned off reasoning on the turns that pick tools. With the API we used at the time, combining tools and reasoning on this model returned a 400 error, so the call settings had to change along with the model name. The final call that writes the answer keeps low effort.</p>
+<p>After the changes, I checked response times with the same questions.</p>
+<table><thead><tr><th>Question</th><th>Before</th><th>After</th></tr></thead><tbody><tr><td>How&#x27;s my portfolio?</td><td>13.8 seconds</td><td>8.2 seconds</td></tr><tr><td>Why did Hyundai Motor drop?</td><td>27.3 seconds, blocked</td><td>8.4 seconds, answered</td></tr></tbody></table>
 
-<h2>Summary</h2>
-<p>The cost cuts themselves were simple: fewer regenerations, less reasoning, no rebuilding the same thing, and heavy generation done when nobody is waiting. What took longer was checking that the cache actually behaved that way. Partial failures, a cache that never expired and a cache that hid measurements only showed up once I counted the numbers directly.</p>
+<h2>Having a cache was not enough</h2>
+<p>Checking how the cache actually worked took longer than changing the settings. A failure in just some sections caused everything to be regenerated. Records of cache reads made old responses look new. Sending the same request three times could still mean only one generation. Reducing calls had to go hand in hand with checking how many generations actually ran.</p>
 </body>
 </html>

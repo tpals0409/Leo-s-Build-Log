@@ -10,11 +10,11 @@
   "publishedAt": "2026-09-28T21:00:00+09:00",
   "thumbnail": "thumbnail.webp",
   "ko": {
-    "title": "LLM 비용을 줄인 캐시와 아침 배치 설계",
+    "title": "LLM 호출을 줄이며 고친 캐시와 아침 배치",
     "summary": "남은 크레딧이 1.6일치였던 상황에서 재생성·추론 토큰·호출 수를 줄인 과정과, 그 사이 의도와 다르게 동작한 캐시를 고친 기록입니다."
   },
   "en": {
-    "title": "Cutting LLM Costs with Caching and a Morning Batch",
+    "title": "Reducing LLM Calls and Fixing the Cache and Morning Batch",
     "summary": "With 1.6 days of credits left, how regeneration, reasoning tokens and call counts were cut, and how a cache that behaved differently from what we intended got fixed."
   }
 }

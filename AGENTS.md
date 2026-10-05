@@ -137,7 +137,7 @@ variant/size는 객체 맵(`const VARIANT = {...}`)으로 정의한다 (Button, 
 ## 검증
 - `npm run check:design` — 위 금지 규칙 검사. UI를 고친 뒤 반드시 통과시킬 것.
   git pre-commit 훅(`.githooks/`, `npm install` 시 자동 등록)이 커밋마다 실행한다. `--no-verify`로 우회하지 말 것.
-- `npm run check` — auth, 텍스트 추출, 본문 변환, 글 등록 검증, 글 컴포넌트 예시·문서 self-check, `content/posts`의 모든 글 검증
+- `npm run check` — auth, 텍스트 추출, 본문 변환, 글 등록 검증, 글 컴포넌트 예시·문서 self-check, `content/posts`의 모든 글 검증, 프로젝트 그림(`lib/diagrams.ts`) 선·화살촉이 노드에 가려지거나 겹치지 않는지
 - `npm run build`
 - GitHub Actions(`.github/workflows/ci.yml`)가 main 푸시·PR마다 위 세 가지를 Node 24로 다시 돌린다. 실패한 채로 두지 말 것.
   main 푸시는 검사 통과 후 k3s(arm64)용 이미지를 GHCR에 `main-<sha>`로 올린다. 배포 요건(포트·probe·PVC·env)은 README "k3s 배포".

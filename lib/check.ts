@@ -20,6 +20,7 @@ import { CODE_DOC, SPECS } from './leo/specs.ts';
 import { postComponentsMarkdown } from './leo/docs.ts';
 import { readFileSync } from 'node:fs';
 import { loadContent } from './content.ts';
+import { DIAGRAMS, diagramProblems, type Diagram } from './diagrams.ts';
 
 assert.equal(htmlToText('<html><head><style>p{color:red}</style></head><body><h1>제목</h1><p>본문 &amp; 끝</p><script>alert(1)</script></body></html>'), '제목 본문 & 끝');
 assert.equal(tokenOk('abc', 'abc'), true);
@@ -228,5 +229,17 @@ assert.equal(ymd(new Date('2023-07-14T15:00:00Z')), '2023-07-15');
 }
 // 저장소의 실제 글이 전부 등록 규칙을 통과하는지 (PR에서 깨진 글을 막는다)
 assert.deepEqual(loadContent().errors, []);
+
+// 프로젝트 그림: 선이 노드 밑을 지나가거나 화살촉이 가려지지 않는지
+{
+  const box = (x: number, y: number) => ({ kind: 'sys' as const, x, y, w: 100, h: 60, title: { ko: `${x}`, en: '' } });
+  const bad: Diagram = { w: 400, h: 100, lanes: [], labels: [], nodes: [box(0, 0), box(150, 0), box(300, 0)],
+    edges: [{ d: 'M100,30 L300,30' }, { d: 'M100,20 L150,20 L150,26' }, { d: 'M100,40 L160,40' }] };
+  const p = diagramProblems(bad);
+  assert.ok(p.some((m) => m.startsWith('M100,30') && m.includes('밑을 지나감')), '노드를 지나가는 선');
+  assert.ok(p.some((m) => m.includes('찌그러짐')), '짧은 마지막 선');
+  assert.ok(p.some((m) => m.startsWith('M100,40') && m.includes('가려짐')), '노드 안에서 끝나는 화살표');
+  for (const [name, d] of Object.entries(DIAGRAMS)) assert.deepEqual(diagramProblems(d), [], `lib/diagrams.ts ${name}`);
+}
 
 console.log('ok');

@@ -375,3 +375,45 @@ export const DIAGRAMS = {
 } satisfies Record<string, Diagram>;
 
 export type DiagramKey = keyof typeof DIAGRAMS;
+
+// 그림 검사(npm run check): 선이 다른 노드 밑을 지나가거나, 화살촉이 노드에 묻히거나 찌그러지거나,
+// 서로 다른 선이 한 줄로 겹치거나(같은 출발·도착을 나누는 갈래는 허용), 다른 선이 화살촉을 지나가면 문제로 돌려준다.
+export function diagramProblems(d: Diagram): string[] {
+  const inside = (n: DiagramNode, x: number, y: number) => {
+    if (n.kind === 'dec') return Math.abs(x - n.x - n.w / 2) + Math.abs(y - n.y - n.h / 2) < n.w / Math.SQRT2 - 0.5;
+    return x > n.x + 0.5 && x < n.x + n.w - 0.5 && y > n.y + 0.5 && y < n.y + n.h - 0.5;
+  };
+  const near = (n: DiagramNode, [x, y]: number[]) => x >= n.x - 2 && x <= n.x + n.w + 2 && y >= n.y - 2 && y <= n.y + n.h + 2 || inside(n, x, y);
+  const pts = d.edges.map((e) => [...e.d.matchAll(/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g)].map((m) => [+m[1], +m[2]]));
+  const segs = pts.flatMap((p, i) => p.slice(1).map((b, j) => ({ i, a: p[j], b })));
+  const along = (a: number[], b: number[], step: number, max = Infinity) => {
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]), out: number[][] = [];
+    for (let t = 0; t <= Math.min(len, max); t += step) out.push([b[0] - (b[0] - a[0]) * t / len, b[1] - (b[1] - a[1]) * t / len]);
+    return out;
+  };
+  const out: string[] = [];
+  pts.forEach((p, i) => {
+    const e = d.edges[i].d, ends = d.nodes.filter((n) => near(n, p[0]) || near(n, p.at(-1)!));
+    const through = new Set(segs.filter((s) => s.i === i).flatMap((s) => along(s.a, s.b, 1))
+      .flatMap(([x, y]) => d.nodes.filter((n) => !ends.includes(n) && inside(n, x, y)).map((n) => n.title.ko)));
+    if (through.size) out.push(`${e}: ${[...through].join(', ')} 밑을 지나감`);
+    const [a, b] = p.slice(-2);
+    if (Math.hypot(b[0] - a[0], b[1] - a[1]) < 10) out.push(`${e}: 마지막 선이 10px보다 짧아 화살촉이 찌그러짐`);
+    if (along(a, b, 1, 8).some(([x, y]) => d.nodes.some((n) => inside(n, x, y)))) out.push(`${e}: 화살촉이 노드에 가려짐`);
+    for (const s of segs) {
+      if (s.i === i || pts[s.i][0].join() === b.join() || pts[s.i].at(-1)!.join() === b.join()) continue;
+      const [x1, y1] = s.a, [x2, y2] = s.b, L2 = (x2 - x1) ** 2 + (y2 - y1) ** 2;
+      const t = Math.max(0, Math.min(1, ((b[0] - x1) * (x2 - x1) + (b[1] - y1) * (y2 - y1)) / L2));
+      if (Math.hypot(x1 + t * (x2 - x1) - b[0], y1 + t * (y2 - y1) - b[1]) < 9) { out.push(`${e}: 화살촉 위로 ${d.edges[s.i].d} 선이 지나감`); break; }
+    }
+  });
+  for (const [k, s] of segs.entries()) for (const t of segs.slice(k + 1)) {
+    if (s.i === t.i || pts[s.i][0].join() === pts[t.i][0].join() || pts[s.i].at(-1)!.join() === pts[t.i].at(-1)!.join()) continue;
+    for (const [c, o] of [[1, 0], [0, 1]]) {
+      if (s.a[c] !== s.b[c] || t.a[c] !== t.b[c] || s.a[c] !== t.a[c]) continue;
+      const lo = Math.max(Math.min(s.a[o], s.b[o]), Math.min(t.a[o], t.b[o])), hi = Math.min(Math.max(s.a[o], s.b[o]), Math.max(t.a[o], t.b[o]));
+      if (hi - lo > 1) out.push(`${d.edges[s.i].d} · ${d.edges[t.i].d}: 한 줄로 겹침`);
+    }
+  }
+  return out;
+}

@@ -1,7 +1,6 @@
 import type { Locale } from './i18n';
 
 // 프로젝트는 코드로 관리한다 (자주 안 바뀜). 글은 posts.project에 이 slug로 연결된다.
-// TODO(김세민): 소개 문구와 이미지 채우기 — 지금은 자리표시
 type T = Record<Locale, string>;
 type Item = { title: T; body: T; tech?: T }; // title·body는 쉬운 말, tech는 개발자용 세부(작게)
 
@@ -22,7 +21,6 @@ export type ProjectDetail = {
 
 export type Project = { slug: string; name: T; image: string | null; summary: T; detail?: ProjectDetail };
 
-const TBD = { ko: '프로젝트 소개를 준비하고 있습니다.', en: 'Project details coming soon.' };
 
 const F = '/projects/finch';
 
@@ -219,6 +217,100 @@ const ALGOSU: ProjectDetail = {
   ],
 };
 
+const J = '/projects/janus';
+
+// 출처: tpals0409/Janus README·V1_AUDIT.md. 화면은 로컬 앱(v1.0.30, 라이트 모드)의 janus-qa-fixture 프로젝트에서 캡처
+const JANUS: ProjectDetail = {
+  banner: `${J}/banner-2240.webp`,
+  device: 'desktop',
+  facts: [
+    { label: { ko: '기간', en: 'Period' }, value: { ko: '2026.08 – 현재 (개발 중)', en: 'Aug 2026 – present' } },
+    { label: { ko: '팀', en: 'Team' }, value: { ko: '1인 개발', en: 'Solo' } },
+    { label: { ko: '역할', en: 'Role' }, value: { ko: '기획 · 설계 · 데스크톱 앱 · 백엔드 · 로컬 추론', en: 'Planning · design · desktop app · backend · local inference' } },
+  ],
+  links: [
+    { label: { ko: 'GitHub', en: 'GitHub' }, href: 'https://github.com/tpals0409/Janus' },
+  ],
+  problem: {
+    ko: '코딩 에이전트가 답변을 마쳐도 파일 변경 확인, 테스트, 리뷰, 커밋이 남음. 로컬 컴퓨터의 제한된 자원으로 검증된 작업 결과를 얼마나 얻을 수 있는지가 출발점.',
+    en: 'When a coding agent finishes answering, checking the changes, testing, reviewing and committing are still left. The starting question: how much verified work can limited local hardware produce?',
+  },
+  answers: [
+    {
+      title: { ko: 'Task 하나에 작업 맥락을 모음', en: 'One Task holds the whole context' },
+      body: { ko: '대화·터미널·에디터·미리보기·리뷰를 Task에 모으고, 실행 중·입력 필요·실패·리뷰 대기 상태를 구분', en: 'Chat, terminal, editor, preview and review live in one Task, with running, needs-input, failed and awaiting-review kept apart.' },
+    },
+    {
+      title: { ko: '로컬 모델과 구독형 CLI', en: 'Local model or your existing CLI' },
+      body: { ko: 'MLX 로컬 모델(Qwen 27B 4-bit)이 기본이고, 이미 로그인한 Claude Code·Codex CLI도 실행기로 선택', en: 'A local MLX model (Qwen 27B 4-bit) by default, or an already signed-in Claude Code or Codex CLI as the runner.' },
+    },
+    {
+      title: { ko: '검증한 변경만 커밋', en: 'Only verified changes are committed' },
+      body: { ko: 'Git diff를 기준으로 검증과 리뷰를 거쳐 커밋하고, 선택적으로 gh CLI로 push·PR까지 연결', en: 'Changes are verified and reviewed against the Git diff before commit, optionally continuing to push and PR through gh.' },
+    },
+  ],
+  mine: {
+    intro: {
+      ko: '1인 개발. 제품 설계부터 Electron 앱, FastAPI 백엔드, 로컬 추론 실행과 검증 체계까지 전담',
+      en: 'Solo project: product design, the Electron app, the FastAPI backend, local inference and the verification setup.',
+    },
+    items: [
+      {
+        title: { ko: '예산을 건 위임', en: 'Delegation with a budget' },
+        body: { ko: '오케스트레이터가 하위 작업을 worker에 맡기되 worker 수와 시간·토큰·단계 예산을 제한하고, AgentProfile로 쓸 도구를 정함', en: 'The orchestrator hands sub-tasks to workers under caps on worker count, time, tokens and steps, with AgentProfiles deciding the tools.' },
+        tech: { ko: '오케스트레이터 · worker · AgentProfile · 자원 스케줄러', en: 'Orchestrator · workers · AgentProfile · resource scheduler' },
+      },
+      {
+        title: { ko: '생성과 검증의 대기 분리', en: 'Generation and verification overlap' },
+        body: { ko: '로컬 모델의 생성 슬롯과 도구·검증 작업을 따로 관리해, 생성을 기다리는 동안 할 수 있는 검증을 겹쳐 실행', en: 'Model generation slots and tool/verification work are scheduled separately, so verification runs while generation waits.' },
+        tech: { ko: 'MLX · 생성 슬롯 · 큐 우선순위 · 시간·토큰 상한', en: 'MLX · generation slots · queue priority · time and token caps' },
+      },
+      {
+        title: { ko: '상태를 나눠 기록', en: 'Separate states, honestly reported' },
+        body: { ko: '실행 종료, 검증 완료, 리뷰 수락, 커밋·push 성공을 서로 다른 상태로 다루고, push 전 Janus가 기록한 커밋과 HEAD 일치를 확인', en: 'Run finished, verified, review accepted and committed/pushed are distinct states, and a push requires the recorded commit to match HEAD.' },
+        tech: { ko: 'Git diff · revision 단위 리뷰 · SHA 확인 · gh CLI', en: 'Git diff · per-revision review · SHA check · gh CLI' },
+      },
+      {
+        title: { ko: '실행 경로별 권한 경계', en: 'Permission boundaries per runner' },
+        body: { ko: '로컬 모델과 Claude Code 경로는 Janus의 도구 승인 흐름을 쓰고, 경로마다 다른 통제 범위를 문서로 공개', en: 'The local and Claude Code paths go through Janus\'s tool approvals, and each runner\'s limits are documented openly.' },
+        tech: { ko: 'MCP · 기본 거부 승인 · HTTP/WS 토큰·Origin 검사', en: 'MCP · default-deny approvals · HTTP/WS token and Origin checks' },
+      },
+      {
+        title: { ko: '문서와 코드 일치 검사', en: 'Docs checked against code' },
+        body: { ko: '설계 문서가 현재 기능을 보장하는 것처럼 읽히지 않도록 주요 설명을 코드와 대조하는 테스트를 CI에 둠', en: 'A CI test compares key claims in the docs with the code, so old design notes never read as current features.' },
+        tech: { ko: 'pytest · TypeScript 검사 · 번들 크기 · 의존성 감사 · macOS 패키징 CI', en: 'pytest · TypeScript checks · bundle size · dependency audit · macOS packaging CI' },
+      },
+    ],
+  },
+  fixes: [
+    {
+      title: { ko: 'worker 효율 개선', en: 'Worker efficiency' },
+      body: { ko: '같은 고정 worker 정책에서 수용 검증 통과 14/15를 유지하며 소요 시간 109.9초 → 88.1초, 프롬프트 토큰 14,855 → 10,993으로 감소 (2026-08-23 v1 감사)', en: 'Under the same fixed-worker policy, acceptance held at 14/15 while wall time fell from 109.9 s to 88.1 s and prompt tokens from 14,855 to 10,993 (v1 audit, 2026-08-23).' },
+    },
+    {
+      title: { ko: '실제 27B 모델로 반복 검증', en: 'Repeated runs on the real 27B model' },
+      body: { ko: 'TaskSuite 45회 중 44회 수용 검증 통과, 281회 복구 반복 후 일시 상태 잔여 0과 SQLite 무결성 확인', en: '44 of 45 TaskSuite runs passed acceptance, and a 281-cycle recovery soak left zero transient state with SQLite integrity intact.' },
+    },
+    {
+      title: { ko: '중단된 작업을 성공으로 표시하지 않기', en: 'Interrupted work never shows as done' },
+      body: { ko: '앱이 다시 시작되면 이전 작업을 중단 상태로 복구하고, 작업 데이터 백업·복원과 민감정보를 뺀 진단 묶음 제공', en: 'After a restart, unfinished work is restored as interrupted, with backup/restore and a redacted diagnostics bundle.' },
+    },
+  ],
+  screens: [
+    { src: `${J}/task-mac.webp`, label: { ko: '작업과 하위 에이전트', en: 'Task and sub-agents' }, size: [1920, 1148] },
+    { src: `${J}/worker-mac.webp`, label: { ko: '워커 상세', en: 'Worker detail' }, size: [1920, 1148] },
+    { src: `${J}/model-mac.webp`, label: { ko: '실행 모델 선택', en: 'Choosing the runner' }, size: [1920, 1148] },
+    { src: `${J}/today-mac.webp`, label: { ko: '사람을 기다리는 작업', en: 'Tasks waiting on you' }, size: [1920, 1148] },
+  ],
+  stack: [
+    { label: { ko: '데스크톱', en: 'Desktop' }, value: 'Electron · React · TypeScript · Zustand' },
+    { label: { ko: '개발 화면', en: 'Dev surfaces' }, value: 'Monaco Editor · 터미널 · 브라우저 미리보기' },
+    { label: { ko: '백엔드', en: 'Backend' }, value: 'Python · FastAPI · HTTP·WebSocket · SQLite' },
+    { label: { ko: '로컬 추론', en: 'Local inference' }, value: 'Apple Silicon · MLX · Qwen 27B 4-bit' },
+    { label: { ko: '결과 관리', en: 'Delivery' }, value: 'Git · GitHub CLI' },
+  ],
+};
+
 const P = '/projects/pinlog';
 
 // 화면·소개 출처: 팀 저장소(Team-PinLog)와 프론트엔드 담당 팀원의 케이스 스터디. 인프라(본인 몫)는 Team-PinLog/infra README
@@ -325,7 +417,11 @@ export const PROJECTS: Project[] = [
     summary: { ko: '포트폴리오 기반 나만의 AI 투자 비서', en: 'A personal AI investing assistant built on your portfolio' },
     detail: FINCH,
   },
-  { slug: 'janus', name: { ko: 'Janus', en: 'Janus' }, image: null, summary: TBD },
+  {
+    slug: 'janus', name: { ko: 'Janus', en: 'Janus' }, image: `${J}/banner-1120.webp`,
+    summary: { ko: '코딩 에이전트의 작업부터 검증, 리뷰, 커밋까지 이어지는 로컬 우선 에이전트 개발 환경', en: 'A local-first agent development environment that carries coding-agent work through verification, review and commit' },
+    detail: JANUS,
+  },
   {
     slug: 'pinlog', name: { ko: '핀로그', en: 'PinLog' }, image: `${P}/banner-1120.webp`,
     summary: { ko: '장소 이름이 기억나지 않아도 경험과 감정으로 다시 찾는 AI 장소 기록 서비스', en: 'An AI place journal that finds places again by experience and feeling, even when you forget the name' },

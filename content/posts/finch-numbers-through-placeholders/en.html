@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+body{font:var(--fw-body) var(--fs-body)/var(--lh-body) var(--font-sans);letter-spacing:var(--ls-body);color:var(--color-fg);max-width:var(--container-wrap);box-sizing:border-box;margin:0 auto;padding:0 24px 80px}
+h2{font:var(--fw-tile) var(--fs-tile)/var(--lh-tile) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-tile);margin:2.4em 0 .8em}
+h3{font:var(--fw-section) var(--fs-body)/var(--lh-body) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-body);margin:2em 0 .5em}
+p,ul,ol{margin:0 0 1em}
+strong{font-weight:var(--fw-section)}
+a{color:var(--color-link)}
+code{font-family:var(--font-mono);font-size:.9em;background:var(--color-fog);padding:0 4px}
+blockquote{margin:1.5em 0;padding-left:var(--space-cluster);border-left:2px solid var(--color-line);color:var(--color-secondary)}
+blockquote p{margin:0}
+</style>
+</head>
+<body><p>FINCH is an AI investment assistant that explains returns, risk and stock analysis based on what you hold and what you've traded. I led the AI part and built the AI server, and one rule was set from the start: the LLM never writes numbers itself.</p>
+<p>Give an LLM some figures and ask for an explanation, and it will round 18.3% to "about 18%" or +0.87%p to "+0.9%p", or make up a number that isn't there. In investment information, one wrong number makes the whole explanation untrustworthy.</p>
+
+<h2>The placeholder structure</h2>
+<p>So the calculation engine produces the numbers, and the LLM only marks where a number goes.</p>
+<leo-pipeline>
+  <leo-stage title="Engine">Computes returns, weights and risk metrics</leo-stage>
+  <leo-stage title="Key list">Only the allowed placeholder keys go into the prompt</leo-stage>
+  <leo-stage title="LLM writes">Uses {{key}} instead of numbers</leo-stage>
+  <leo-stage title="Checks">Rejects unknown keys and numbers written directly</leo-stage>
+  <leo-stage title="Substitution">The server swaps keys for engine values</leo-stage>
+</leo-pipeline>
+<p>For example, the LLM writes "SK hynix {{return_000660}}" and the server replaces the key with "+3.4%" from the engine. The same pass splits the response into text segments and metric segments, so the UI can highlight the numbers on their own.</p>
+<pre><code class="language-py" data-file="app/llm/generate.py">for match in _PLACEHOLDER_RE.finditer(narrative):
+    segment = values.get(match.group(1))
+    if segment is None:
+        continue
+    if match.start() &gt; cursor:
+        out.append(Segment.text(narrative[cursor : match.start()]))
+    out.append(segment)
+    cursor = match.end()</code></pre>
+<p>If a substituted value doesn't match the engine value, the response is blocked instead of regenerated. That means the pipeline is broken, not the model, and regenerating in the hope that it comes out right would be the wrong move.</p>
+<p>After launch, this structure turned out to have three holes.</p>
+
+<h2>Hole 1: making the model fill in separate lists</h2>
+<p>The original response format asked for the text plus two separate lists: the placeholders used and the citations used. One day the stock analysis sections were all going out empty. That day's rejection reasons showed 102 citation-check failures. The model had copied the in-text notation into the lists, <code>^cit_1</code> and <code>{{key}}</code> instead of <code>cit_1</code> and <code>key</code>, and the check only accepted bare ids.</p>
+<p>I first made the check accept both notations, then went further and removed the lists. The text already contains every <code>{{key}}</code> and footnote, so the server can pull them out. Asking the model to keep a list in sync with its own text means writing the same thing twice, and when the two disagree, the section is thrown away. The response format went down to a single text field. We were about to switch to a smaller model to cut costs, so reducing what the model had to get right mattered.</p>
+
+<h2>Hole 2: writing the unit twice</h2>
+<p>Substituted values already carry their sign and unit (-0.40%p, 41.00%, 1,250 won). The model added the unit again anyway. The first card on the home screen said "비중은 41.00%%였습니다" (a weight of 41.00%%), and a performance breakdown said "-0.40%pp".</p>
+<p>The segments made the cause obvious. The metric segment was "41.00%", and the text segment right after it started with "%". It wasn't a rendering bug; the model had written <code>{{key}}%</code>. The prompt already warned against this, so along with tightening the wording I added a check. Once values are substituted the placeholder boundary is gone, so the check runs on the text before substitution and looks for the same unit right after a <code>{{key}}</code>. Values without a unit are skipped, because some places need the model to add one (like <code>{{trading_days}}</code> followed by "days").</p>
+
+<h2>Hole 3: a path where no values came through</h2>
+<p>The last hole showed up just before the demo. Asked about holdings in chat, the assistant answered "I couldn't find per-stock return data." The tool was reading all 7 holdings correctly.</p>
+<p>In this design, numbers from tools also have to be registered as placeholder values before they reach generation. That was on purpose, so no number can get around the rule. But the path that read account data from the backend never called the code that registers values. In production there were 7 holdings and 0 registered values, and the model was told "No numeric placeholders available. Do not mention numbers." It was following the rule exactly.</p>
+<p>After the fix, 31 values were registered. I found one more thing along the way: keys end in a stock code, like <code>return_000660</code>, so the model sometimes wrote the code instead of the name ("000660: +3.4%"). Now a code-to-name table goes along with the request.</p>
+<leo-compare>
+  <leo-side label="Before"><p>"I couldn't find per-stock return data."</p></leo-side>
+  <leo-side label="After"><p>"SK hynix +3.4%, Korean Air +19.2%, Hyundai Motor -14.3%, …"</p></leo-side>
+</leo-compare>
+<p>The fix came with 4 new tests, and I confirmed all 4 fail when the fix is reverted.</p>
+
+<h2>Summary</h2>
+<p>The placeholder structure stopped the LLM from making up numbers. The cost is that every number has to travel from the engine through placeholders, and if that path breaks anywhere, you get "I don't know" instead of a wrong answer. In all three holes, the model wasn't breaking the rule; the response format, a check or a data path didn't match it.</p>
+</body>
+</html>

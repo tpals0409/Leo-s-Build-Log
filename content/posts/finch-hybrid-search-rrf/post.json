@@ -1,0 +1,19 @@
+{
+  "category": "engineering",
+  "project": "finch",
+  "tags": [
+    "rag",
+    "search",
+    "postgres",
+    "evaluation"
+  ],
+  "publishedAt": "2026-09-22T20:00:00+09:00",
+  "ko": {
+    "title": "벡터 검색 0.375에서 하이브리드 검색 1.000까지",
+    "summary": "문서가 4.5배로 늘자 벡터 검색만으로는 Recall@5가 0.375까지 떨어졌습니다. 한국어 바이그램 단어 검색과 RRF, 제목·출처·최신성 가중치로 고친 과정을 같은 평가셋 숫자로 따라갑니다."
+  },
+  "en": {
+    "title": "From 0.375 to 1.000: Hybrid Search for FINCH",
+    "summary": "When the documents grew 4.5 times, vector search alone dropped to 0.375 Recall@5. Korean bigram keyword search, RRF and title, source and freshness weights, followed on the same evaluation set."
+  }
+}

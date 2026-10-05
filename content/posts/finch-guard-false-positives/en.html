@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+body{font:var(--fw-body) var(--fs-body)/var(--lh-body) var(--font-sans);letter-spacing:var(--ls-body);color:var(--color-fg);max-width:var(--container-wrap);box-sizing:border-box;margin:0 auto;padding:0 24px 80px}
+h2{font:var(--fw-tile) var(--fs-tile)/var(--lh-tile) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-tile);margin:2.4em 0 .8em}
+h3{font:var(--fw-section) var(--fs-body)/var(--lh-body) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-body);margin:2em 0 .5em}
+p,ul,ol{margin:0 0 1em}
+strong{font-weight:var(--fw-section)}
+a{color:var(--color-link)}
+code{font-family:var(--font-mono);font-size:.9em;background:var(--color-fog);padding:0 4px}
+blockquote{margin:1.5em 0;padding-left:var(--space-cluster);border-left:2px solid var(--color-line);color:var(--color-secondary)}
+blockquote p{margin:0}
+</style>
+</head>
+<body><p>Before FINCH's AI server sends an explanation to the user, the text goes through 10 automatic checks. They look at things like whether the model wrote a number directly, whether each footnote points to a real source, whether there's trading advice such as "a good time to buy", and whether the sentence count is in range. If any check fails, the server regenerates with the reasons attached, and if that fails too, the section isn't sent.</p>
+<p>Strict checks stop wrong explanations, but they also throw away good ones, and every discarded section costs more tokens to regenerate. Once we were in production and counted the rejection reasons, a good share turned out to be false positives: text that was fine but got flagged anyway. This post is about finding and reducing them.</p>
+
+<h2>Part of the top rejection was a footnote format issue</h2>
+<p>Early in production, the top rejection reason was "raw number" (a number written directly instead of through a placeholder) with 137 cases, and second was the citation check with 102. Following up on an issue the backend part raised, it turned out both had the same root.</p>
+<p>Footnotes are supposed to look like <code>[^cit_5]</code>, but the model sometimes wrote <code>^cit_5</code> without the brackets. The number check removes footnotes first and then looks for digits. A bracketless footnote wasn't removed, so the digit 5 was left behind and flagged as a raw number.</p>
+<p>Instead of asking the model to follow the format more carefully, the server now normalizes footnotes in the text to the standard form. The check actually got stricter: before, a bracketless footnote was invisible to it, so a made-up citation could slip through. Now it's caught.</p>
+
+<h2>When the prompt and the check disagree</h2>
+<p>Raw-number rejections kept coming after the footnote fix. Counting regeneration reasons over 6 hours of production, most of the 21 raw-number rejections were false positives.</p>
+<leo-metrics>
+  <leo-metric value="12" label="'1' as a rank or unit number"></leo-metric>
+  <leo-metric value="6" label="'2026' as a date or year"></leo-metric>
+  <leo-metric value="3" label="', 주' and '한 주' (one week)"></leo-metric>
+</leo-metrics>
+<p>The prompt told the model to write years as-is, but the check only allowed the form "2026년". The quantity regex could start with a comma, so it read ", 주" as a quantity. Dates, years, ranks, equipment numbers and "한 주" (one week, as a period) went into the allowlist, and the regex now has to start with a digit (<code>\d[\d,]*</code>).</p>
+<p>The prompt also got a section called "expressions that get discarded by automatic checks", listing the exact words the checker looks for. If the model doesn't know what gets thrown away, it keeps making the same mistake.</p>
+
+<h2>A fix that overcorrected</h2>
+<p>Sentence counts went the same way. An earlier prompt line, "it's safer to keep it short", led to overcorrection. In the batch run with the new prompt, 26 of 145 sections were discarded, and the top reason was stock analysis failing "at least 3 sentences required: 1". Portfolio diagnosis went the other way, running 5 to 9 sentences. Count words like "한 종목" (one stock) and "네 가지" (four things) were also rejected as quantities.</p>
+<p>So the prompt now states the sentence counts exactly as the check enforces them. Stock analysis: "exactly 3 sentences, 4 only when there's plenty of evidence; 1–2 or 5 gets discarded". Diagnosis: exactly 3 sentences per finding. It also says that too few and too many are both discarded, and that count words are quantities too.</p>
+
+<h2>Three sentences counted as one</h2>
+<p>In the next batch, 13 of 35 discards were still "at least 3 sentences required: 1". This time it wasn't the model. It had written 3 sentences but put the footnote after the period.</p>
+<pre><code>…늘었습니다.[^cit_1] 다음 문장은…</code></pre>
+<p>The sentence splitter only treated "terminal punctuation followed by whitespace" as an end, so a period followed by a footnote didn't count. The whole paragraph was counted as one sentence. Now footnotes after a period are moved in front of it before counting.</p>
+<pre><code class="language-py" data-file="app/llm/guard/output.py">_SENTENCE_END_RE = re.compile(r"(?&lt;!\d)[.!?]+(?=\s|$)")
+_TRAILING_CITATION_RE = re.compile(r"([.!?]+)((?:\s*\[\^[^\]]+\])+)")
+
+
+def split_sentences(text: str) -&gt; list[str]:
+    text = _TRAILING_CITATION_RE.sub(lambda m: m.group(2).strip() + m.group(1), text)
+    ...</code></pre>
+<p>This fix changed only the check, not the prompt. A prompt change bumps the prompt version and invalidates every cached analysis. Changing only the check kept the cache, and the next batch rebuilt just the sections that had failed.</p>
+
+<h2>False positives in chat</h2>
+<p>The same day, after the backend relay was connected, the very first chat ended up blocked. "1년간" (over 1 year), "1종목" (1 stock) and "3종목" (3 stocks) were rejected as quantities. A period like "1-year volatility" isn't a ratio, an amount or a quantity, so durations went into the allowlist. Stock counts were a place where the tools gave no placeholder, leaving the model no choice but to write a number, so the chat prompt now says to list stocks by name instead of counting them.</p>
+
+<h2>Summary</h2>
+<p>With each fix I tried not to loosen the checks. Made-up citations and directly written numbers are still blocked; only cases where the same thing was written differently, or the check miscounted, were let through.</p>
+<p>Looking back, most false positives weren't the model's fault. Either the prompt and the check described different rules (years, sentence counts), or the check didn't know what real output looked like (bracketless footnotes, footnotes after periods). So the work started with counting rejection reasons and reading the flagged sentences.</p>
+</body>
+</html>

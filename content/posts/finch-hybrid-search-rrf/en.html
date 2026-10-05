@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+body{font:var(--fw-body) var(--fs-body)/var(--lh-body) var(--font-sans);letter-spacing:var(--ls-body);color:var(--color-fg);max-width:var(--container-wrap);box-sizing:border-box;margin:0 auto;padding:0 24px 80px}
+h2{font:var(--fw-tile) var(--fs-tile)/var(--lh-tile) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-tile);margin:2.4em 0 .8em}
+h3{font:var(--fw-section) var(--fs-body)/var(--lh-body) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-body);margin:2em 0 .5em}
+p,ul,ol{margin:0 0 1em}
+strong{font-weight:var(--fw-section)}
+a{color:var(--color-link)}
+code{font-family:var(--font-mono);font-size:.9em;background:var(--color-fog);padding:0 4px}
+blockquote{margin:1.5em 0;padding-left:var(--space-cluster);border-left:2px solid var(--color-line);color:var(--color-secondary)}
+blockquote p{margin:0}
+</style>
+</head>
+<body><p>FINCH's AI explanations come with sources. If it says a company cancelled treasury shares, the filing is attached as a footnote. Sources come from searching filings and news we've already collected, and if search brings back the wrong document, the explanation goes wrong with it.</p>
+<p>This post covers how search started as vector search alone, dropped off when the document set grew, and became hybrid search. Every change was judged on the same evaluation set.</p>
+
+<h2>The evaluation set came first</h2>
+<p>Before touching search, I built an evaluation set. It only has questions whose answers actually exist in our documents, and each answer is given as part of a document title ("주식소각결정" for share cancellation, "유상증자결정" for a rights issue, and so on). The metric is Recall@5, the share of questions with the right document in the top 5, with a baseline of 0.75.</p>
+<p>It also has one question with no answer: "Is there a filing about entering the space launch business?" No stock in the set has anything like that. It's there to record that a search returning the top 5 with no score threshold always returns something, answer or not.</p>
+
+<h2>Vector search alone: 0.875</h2>
+<p>At first, search used only embedding similarity (an embedding turns text into a vector of numbers that sit closer together the closer the meanings are). Over 2,280 chunks (pieces of documents), Recall@5 was 0.875, 7 of 8.</p>
+<p>The miss was the share-cancellation question. The cancellation filing used the phrase "주식 소각 결정" (decision to cancel shares) several times, but its similarity to the question was only 0.4366, below 8 half-year reports from different companies (0.46–0.51). I first assumed one document was taking over the top results and implemented a cap on chunks per document. With caps of 1, 2 and unlimited, all three gave 0.875. It didn't help, so I reverted it and kept only the measurement in the evaluation file.</p>
+<p>The real cause was that vector search is weak when the words overlap exactly. I noted then that hybrid search was needed.</p>
+
+<h2>4.5 times the documents: 0.375</h2>
+<p>Six days later the collection grew to 216 filings and 10,195 chunks. A single KB Financial half-year report accounted for 6,110 of them, more than half. Measured the same way, Recall@5 fell to 0.375, 3 of 8. Chunks from that big report filled the top results.</p>
+
+<h2>Adding keyword search and merging with RRF</h2>
+<p>So keyword search went in next to vector search, and the two result lists were merged with RRF (Reciprocal Rank Fusion).</p>
+<leo-steps>
+  <leo-step title="Korean keyword search"><p>Postgres' built-in full-text search knows nothing about Korean morphology. Korean attaches particles to words, so feeding sentences in as-is turns each word-plus-particle into one token that rarely matches. Instead, text is stored as two-character bigrams ("소각결정" → 소각, 각결, 결정), searched with built-in features only (tsvector and a GIN index), no extensions.</p></leo-step>
+  <leo-step title="Merging with RRF"><p>RRF looks only at rank, not score. A document at rank r in a list gets 1/(60 + r), and the points are summed. Vector similarity and keyword scores are on different scales and can't be added directly; using only rank avoids that. Each path contributes 60 candidates before merging.</p></leo-step>
+  <leo-step title="Reserved slots for keyword hits"><p>Plain RRF buried documents whose titles matched exactly, because top vector chunks also matched a few words and picked up extra points. So 2 of the top 5 slots (top_k × 0.4) go to the top keyword results first.</p></leo-step>
+</leo-steps>
+<p>With this, Recall@5 went from 0.375 to 0.667.</p>
+
+<h2>A bug that zeroed every rank</h2>
+<p>Then it turned out the keyword ranking score (ts_rank_cd) was 0 for everything. The bigram string had been cast straight to tsvector, which dropped word positions, and the ranking function, which relies on positions, returned 0 for every document. Switching to <code>to_tsvector('simple', …)</code> brought the same evaluation to 0.833.</p>
+
+<h2>Title weight, source and freshness</h2>
+<p>Three days later I worked through the remaining misses. Filings put their type right in the title, so matching titles mattered.</p>
+<ul>
+  <li>Titles are weighted A and bodies D, and there's an extra candidate path that looks only at titles. A document whose title directly contains the key words of the question gets one reserved slot.</li>
+  <li>Scores are multiplied by a source weight: filings and statistics (DART, ECOS, KRX) 1.15, the brokerage API (KIS) 1.10, news 1.00. A bigger gap would always push recent news below old filings, so it stays within 15%.</li>
+  <li>Scores are also multiplied by freshness. Different kinds of documents age at different speeds, so the half-life is 14 days for news, 90 for filings, 180 for financials and 30 for macro indicators.</li>
+</ul>
+<pre><code class="language-py" data-file="app/rag/search.py">return 0.5 + 0.5 * math.exp(-math.log(2) * age_days / half_life)</code></pre>
+<p>At this stage Recall@5 reached 1.000, 7 of 7. The no-answer question still returns something, and that stays on the watch list.</p>
+<leo-metrics>
+  <leo-metric value="0.375" label="Vector only (10,195 chunks)"></leo-metric>
+  <leo-metric value="0.667" label="+ keyword search, RRF"></leo-metric>
+  <leo-metric value="0.833" label="+ position bug fix"></leo-metric>
+  <leo-metric value="1.000" label="+ title, source, freshness"></leo-metric>
+</leo-metrics>
+
+<h2>Documents lost before search</h2>
+<p>The first production batch hit a problem in collection, not search. Seven newly added stocks were filled with a year of filings, but not a single annual report came in. Periodic filings were appended to the end of the list, and the caller took only the first 20. Now periodic filings go to the front. Search can't find a document that was never collected.</p>
+
+<h2>Summary</h2>
+<p>Building the evaluation set first meant every change could be checked with a number. The chunk cap that did nothing was reverted, and the fact that vector search alone wasn't enough at scale was confirmed by a 0.375, not a hunch. The limits: the set has only 7 or 8 questions, and when the documents are re-collected the answers change too, so the set has to be updated with them.</p>
+</body>
+</html>

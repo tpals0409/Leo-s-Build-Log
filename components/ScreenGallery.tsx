@@ -69,7 +69,7 @@ export default function ScreenGallery({ screens, locale, device = 'phone' }: { s
 
 // 캡처 한 장. 움직이는 화면은 LoopVideo.
 // 휴대폰(FINCH): 세로 352×692. 크게 볼 때는 닫기·아래 줄을 뺀 남는 높이에 맞춘다.
-// PC(PinLog): 맥 창 테두리를 입힌 캡처라 장마다 비율이 조금 다르다(16:10·16:9 + 제목 줄) → 목록에선 같은 칸(1200×795) 가운데에, 크게 볼 땐 폭과 남는 높이 중 작은 쪽에 맞춘다.
+// PC(PinLog): 모든 캡처를 16:9로 잘라 맥 창 테두리를 입혔다(같은 크기 창). 크게 볼 땐 폭과 남는 높이 중 작은 쪽에 맞춘다.
 const PHONE = { small: 'aspect-[352/692] w-full', big: 'aspect-[352/692] h-full w-auto max-w-full' };
 const CHROME = 'calc(100dvh - 10rem)'; // 크게 볼 때 닫기·아래 줄·여백을 뺀 높이
 // mp4엔 투명도가 없어 원본의 투명한 바깥(휴대폰 모서리·그림자, 맥 창 둥근 모서리)이 채워져 보인다 → 테두리 모양대로 잘라 낸다.
@@ -85,12 +85,12 @@ function Media({ s, device, big }: { s: Screen; device: Device; big?: boolean })
       ? <LoopVideo key={s.src} src={s.video} poster={s.src} label={s.label} className={c} style={{ clipPath: PHONE_FRAME }} />
       : <img src={s.src} alt={s.label} width={352} height={692} loading={big ? 'eager' : 'lazy'} decoding="async" className={c} />;
   }
-  const [w, h] = s.size ?? [1200, 795];
+  const [w, h] = s.size ?? [960, 574];
   const style = { aspectRatio: `${w} / ${h}`, width: big ? `min(100%, calc(${CHROME} * ${w / h}))` : '100%' };
   const m = s.video
     ? <LoopVideo key={s.src} src={s.video} poster={s.src} label={s.label} style={{ ...style, clipPath: macFrame([w, h]) }} />
     : <img src={s.src} alt={s.label} width={w} height={h} loading={big ? 'eager' : 'lazy'} decoding="async" style={style} />;
-  return big ? m : <div className="flex aspect-[1200/795] w-full items-center justify-center">{m}</div>;
+  return big ? m : <div className="flex aspect-[960/574] w-full items-center justify-center">{m}</div>;
 }
 
 function Icon({ d, className = '' }: { d: string; className?: string }) {

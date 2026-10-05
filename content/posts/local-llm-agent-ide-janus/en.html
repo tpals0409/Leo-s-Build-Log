@@ -25,7 +25,7 @@ blockquote p{margin:0}
 
 <leo-metrics>
   <leo-metric value="27B" label="Local model" note="Qwen3.8 · MLX 4-bit"></leo-metric>
-  <leo-metric value="44/45" label="TaskSuite acceptance on the real model" note="3 tasks × 3 policies × 5 runs"></leo-metric>
+  <leo-metric value="44/45" label="Fixed tasks passed" note="3 tasks × 3 delegation modes × 5 runs"></leo-metric>
   <leo-metric value="0" label="Code sent off the machine" note="on the local path"></leo-metric>
 </leo-metrics>
 
@@ -38,7 +38,7 @@ blockquote p{margin:0}
   <leo-stage title="Review">A person checks the diff and results</leo-stage>
   <leo-stage title="Commit">Push only if the recorded commit is HEAD</leo-stage>
 </leo-pipeline>
-<p>Run finished, verified, review accepted and committed are recorded as separate states. Changes are computed from the repository's own Git diff rather than a separate snapshot, and when the revision hash of the whole change set changes, earlier reviews and verification have to be redone. Nothing can be committed without passing verification.</p>
+<p>Run finished, verified, review accepted and committed are recorded as separate states. Changes are computed from the repository's own Git diff rather than a separate snapshot, and when the revision (an ID computed from the whole change set) changes, earlier reviews and verification have to be redone. Nothing can be committed without passing verification.</p>
 
 <h2>Delegation with a budget</h2>
 <p>I expected that splitting large tasks across sub-agents (workers) would help a weaker model. Measurements on the real model didn't match that.</p>
@@ -51,20 +51,20 @@ blockquote p{margin:0}
   <li>Worker count and token, time and step budgets are capped, and a role can be respawned only for one initial try and two corrections.</li>
   <li>When a worker runs out of budget, its changes and partial results go to the parent agent so the same work isn't assigned again.</li>
   <li>Only one role edits files; research and verification roles get read tools only. Calling a write tool that wasn't given is rejected at execution.</li>
-  <li>Retries depend on the failure. If verification fails, a read-only verifier finds the cause and the implementer fixes it; budget, timeout and tool errors each set up the next attempt differently.</li>
+  <li>Retries depend on the failure. If verification fails, a sub-agent that can only read finds the cause and the sub-agent that edits files fixes it; budget, timeout and tool errors each set up the next attempt differently.</li>
 </ul>
 
 <h2>Saving local resources</h2>
 <p>Locally, generating less means finishing sooner, so Janus avoids resending or regenerating the same content.</p>
 <ul>
   <li>Older conversation is summarized while keeping tool calls paired with their results. In a test that simulates long sessions, input dropped by more than 40%.</li>
-  <li>The unchanging prefix (system instructions and summary) is connected to the model server's prefix cache. On the second turn of a session, 36 of 57 prompt tokens were served from the cache.</li>
+  <li>The unchanging prefix (system instructions and summary) is connected to the model server's prefix cache (which reuses the computation for an identical beginning). On the second turn of a session, 36 of 57 prompt tokens were served from the cache.</li>
   <li>Concurrent generation went from 5 to 3. Each request keeps its own KV cache and there is one GPU, so going past 2 or 3 brought no gain, and in practice concurrency never went above 3.</li>
 </ul>
 
 <h2>Judging improvements by measurement only</h2>
-<p>Each harness change was compared against the current setup by running the same tasks with the same model and policy several times. If the pass rate dropped, the change didn't count as an improvement even if time and tokens went down. A scheduler change dropped the pass rate from 44/45 to 40/45, so it wasn't applied.</p>
-<p>The single-worker policy kept the pass rate while using less time and fewer tokens, so it was applied.</p>
+<p>Each harness change was compared against the current setup by running a fixed set of tasks (each with a test that decides whether it is done) several times, with the same model and delegation mode. If the pass rate dropped, the change didn't count as an improvement even if time and tokens went down. A change to the scheduler, which decides the order of work, dropped the pass rate from 44/45 to 40/45, so it wasn't applied.</p>
+<p>The single-worker mode kept the pass rate while using less time and fewer tokens, so it was applied.</p>
 <leo-metrics>
   <leo-metric value="14/15" label="Acceptance passed" note="same as before"></leo-metric>
   <leo-metric value="88.1" unit="s" label="Wall time" delta="-19.8%"></leo-metric>
@@ -74,7 +74,7 @@ blockquote p{margin:0}
 
 <h2>Looking back: what the harness covered and what it didn't</h2>
 <p>Deciding completion by verification, capping delegation and checking changes by measurement let the 27B model pass 44 of 45 tasks.</p>
-<p>The model's own limits remain. Deep investigation and decisions across many files still depend on the model, and the difference is obvious next to Claude or Codex. That's why Janus also lets you choose an already signed-in Claude Code or Codex CLI as the runner, with the documentation spelling out how control differs on each path.</p>
+<p>The model's own limits remain. Deep investigation and decisions across many files still depend on the model, and the difference is obvious next to Claude or Codex. That's why Janus also lets you use an already signed-in Claude Code or Codex CLI instead of the local model, with the documentation spelling out how control differs on each path.</p>
 <leo-callout type="note" title="What I want to try next">
 <p>Cost is a big obstacle, but I'd like to try a stronger local model. The harness and the measurements work the same with a different model, so I plan to run the same tasks with only the model swapped and compare.</p>
 </leo-callout>

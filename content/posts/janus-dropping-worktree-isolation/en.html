@@ -15,11 +15,11 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<p>At first, Janus created a separate git worktree for every Task (a unit of work handed to the agent). A worktree checks out the same repository into another folder. The agent edited files only on a <code>janus/</code> branch in that copy and never touched the user's own checkout. To bring the result over, you ran a cherry-pick command that Janus gave you.</p>
+<p>At first, Janus created a separate git worktree for every Task (a unit of work handed to the agent). A worktree checks out the same repository into another folder. The agent edited files only on a <code>janus/</code> branch in that copy and never touched the user's own checkout. To bring the result over, you ran a cherry-pick command (a git command that copies commits from another branch onto the current one) that Janus gave you.</p>
 <p>Janus doesn't do this anymore. The agent works directly on the current branch of the repository you pick. This post covers how that changed and how the risks that came with it were handled.</p>
 
 <h2>Finding out late that isolation was gone</h2>
-<p>While preparing v1.0.28 I was checking the docs against actual behavior and found that isolation was already broken. An earlier commit that cleaned up the orchestration engine had removed the Task isolation wiring and the <code>janus/</code> branch guard along with it. From then on, the agent had been working in the user's real repository on the real branch.</p>
+<p>While preparing v1.0.28 I was checking the docs against actual behavior and found that isolation was already broken. An earlier commit that cleaned up the code that managed agent runs (the orchestration engine) had removed the Task isolation wiring and the <code>janus/</code> branch guard along with it. From then on, the agent had been working in the user's real repository on the real branch.</p>
 <p>The app, meanwhile, kept saying "creates a Task worktree without modifying your main checkout." The behavior and the description were opposites.</p>
 
 <h2>Restoring it, then removing it again</h2>
@@ -43,10 +43,10 @@ blockquote p{margin:0}
 <p>The behavior stayed with working in the original checkout, and the descriptions and safeguards were brought in line with that.</p>
 <leo-steps>
   <leo-step title="Say what actually happens"><p>"Creates a worktree without modifying your main checkout" became "works directly on this repository's current branch." When isolation was reverted, this wording was not.</p></leo-step>
-  <leo-step title="Document the boundaries that don't exist"><p>The README got a section on where the agent writes, with a table per runner (local model, subscription CLI) covering path confinement, approval before writes and whether the shell can leave. SECURITY.md lists boundaries that are missing, such as Tasks not being isolated from each other.</p></leo-step>
+  <leo-step title="Document the boundaries that don't exist"><p>The README got a section on where the agent writes, with a table for each way of running the agent (Janus's local model, or a subscription CLI such as an already signed-in Claude Code or Codex) covering path confinement, approval before writes and whether the shell can leave. SECURITY.md lists boundaries that are missing, such as Tasks not being isolated from each other.</p></leo-step>
   <leo-step title="Test docs against code"><p>So the docs can't drift again, CI runs a test that checks key claims in the docs against the code.</p></leo-step>
-  <leo-step title="Block concurrent runs in one project"><p>A warning on screen couldn't prevent conflicts, so the transaction that creates a run now rejects it if another Task in the same project is running. It names the blocking Task and clears as soon as that Task stops.</p></leo-step>
-  <leo-step title="Limit the subscription CLIs"><p>Working in the original checkout makes this more important, so Claude Code runs with <code>--restricted</code> to keep file tools inside the working folder, and its allowed tools are derived from the agent profile.</p></leo-step>
+  <leo-step title="Block concurrent runs in one project"><p>A warning on screen couldn't prevent conflicts, so at the moment a run starts, Janus checks whether another Task in the same project is running and refuses to start if it is. It names the blocking Task and clears as soon as that Task stops.</p></leo-step>
+  <leo-step title="Limit the subscription CLIs"><p>Working in the original checkout makes this more important, so Claude Code runs with the <code>--restricted</code> option, which keeps file tools inside the working folder, and its allowed tools come from the agent profile (the setting that lists which tools each agent may use).</p></leo-step>
 </leo-steps>
 
 <h2>Summary</h2>

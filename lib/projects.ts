@@ -134,7 +134,7 @@ const A = '/projects/algosu';
 
 // 출처: tpals0409/AlgoSu README. 화면은 algo-su.com 데모(읽기 전용, 라이트 모드)에서 캡처 — 데모 안내 띠와 깨진 데모 아바타는 가림
 const ALGOSU: ProjectDetail = {
-  banner: `${A}/thumb-mac-2240.webp`,
+  banner: `${A}/banner-2240.webp`,
   device: 'desktop',
   facts: [
     { label: { ko: '기간', en: 'Period' }, value: { ko: '2026.02 – 현재 (운영 중)', en: 'Feb 2026 – present (live)' } },
@@ -223,7 +223,7 @@ const P = '/projects/pinlog';
 
 // 화면·소개 출처: 팀 저장소(Team-PinLog)와 프론트엔드 담당 팀원의 케이스 스터디. 인프라(본인 몫)는 Team-PinLog/infra README
 const PINLOG: ProjectDetail = {
-  banner: `${P}/thumb-mac-2240.webp`,
+  banner: `${P}/banner-2240.webp`,
   device: 'desktop',
   facts: [
     { label: { ko: '기간', en: 'Period' }, value: { ko: '2026.07 – 2026.08 (5주)', en: 'Jul – Aug 2026 (5 weeks)' } },
@@ -316,7 +316,7 @@ const PINLOG: ProjectDetail = {
 
 export const PROJECTS: Project[] = [
   {
-    slug: 'algosu', name: { ko: '알고수', en: 'AlgoSu' }, image: `${A}/thumb-mac-1120.webp`,
+    slug: 'algosu', name: { ko: '알고수', en: 'AlgoSu' }, image: `${A}/banner-1120.webp`,
     summary: { ko: '코드 제출부터 GitHub 저장, AI 코드 분석까지 이어지는 알고리즘 스터디 관리 서비스', en: 'An algorithm study tool that carries a submission through GitHub saving to AI code review' },
     detail: ALGOSU,
   },
@@ -327,7 +327,7 @@ export const PROJECTS: Project[] = [
   },
   { slug: 'janus', name: { ko: 'Janus', en: 'Janus' }, image: null, summary: TBD },
   {
-    slug: 'pinlog', name: { ko: '핀로그', en: 'PinLog' }, image: `${P}/thumb-mac-1120.webp`,
+    slug: 'pinlog', name: { ko: '핀로그', en: 'PinLog' }, image: `${P}/banner-1120.webp`,
     summary: { ko: '장소 이름이 기억나지 않아도 경험과 감정으로 다시 찾는 AI 장소 기록 서비스', en: 'An AI place journal that finds places again by experience and feeling, even when you forget the name' },
     detail: PINLOG,
   },

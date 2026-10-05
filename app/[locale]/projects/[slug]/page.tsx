@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import FlowDiagram from '@/components/FlowDiagram';
 import PostGrid from '@/components/PostGrid';
 import ScreenGallery from '@/components/ScreenGallery';
 import { ButtonLink } from '@/components/ui/Button';
@@ -68,8 +69,8 @@ function CaseStudy({ d, locale }: { d: ProjectDetail; locale: Locale }) {
       <Section title={t.answers}>
         <Numbered items={d.answers} locale={locale} />
       </Section>
-      <Diagram title={t.architecture} {...d.architecture} locale={locale} />
-      <Diagram title={t.scenario} {...d.scenario} locale={locale} />
+      <Diagram title={t.architecture} {...d.architecture} accent={d.accent} locale={locale} />
+      <Diagram title={t.scenario} {...d.scenario} accent={d.accent} locale={locale} />
       <Section title={t.mine}>
         <Numbered items={d.mine} locale={locale} />
       </Section>
@@ -83,15 +84,12 @@ function CaseStudy({ d, locale }: { d: ProjectDetail; locale: Locale }) {
   );
 }
 
-// 아키텍처·사용자 시나리오: 포트폴리오에서 잘라 온 그림(본문 폭 전체) + 그 옆에 있던 ❶❷❸ 설명을 아래 3열로.
-// 그림 글자가 작아서 누르면 원본 크기로 연다(좁은 화면).
-function Diagram({ title, image, notes, locale }: ProjectDetail['architecture'] & { title: string; locale: Locale }) {
+// 아키텍처·사용자 시나리오: 그림(FlowDiagram, 본문 폭 전체) + 그 옆에 있던 ❶❷❸ 설명을 아래 3열로.
+function Diagram({ title, diagram, notes, accent, locale }: ProjectDetail['architecture'] & { title: string; accent: ProjectDetail['accent']; locale: Locale }) {
   return (
     <section className="flex flex-col gap-6 border-t border-line pt-8">
       <h2 className="t-tile">{title}</h2>
-      <a href={image[locale]} target="_blank" rel="noopener" className="block cursor-zoom-in">
-        <img src={image[locale]} alt={title} loading="lazy" decoding="async" className="w-full" />
-      </a>
+      <FlowDiagram name={diagram} locale={locale} title={title} accent={accent} />
       <ol className="grid gap-5 sm:grid-cols-3">
         {notes.map((n, i) => (
           <li key={n.title.en} className="flex gap-3">

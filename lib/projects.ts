@@ -1,3 +1,4 @@
+import type { DiagramKey } from './diagrams';
 import type { Locale } from './i18n';
 
 // 프로젝트는 코드로 관리한다 (자주 안 바뀜). 글은 posts.project에 이 slug로 연결된다.
@@ -8,6 +9,8 @@ type Item = { title: T; body: T; tech?: T }; // title·body는 쉬운 말, tech�
 // screens: 화면 캡처. video가 있으면 움직이는 화면(mp4, src는 첫 장면 — 움직임 줄이기 설정이면 이것만 보임)
 export type ProjectDetail = {
   banner: T; // 언어별 배너(2:1)
+  // 프로젝트 색: 배너 디자인(형광펜 띠 tint, 강조 글자 deep)과 같은 값. 아키텍처·시나리오 그림의 강조 노드에 쓴다
+  accent: { tint: string; deep: string };
   device: 'phone' | 'desktop'; // 화면 캡처 종류 (ScreenGallery)
   facts: { label: T; value: T }[];
   links: { label: T; href: string }[];
@@ -16,9 +19,9 @@ export type ProjectDetail = {
   mine: Item[];
   fixes: Item[];
   screens: { src: string; video?: string; label: T; size?: [number, number] }[]; // size: PC 캡처(16:9 + 맥 창 테두리)의 픽셀 크기
-  // 포트폴리오(PDF)와 같은 그림·문구. 그림은 포트폴리오 4K 페이지에서 잘라 낸 것, notes는 그림 옆 ❶❷❸ 설명
-  architecture: { image: T; notes: Item[] }; // image: 언어별 그림 (영어판은 포트폴리오 원본을 옮겨 다시 그린 것)
-  scenario: { image: T; notes: Item[] };
+  // 포트폴리오(PDF)와 같은 그림·문구. 그림은 lib/diagrams.ts 데이터를 FlowDiagram이 그린다, notes는 그림 옆 ❶❷❸ 설명
+  architecture: { diagram: DiagramKey; notes: Item[] };
+  scenario: { diagram: DiagramKey; notes: Item[] };
   tech: { name: string; problem: T; role: T }[]; // 기술 사용 이유 — 직접 맡은 부분만
 };
 
@@ -30,6 +33,7 @@ const F = '/projects/finch';
 
 const FINCH: ProjectDetail = {
   banner: { ko: `${F}/banner-v3-2240.webp`, en: `${F}/banner-en-2240.webp` },
+  accent: { tint: '#F2CF5B', deep: '#9A6A00' },
   device: 'phone',
   facts: [
     { label: { ko: '기간', en: 'Period' }, value: { ko: '2026.08 – 2026.09 (6주)', en: 'Aug – Sep 2026 (6 weeks)' } },
@@ -119,7 +123,7 @@ const FINCH: ProjectDetail = {
     { src: `${F}/chat-answer.webp`, video: `${F}/chat-answer.mp4`, label: { ko: 'AI 채팅', en: 'AI chat' } },
   ],
   architecture: {
-    image: { ko: `${F}/arch.webp`, en: `${F}/arch-en.webp` },
+    diagram: 'finch-arch',
     notes: [
       { title: { ko: '책임 분리', en: 'Separation of duties' }, body: { ko: '수치·위험 판정 = Kotlin 엔진, 설명 = LLM', en: 'Numbers and risk calls = Kotlin engine; explanation = LLM' } },
       { title: { ko: '원장 단일화', en: 'Single ledger' }, body: { ko: '잔고·손익은 충전·체결 기록에서만 계산', en: 'Balances and P&L are computed only from deposit and trade records' } },
@@ -127,7 +131,7 @@ const FINCH: ProjectDetail = {
     ],
   },
   scenario: {
-    image: { ko: `${F}/scenario.webp`, en: `${F}/scenario-en.webp` },
+    diagram: 'finch-scenario',
     notes: [
       { title: { ko: '사용자 흐름', en: 'User flow' }, body: { ko: '가입 → 탐색 → 모의 매매 → 포트폴리오 → AI 질문', en: 'Sign up → explore → paper trading → portfolio → ask the AI' } },
       { title: { ko: '시스템 흐름', en: 'System flow' }, body: { ko: '시세 수집 → 원장 기록 → 계산 엔진 → LLM 설명', en: 'Price collection → ledger → calculation engine → LLM explanation' } },
@@ -148,6 +152,7 @@ const A = '/projects/algosu';
 // 출처: tpals0409/AlgoSu README. 화면은 algo-su.com 데모(읽기 전용, 라이트 모드)에서 캡처 — 데모 안내 띠와 깨진 데모 아바타는 가림
 const ALGOSU: ProjectDetail = {
   banner: { ko: `${A}/banner-2240.webp`, en: `${A}/banner-en-2240.webp` },
+  accent: { tint: '#C9BEEA', deep: '#6A55A8' },
   device: 'desktop',
   facts: [
     { label: { ko: '기간', en: 'Period' }, value: { ko: '2026.02 – 현재 (운영 중)', en: 'Feb 2026 – present (live)' } },
@@ -218,7 +223,7 @@ const ALGOSU: ProjectDetail = {
     { src: `${A}/analytics-mac.webp`, label: { ko: '통계', en: 'Analytics' }, size: [1920, 1148] },
   ],
   architecture: {
-    image: { ko: `${A}/arch.webp`, en: `${A}/arch-en.webp` },
+    diagram: 'algosu-arch',
     notes: [
       { title: { ko: '서비스 경계', en: 'Service boundaries' }, body: { ko: 'Identity·Problem·Submission이 각자 DB를 소유', en: 'Identity, Problem and Submission each own their database' } },
       { title: { ko: '비동기 분리', en: 'Async split' }, body: { ko: 'GitHub Worker·AI Analysis는 큐 소비자', en: 'GitHub Worker and AI Analysis consume from the queue' } },
@@ -226,7 +231,7 @@ const ALGOSU: ProjectDetail = {
     ],
   },
   scenario: {
-    image: { ko: `${A}/scenario.webp`, en: `${A}/scenario-en.webp` },
+    diagram: 'algosu-scenario',
     notes: [
       { title: { ko: '사용자 흐름', en: 'User flow' }, body: { ko: '문제 선택 → 제출 → 진행 상태 → 피드백 → 대시보드', en: 'Pick a problem → submit → progress → feedback → dashboard' } },
       { title: { ko: '시스템 흐름', en: 'System flow' }, body: { ko: '저장 → 큐 발행 → GitHub 커밋 → AI 분석 → SSE', en: 'Save → publish to queue → GitHub commit → AI analysis → SSE' } },
@@ -247,7 +252,8 @@ const J = '/projects/janus';
 
 // 출처: tpals0409/Janus README·V1_AUDIT.md. 화면은 로컬 앱(v1.0.30, 라이트 모드)의 janus-qa-fixture 프로젝트에서 캡처
 const JANUS: ProjectDetail = {
-  banner: { ko: `${J}/banner-v3-2240.webp`, en: `${J}/banner-en-v2-2240.webp` },
+  banner: { ko: `${J}/banner-v4-2240.webp`, en: `${J}/banner-en-v3-2240.webp` },
+  accent: { tint: '#BFE3CC', deep: '#23794A' },
   device: 'desktop',
   facts: [
     { label: { ko: '기간', en: 'Period' }, value: { ko: '2026.08 – 현재 (개발 중)', en: 'Aug 2026 – present' } },
@@ -325,7 +331,7 @@ const JANUS: ProjectDetail = {
     { src: `${J}/agents-dark.webp`, label: { ko: '에이전트 대시보드', en: 'Agent dashboard' }, size: [1920, 1148] },
   ],
   architecture: {
-    image: { ko: `${J}/arch.webp`, en: `${J}/arch-en.webp` },
+    diagram: 'janus-arch',
     notes: [
       { title: { ko: '로컬 우선', en: 'Local first' }, body: { ko: 'MLX 로컬 모델(Qwen 27B 4-bit)로 기기 내 추론', en: 'On-device inference with a local MLX model (Qwen 27B 4-bit)' } },
       { title: { ko: '자원 제한', en: 'Resource limits' }, body: { ko: 'worker 수와 시간·토큰·단계 예산을 제한', en: 'Caps on worker count and time, token and step budgets' } },
@@ -333,7 +339,7 @@ const JANUS: ProjectDetail = {
     ],
   },
   scenario: {
-    image: { ko: `${J}/scenario.webp`, en: `${J}/scenario-en.webp` },
+    diagram: 'janus-scenario',
     notes: [
       { title: { ko: '사용자 흐름', en: 'User flow' }, body: { ko: 'Task → 실행기 → 도구 승인 → diff·검증 → 리뷰 수락', en: 'Task → runner → tool approval → diff and verification → accept review' } },
       { title: { ko: '시스템 흐름', en: 'System flow' }, body: { ko: '에이전트 실행 → 도구 실행 → Git diff·테스트 → 커밋', en: 'Agent run → tool execution → Git diff and tests → commit' } },
@@ -354,6 +360,7 @@ const P = '/projects/pinlog';
 // 화면·소개 출처: 팀 저장소(Team-PinLog)와 프론트엔드 담당 팀원의 케이스 스터디. 인프라(본인 몫)는 Team-PinLog/infra README
 const PINLOG: ProjectDetail = {
   banner: { ko: `${P}/banner-2240.webp`, en: `${P}/banner-en-2240.webp` },
+  accent: { tint: '#9FDCCB', deep: '#1E8A73' },
   device: 'desktop',
   facts: [
     { label: { ko: '기간', en: 'Period' }, value: { ko: '2026.07 – 2026.08 (5주)', en: 'Jul – Aug 2026 (5 weeks)' } },
@@ -430,7 +437,7 @@ const PINLOG: ProjectDetail = {
     { src: `${P}/library-mac16.webp`, video: `${P}/library-mac16.mp4`, label: { ko: '라이브러리', en: 'Library' }, size: [960, 574] },
   ],
   architecture: {
-    image: { ko: `${P}/arch.webp`, en: `${P}/arch-en.webp` },
+    diagram: 'pinlog-arch',
     notes: [
       { title: { ko: '런타임', en: 'Runtime' }, body: { ko: 'k3s 내장 containerd (Docker·cri-dockerd 제거)', en: 'k3s embedded containerd (Docker and cri-dockerd removed)' } },
       { title: { ko: '배포', en: 'Delivery' }, body: { ko: 'GitHub Actions → 인프라 저장소 PR → Argo CD → Helm·ApplicationSet', en: 'GitHub Actions → infra repo PR → Argo CD → Helm and ApplicationSet' } },
@@ -438,7 +445,7 @@ const PINLOG: ProjectDetail = {
     ],
   },
   scenario: {
-    image: { ko: `${P}/scenario.webp`, en: `${P}/scenario-en.webp` },
+    diagram: 'pinlog-scenario',
     notes: [
       { title: { ko: '사용자 흐름', en: 'User flow' }, body: { ko: '위치 선택 → 기록 → 목록 → 자연어 검색 → 기록 열기', en: 'Pick a spot → record → list → natural-language search → open the record' } },
       { title: { ko: '시스템 흐름', en: 'System flow' }, body: { ko: '저장 → AI 검색(내 기록 매칭) → 결과 강조', en: 'Save → AI search over your records → highlighted results' } },
@@ -467,8 +474,8 @@ export const PROJECTS: Project[] = [
     detail: FINCH,
   },
   {
-    slug: 'janus', name: { ko: '야누스', en: 'Janus' }, image: { ko: `${J}/banner-v3-1120.webp`, en: `${J}/banner-en-v2-1120.webp` },
-    summary: { ko: '코딩 에이전트의 작업부터 검증, 리뷰, 커밋까지 이어지는 로컬 우선 에이전트 개발 환경', en: 'A local-first agent development environment that carries coding-agent work through verification, review and commit' },
+    slug: 'janus', name: { ko: '야누스', en: 'Janus' }, image: { ko: `${J}/banner-v4-1120.webp`, en: `${J}/banner-en-v3-1120.webp` },
+    summary: { ko: '로컬 LLM 기반 에이전트 코딩 IDE', en: 'An agentic coding IDE on a local LLM' },
     detail: JANUS,
   },
   {

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<style>
+body{font:var(--fw-body) var(--fs-body)/var(--lh-body) var(--font-sans);letter-spacing:var(--ls-body);color:var(--color-fg);max-width:var(--container-wrap);box-sizing:border-box;margin:0 auto;padding:0 24px 80px}
+h2{font:var(--fw-tile) var(--fs-tile)/var(--lh-tile) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-tile);margin:2.4em 0 .8em}
+h3{font:var(--fw-section) var(--fs-body)/var(--lh-body) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-body);margin:2em 0 .5em}
+p,ul,ol{margin:0 0 1em}
+strong{font-weight:var(--fw-section)}
+a{color:var(--color-link)}
+code{font-family:var(--font-mono);font-size:.9em;background:var(--color-fog);padding:0 4px}
+blockquote{margin:1.5em 0;padding-left:var(--space-cluster);border-left:2px solid var(--color-line);color:var(--color-secondary)}
+blockquote p{margin:0}
+</style>
+</head>
+<body>
+<p>야누스는 처음에 Task(에이전트에게 맡기는 작업 단위)마다 git worktree를 따로 만들었습니다. worktree는 같은 저장소를 다른 폴더에 하나 더 꺼내 두는 기능이에요. 에이전트는 그 작업 사본의 <code>janus/</code> 브랜치에서만 파일을 고쳤고, 사용자가 쓰는 원래 체크아웃은 건드리지 않았습니다. 결과를 가져오고 싶으면 야누스가 알려 주는 cherry-pick 명령을 직접 실행하는 방식이었어요.</p>
+<p>지금은 이 격리를 쓰지 않습니다. 에이전트는 사용자가 고른 저장소의 현재 브랜치에서 바로 작업합니다. 이렇게 바꾼 과정과, 그 대가로 넘긴 위험을 어떻게 다뤘는지 정리합니다.</p>
+
+<h2>격리가 끊긴 걸 늦게 안 일</h2>
+<p>v1.0.28을 준비하면서 문서와 실제 동작을 맞춰 보다가, 격리가 이미 끊겨 있다는 걸 발견했습니다. 그 전에 오케스트레이션 엔진을 정리하는 커밋에서 Task 격리 배선과 <code>janus/</code> 브랜치 가드가 함께 지워졌던 거예요. 그 뒤로 에이전트는 사용자의 실제 저장소, 실제 브랜치에서 작업하고 있었습니다.</p>
+<p>그런데 앱 화면은 계속 "main 체크아웃을 수정하지 않고 Task 전용 워크트리를 만듭니다"라고 안내하고 있었습니다. 동작과 설명이 반대였던 거죠.</p>
+
+<h2>복원했다가 다시 뺀 이유</h2>
+<p>처음에는 격리를 되살렸습니다. 그런데 정리하면서 다시 생각해 보니, 실제로 야누스를 쓸 때 원하는 건 에이전트가 고친 결과를 내 에디터와 개발 서버에서 바로 보는 것이었어요. 작업 사본에서 고친 걸 보려면 그 폴더로 가서 확인하거나 cherry-pick으로 옮겨야 했고, 그 거리가 생각보다 번거로웠습니다.</p>
+<p>그래서 격리를 다시 빼고, 원본 체크아웃에서 직접 작업하는 쪽으로 정했습니다. 되돌리는 수단은 git 하나로 둡니다.</p>
+<leo-compare>
+  <leo-side label="worktree 격리"><p>원래 체크아웃이 안전합니다. 대신 결과를 보려면 작업 사본으로 가거나 cherry-pick으로 옮겨야 합니다.</p></leo-side>
+  <leo-side label="원본 체크아웃에서 직접"><p>고친 결과를 에디터·개발 서버에서 바로 봅니다. 대신 git으로 되돌릴 수 없는 범위가 생깁니다.</p></leo-side>
+</leo-compare>
+
+<h2>넘긴 위험</h2>
+<p>git 이력으로 되돌릴 수 없는 범위를 되돌리기 커밋 메시지에 그대로 적어 두었습니다.</p>
+<ul>
+  <li>저장하지 않은 변경: 에이전트가 같은 파일을 고치면 원래 내용이 이력에 없습니다. 되돌리면 에이전트가 고친 것과 사용자가 고친 것이 같이 사라집니다.</li>
+  <li>추적하지 않는 파일: 새로 만들었거나 덮어쓴 파일은 이력에 없습니다.</li>
+  <li>셸 명령: 파일 도구는 저장소 안으로 막혀 있지만, 셸은 시작 위치만 저장소일 뿐 <code>cd</code>로 밖에 나갈 수 있습니다.</li>
+  <li>같은 프로젝트의 Task 두 개: 작업 트리 하나를 같이 쓰기 때문에 서로의 미저장 변경을 덮어쓸 수 있고, 둘 다 커밋 전이라 git이 나눠 주지 못합니다.</li>
+</ul>
+
+<h2>위험을 드러내고 막은 방법</h2>
+<p>동작은 원본에서 작업하는 쪽으로 두고, 설명과 안전장치를 그 사실에 맞췄습니다.</p>
+<leo-steps>
+  <leo-step title="화면 문구를 사실대로"><p>"main 체크아웃을 수정하지 않고 워크트리를 만듭니다"를 "이 저장소의 현재 브랜치에서 직접 작업합니다"로 바꿨습니다. 격리를 되돌리면서도 이 문구는 되돌리지 않았어요.</p></leo-step>
+  <leo-step title="문서에 없는 경계까지 적기"><p>README에 에이전트가 어디에 쓰는지 정리한 칸을 새로 만들고, 실행 경로(로컬 모델·구독형 CLI)별로 경로 제한·쓰기 전 승인·셸 이탈 여부를 표로 적었습니다. SECURITY.md에는 Task끼리 격리되지 않는다는 것처럼 없는 경계를 명시했습니다.</p></leo-step>
+  <leo-step title="문서와 코드를 대조하는 테스트"><p>문서가 다시 실제와 어긋나지 않도록, 주요 설명을 코드와 대조하는 테스트를 CI에 넣었습니다.</p></leo-step>
+  <leo-step title="같은 프로젝트 동시 실행 막기"><p>화면 경고로는 충돌을 못 막아서, 실행을 만드는 트랜잭션에서 같은 프로젝트의 다른 Task가 돌고 있으면 거절합니다. 막은 Task 이름을 보여 주고, 그 Task가 멈추면 바로 풀립니다.</p></leo-step>
+  <leo-step title="구독형 CLI 범위 제한"><p>원본에서 작업할수록 더 필요해서, Claude Code는 <code>--restricted</code>로 파일 도구를 작업 폴더에 가두고, 쓸 수 있는 도구도 에이전트 프로필에서 만들어 넘기도록 했습니다.</p></leo-step>
+</leo-steps>
+
+<h2>정리</h2>
+<p>격리는 원래 체크아웃을 지켜 주지만, 혼자 쓰는 도구에서는 결과를 확인하는 거리를 늘렸습니다. 원본에서 작업하기로 하면서 git으로 덮지 못하는 위험이 생겼고, 그 범위는 문서와 화면에 그대로 적고, 막을 수 있는 것(같은 프로젝트 동시 실행, 구독형 CLI 범위)은 코드로 막았습니다.</p>
+<p>이번 일로 하나 더 정했습니다. 동작을 바꾸면 화면 문구와 문서도 같이 바꾸고, 그걸 사람이 기억하는 대신 테스트가 확인하게 하는 것입니다.</p>
+</body>
+</html>

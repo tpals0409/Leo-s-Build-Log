@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+body{font:var(--fw-body) var(--fs-body)/var(--lh-body) var(--font-sans);letter-spacing:var(--ls-body);color:var(--color-fg);max-width:var(--container-wrap);box-sizing:border-box;margin:0 auto;padding:0 24px 80px}
+h2{font:var(--fw-tile) var(--fs-tile)/var(--lh-tile) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-tile);margin:2.4em 0 .8em}
+h3{font:var(--fw-section) var(--fs-body)/var(--lh-body) var(--font-heading, var(--font-sans));letter-spacing:var(--ls-body);margin:2em 0 .5em}
+p,ul,ol{margin:0 0 1em}
+strong{font-weight:var(--fw-section)}
+a{color:var(--color-link)}
+code{font-family:var(--font-mono);font-size:.9em;background:var(--color-fog);padding:0 4px}
+blockquote{margin:1.5em 0;padding-left:var(--space-cluster);border-left:2px solid var(--color-line);color:var(--color-secondary)}
+blockquote p{margin:0}
+</style>
+</head>
+<body>
+<p>At first, Janus created a separate git worktree for every Task (a unit of work handed to the agent). A worktree checks out the same repository into another folder. The agent edited files only on a <code>janus/</code> branch in that copy and never touched the user's own checkout. To bring the result over, you ran a cherry-pick command that Janus gave you.</p>
+<p>Janus doesn't do this anymore. The agent works directly on the current branch of the repository you pick. This post covers how that changed and how the risks that came with it were handled.</p>
+
+<h2>Finding out late that isolation was gone</h2>
+<p>While preparing v1.0.28 I was checking the docs against actual behavior and found that isolation was already broken. An earlier commit that cleaned up the orchestration engine had removed the Task isolation wiring and the <code>janus/</code> branch guard along with it. From then on, the agent had been working in the user's real repository on the real branch.</p>
+<p>The app, meanwhile, kept saying "creates a Task worktree without modifying your main checkout." The behavior and the description were opposites.</p>
+
+<h2>Restoring it, then removing it again</h2>
+<p>I restored isolation first. But thinking it over, what I actually wanted when using Janus was to see the agent's changes right away in my own editor and dev server. With a separate copy, I had to go to that folder or cherry-pick the changes over, and that distance was more of a hassle than I expected.</p>
+<p>So I removed isolation again and settled on working directly in the original checkout, with git as the one way to undo.</p>
+<leo-compare>
+  <leo-side label="Worktree isolation"><p>Your checkout stays safe. To see the result, you go to the copy or cherry-pick it over.</p></leo-side>
+  <leo-side label="Work in the original checkout"><p>You see changes right away in your editor and dev server. Some things can no longer be undone with git.</p></leo-side>
+</leo-compare>
+
+<h2>The risks taken on</h2>
+<p>The revert commit message lists exactly what git history can't undo.</p>
+<ul>
+  <li>Unsaved changes: if the agent edits a file you also changed, your version isn't in history. Reverting throws away both the agent's edits and yours.</li>
+  <li>Untracked files: files that were created or overwritten aren't in history.</li>
+  <li>Shell commands: file tools are confined to the repository, but the shell only starts there and can leave with <code>cd</code>.</li>
+  <li>Two Tasks in the same project: they share one working tree, so they can overwrite each other's unsaved changes, and since neither has committed, git can't separate them.</li>
+</ul>
+
+<h2>How the risks were exposed and contained</h2>
+<p>The behavior stayed with working in the original checkout, and the descriptions and safeguards were brought in line with that.</p>
+<leo-steps>
+  <leo-step title="Say what actually happens"><p>"Creates a worktree without modifying your main checkout" became "works directly on this repository's current branch." When isolation was reverted, this wording was not.</p></leo-step>
+  <leo-step title="Document the boundaries that don't exist"><p>The README got a section on where the agent writes, with a table per runner (local model, subscription CLI) covering path confinement, approval before writes and whether the shell can leave. SECURITY.md lists boundaries that are missing, such as Tasks not being isolated from each other.</p></leo-step>
+  <leo-step title="Test docs against code"><p>So the docs can't drift again, CI runs a test that checks key claims in the docs against the code.</p></leo-step>
+  <leo-step title="Block concurrent runs in one project"><p>A warning on screen couldn't prevent conflicts, so the transaction that creates a run now rejects it if another Task in the same project is running. It names the blocking Task and clears as soon as that Task stops.</p></leo-step>
+  <leo-step title="Limit the subscription CLIs"><p>Working in the original checkout makes this more important, so Claude Code runs with <code>--restricted</code> to keep file tools inside the working folder, and its allowed tools are derived from the agent profile.</p></leo-step>
+</leo-steps>
+
+<h2>Summary</h2>
+<p>Isolation protects your checkout, but in a tool used by one person it added distance between the agent's work and checking it. Working in the original checkout brought risks git can't cover; those are written down in the docs and on screen, and the ones that could be blocked in code (concurrent runs in one project, subscription CLI scope) were.</p>
+<p>One more rule came out of this: when behavior changes, the screen text and docs change with it, and a test checks that instead of someone having to remember.</p>
+</body>
+</html>

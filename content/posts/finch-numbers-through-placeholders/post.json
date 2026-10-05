@@ -8,11 +8,11 @@
   ],
   "publishedAt": "2026-09-28T20:00:00+09:00",
   "ko": {
-    "title": "LLM이 숫자를 쓰지 않게 한 자리표시자 구조와 세 개의 구멍",
+    "title": "LLM이 투자 수치를 지어내지 않게 만든 구조",
     "summary": "핀치에서 LLM은 숫자 대신 자리표시자만 쓰고, 서버가 계산 엔진 값으로 바꿉니다. 이 구조를 설계한 이유와, 운영하며 나온 구멍 세 개를 어떻게 막았는지 정리했습니다."
   },
   "en": {
-    "title": "Keeping Numbers Out of the LLM: Placeholders and Three Holes",
+    "title": "Keeping an LLM from Making Up Investment Numbers",
     "summary": "In FINCH the LLM writes placeholders instead of numbers, and the server fills in engine values. Why it was designed this way, and three holes that showed up in production."
   }
 }

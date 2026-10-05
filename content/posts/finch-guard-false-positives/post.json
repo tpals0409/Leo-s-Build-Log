@@ -8,11 +8,11 @@
   ],
   "publishedAt": "2026-09-16T21:00:00+09:00",
   "ko": {
-    "title": "LLM 출력 검사의 오탐을 줄인 기록",
+    "title": "AI 답변 검사가 멀쩡한 답까지 버리던 문제",
     "summary": "핀치는 LLM 설명을 내보내기 전에 자동 검사 10개를 거칩니다. 반려 사유를 세어 보니 상당수가 오탐이었고, 원인은 대부분 모델이 아니라 프롬프트와 검사의 어긋남이었습니다."
   },
   "en": {
-    "title": "Reducing False Positives in LLM Output Checks",
+    "title": "When Output Checks Threw Away Good AI Answers",
     "summary": "FINCH runs 10 automatic checks before sending an LLM explanation. Counting rejections showed many were false positives, mostly caused by the prompt and the checks disagreeing, not by the model."
   }
 }

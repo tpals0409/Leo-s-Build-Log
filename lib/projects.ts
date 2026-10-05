@@ -25,7 +25,7 @@ export type Project = { slug: string; name: T; image: string | null; summary: T;
 const F = '/projects/finch';
 
 const FINCH: ProjectDetail = {
-  banner: `${F}/banner-v2-2240.webp`,
+  banner: `${F}/banner-v3-2240.webp`,
   device: 'phone',
   facts: [
     { label: { ko: '기간', en: 'Period' }, value: { ko: '2026.08 – 2026.09 (6주)', en: 'Aug – Sep 2026 (6 weeks)' } },
@@ -209,7 +209,7 @@ const J = '/projects/janus';
 
 // 출처: tpals0409/Janus README·V1_AUDIT.md. 화면은 로컬 앱(v1.0.30, 라이트 모드)의 janus-qa-fixture 프로젝트에서 캡처
 const JANUS: ProjectDetail = {
-  banner: `${J}/banner-2240.webp`,
+  banner: `${J}/banner-v2-2240.webp`,
   device: 'desktop',
   facts: [
     { label: { ko: '기간', en: 'Period' }, value: { ko: '2026.08 – 현재 (개발 중)', en: 'Aug 2026 – present' } },
@@ -389,12 +389,12 @@ export const PROJECTS: Project[] = [
     detail: ALGOSU,
   },
   {
-    slug: 'finch', name: { ko: 'FINCH', en: 'FINCH' }, image: `${F}/banner-v2-1120.webp`,
+    slug: 'finch', name: { ko: '핀치', en: 'FINCH' }, image: `${F}/banner-v3-1120.webp`,
     summary: { ko: '포트폴리오 기반 나만의 AI 투자 비서', en: 'A personal AI investing assistant built on your portfolio' },
     detail: FINCH,
   },
   {
-    slug: 'janus', name: { ko: 'Janus', en: 'Janus' }, image: `${J}/banner-1120.webp`,
+    slug: 'janus', name: { ko: '야누스', en: 'Janus' }, image: `${J}/banner-v2-1120.webp`,
     summary: { ko: '코딩 에이전트의 작업부터 검증, 리뷰, 커밋까지 이어지는 로컬 우선 에이전트 개발 환경', en: 'A local-first agent development environment that carries coding-agent work through verification, review and commit' },
     detail: JANUS,
   },

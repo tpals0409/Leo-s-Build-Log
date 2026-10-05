@@ -1,6 +1,6 @@
 # 어떤 에이전트/사람이 올리든 같은 검사를 통과해야 한다 (AGENTS.md 검증 항목).
 # pre-commit 훅은 --no-verify로 건너뛸 수 있어서, 여기서 한 번 더 막는다.
-# main에 들어오면 검사 통과 후 k3s(arm64)용 이미지를 GHCR에 올린다. 배포(매니페스트 태그 갱신)는 GitOps 쪽.
+# main에 들어오면 검사 통과 후 k3s(arm64)용 이미지를 GHCR에 올리고 GitOps 이미지 태그를 갱신한다.
 name: CI
 
 on:
@@ -63,3 +63,54 @@ jobs:
           cache-to: type=gha,mode=max
       - name: 이미지 주소
         run: printf '### 이미지\n`%s:main-%s`\n' "$IMAGE" "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    name: Update K3s GitOps image
+    needs: image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out GitOps repository
+        uses: actions/checkout@v7
+        with:
+          repository: tpals0409/aether-gitops
+          ref: main
+          path: aether-gitops
+          ssh-key: ${{ secrets.AETHER_GITOPS_DEPLOY_KEY }}
+          persist-credentials: true
+      - name: Update only Leo's Build Log image tag
+        env:
+          IMAGE: ghcr.io/tpals0409/leo-s-build-log:main-${{ github.sha }}
+        run: |
+          set -euo pipefail
+          cd aether-gitops
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          import re
+
+          path = Path("leos-build-log/base/workloads.yaml")
+          text = path.read_text()
+          pattern = re.compile(r"(?m)^(\s*image:\s*)ghcr\.io/tpals0409/leo-s-build-log:main-[0-9a-f]{40}(\s*)$")
+          updated, count = pattern.subn(lambda m: f"{m.group(1)}{os.environ['IMAGE']}{m.group(2)}", text)
+          if count != 1:
+              raise SystemExit(f"Expected exactly one Leo app image field; found {count}")
+          if updated == text:
+              print("GitOps already points at this image; no commit needed")
+              raise SystemExit(0)
+          path.write_text(updated)
+          PY
+          if git diff --quiet -- leos-build-log/base/workloads.yaml; then
+            echo "GitOps already points at this image; no commit needed"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add leos-build-log/base/workloads.yaml
+          git commit -m "Deploy Leo Build Log image ${GITHUB_SHA::7}"
+          # Fail safely rather than overwrite concurrent GitOps changes.
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main

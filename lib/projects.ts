@@ -13,7 +13,7 @@ export type ProjectDetail = {
   links: { label: T; href: string }[];
   problem: T;
   answers: Item[];
-  mine: { intro: T; items: Item[] };
+  mine: Item[];
   fixes: Item[];
   screens: { src: string; video?: string; label: T; size?: [number, number] }[]; // size: PC 캡처(16:9 + 맥 창 테두리)의 픽셀 크기
   stack: { label: T; value: string }[];
@@ -25,15 +25,15 @@ export type Project = { slug: string; name: T; image: string | null; summary: T;
 const F = '/projects/finch';
 
 const FINCH: ProjectDetail = {
-  banner: `${F}/banner-2240.webp`,
+  banner: `${F}/banner-v2-2240.webp`,
   device: 'phone',
   facts: [
     { label: { ko: '기간', en: 'Period' }, value: { ko: '2026.08 – 2026.09 (6주)', en: 'Aug – Sep 2026 (6 weeks)' } },
-    { label: { ko: '팀', en: 'Team' }, value: { ko: '5명 · 프론트엔드 2, 백엔드 1, AI 1, 인프라 1', en: '5 people · 2 frontend, 1 backend, 1 AI, 1 infra' } },
+    { label: { ko: '팀', en: 'Team' }, value: { ko: '5명', en: '5 people' } },
     { label: { ko: '역할', en: 'Role' }, value: { ko: 'AI 파트 리드', en: 'AI lead' } },
   ],
   links: [
-    { label: { ko: '서비스', en: 'Live service' }, href: 'https://finchapp.org' },
+    { label: { ko: '데모', en: 'Demo' }, href: 'https://finchapp.org' },
     { label: { ko: '시연 영상', en: 'Demo video' }, href: 'https://youtu.be/4Cbu0-vMve4' },
     { label: { ko: 'GitHub', en: 'GitHub' }, href: 'https://github.com/Team-FINCH/finch-docs' },
   ],
@@ -59,12 +59,7 @@ const FINCH: ProjectDetail = {
       body: { ko: '뉴스와 공시를 매일 수집해 두고, 답변에 쓴 자료를 각주로 첨부', en: 'News and filings are collected daily, and the ones used in an answer are attached as footnotes.' },
     },
   ],
-  mine: {
-    intro: {
-      ko: 'AI 서버(FastAPI) 설계·구현 총괄. 브리핑·채팅·종목 분석·포트폴리오 진단 기능과 이를 받치는 출력 검사, 자료 수집·검색 담당',
-      en: 'Led the design and build of the AI server (FastAPI): briefing, chat, stock analysis and portfolio diagnosis, plus the output checks and data collection and search behind them.',
-    },
-    items: [
+  mine: [
     {
       title: { ko: '숫자 치환 구조', en: 'Number substitution' },
       body: { ko: 'LLM은 허용된 키만 쓰고 서버가 계산 엔진 값으로 치환. 계산되지 않은 숫자가 답변에 들어갈 경로 차단', en: 'The LLM writes only allowed keys and the server fills in engine values, so no uncomputed number can reach an answer.' },
@@ -90,8 +85,7 @@ const FINCH: ProjectDetail = {
       body: { ko: '검사 규칙·숫자 치환·도구 호출을 테스트로 먼저 정의한 뒤 구현. 고정 포트폴리오 골든 테스트로 계산 결과 회귀 확인', en: 'Checks, number substitution and tool calls were defined as tests first, then implemented. Golden tests on a fixed portfolio catch calculation regressions.' },
       tech: { ko: 'pytest · 골든 테스트 · 테스트 708개', en: 'pytest · golden tests · 708 tests' },
     },
-    ],
-  },
+  ],
   fixes: [
     {
       title: { ko: '답이 "확인되지 않았습니다"로만 나오던 문제', en: 'Answers that only said "could not be confirmed"' },
@@ -141,7 +135,7 @@ const ALGOSU: ProjectDetail = {
   ],
   links: [
     { label: { ko: '서비스', en: 'Live service' }, href: 'https://algo-su.com' },
-    { label: { ko: '데모 체험', en: 'Try the demo' }, href: 'https://algo-su.com/login' },
+    { label: { ko: '데모', en: 'Demo' }, href: 'https://algo-su.com/login' },
     { label: { ko: 'GitHub', en: 'GitHub' }, href: 'https://github.com/tpals0409/AlgoSu' },
   ],
   problem: {
@@ -162,12 +156,7 @@ const ALGOSU: ProjectDetail = {
       body: { ko: '문제별로 멤버의 제출 코드와 AI 점수를 모아 보고, 스터디 노트를 공유', en: 'Each problem gathers members\' code and AI scores, with a shared study note.' },
     },
   ],
-  mine: {
-    intro: {
-      ko: '1인 개발. 기획·설계부터 프론트엔드·백엔드·인프라·운영까지 전담하고, 구현은 역할별 AI 에이전트에 나눠 맡김',
-      en: 'Solo project: planning, design, frontend, backend, infra and operations, with implementation split across role-based AI agents.',
-    },
-    items: [
+  mine: [
       {
         title: { ko: '서비스 경계 설계', en: 'Service boundaries' },
         body: { ko: 'Gateway·Identity·Problem·Submission 서비스와 GitHub·AI 워커로 책임을 나누고, 서비스별 DB로 데이터 소유권 분리', en: 'Gateway, Identity, Problem and Submission services plus GitHub and AI workers, each service owning its own database.' },
@@ -188,8 +177,7 @@ const ALGOSU: ProjectDetail = {
         body: { ko: '린트·타입 검사·테스트·보안 검사를 CI에 넣고, 이미지를 GitOps로 k3s에 배포. 운영 상태는 지표로 확인', en: 'Lint, type checks, tests and security scans in CI, images shipped to k3s through GitOps, and operations watched through metrics.' },
         tech: { ko: 'GitHub Actions · GHCR · Argo CD · k3s · Prometheus · Grafana', en: 'GitHub Actions · GHCR · Argo CD · k3s · Prometheus · Grafana' },
       },
-    ],
-  },
+  ],
   fixes: [
     {
       title: { ko: '새 버전 롤아웃이 멈춘 문제', en: 'A stuck rollout' },
@@ -249,12 +237,7 @@ const JANUS: ProjectDetail = {
       body: { ko: 'Git diff를 기준으로 검증과 리뷰를 거쳐 커밋하고, 선택적으로 gh CLI로 push·PR까지 연결', en: 'Changes are verified and reviewed against the Git diff before commit, optionally continuing to push and PR through gh.' },
     },
   ],
-  mine: {
-    intro: {
-      ko: '1인 개발. 제품 설계부터 Electron 앱, FastAPI 백엔드, 로컬 추론 실행과 검증 체계까지 전담',
-      en: 'Solo project: product design, the Electron app, the FastAPI backend, local inference and the verification setup.',
-    },
-    items: [
+  mine: [
       {
         title: { ko: '예산을 건 위임', en: 'Delegation with a budget' },
         body: { ko: '오케스트레이터가 하위 작업을 worker에 맡기되 worker 수와 시간·토큰·단계 예산을 제한하고, AgentProfile로 쓸 도구를 정함', en: 'The orchestrator hands sub-tasks to workers under caps on worker count, time, tokens and steps, with AgentProfiles deciding the tools.' },
@@ -280,8 +263,7 @@ const JANUS: ProjectDetail = {
         body: { ko: '설계 문서가 현재 기능을 보장하는 것처럼 읽히지 않도록 주요 설명을 코드와 대조하는 테스트를 CI에 둠', en: 'A CI test compares key claims in the docs with the code, so old design notes never read as current features.' },
         tech: { ko: 'pytest · TypeScript 검사 · 번들 크기 · 의존성 감사 · macOS 패키징 CI', en: 'pytest · TypeScript checks · bundle size · dependency audit · macOS packaging CI' },
       },
-    ],
-  },
+  ],
   fixes: [
     {
       title: { ko: 'worker 효율 개선', en: 'Worker efficiency' },
@@ -319,7 +301,7 @@ const PINLOG: ProjectDetail = {
   device: 'desktop',
   facts: [
     { label: { ko: '기간', en: 'Period' }, value: { ko: '2026.07 – 2026.08 (5주)', en: 'Jul – Aug 2026 (5 weeks)' } },
-    { label: { ko: '팀', en: 'Team' }, value: { ko: '6명 · SSAFY 공통 프로젝트', en: '6 people · SSAFY team project' } },
+    { label: { ko: '팀', en: 'Team' }, value: { ko: '6명', en: '6 people' } },
     { label: { ko: '역할', en: 'Role' }, value: { ko: '인프라 리드', en: 'Infra lead' } },
   ],
   links: [
@@ -344,12 +326,7 @@ const PINLOG: ProjectDetail = {
       body: { ko: '모든 서비스를 공용 Helm 차트로 배포하고, Git에 선언한 상태를 Argo CD가 k3s에 반영', en: 'Every service ships through a shared Helm chart, and Argo CD applies the state declared in Git to k3s.' },
     },
   ],
-  mine: {
-    intro: {
-      ko: 'k3s 기반 배포·운영 인프라 설계·구축 총괄. 배포 자동화, 자원 분리, 관측, AI 운영 알림, 백업·복구 담당',
-      en: 'Led the design and build of the k3s deployment and operations platform: deploy automation, resource isolation, observability, AI-assisted alerts, and backup and recovery.',
-    },
-    items: [
+  mine: [
       {
         title: { ko: '검증된 이미지만 배포', en: 'Only verified images ship' },
         body: { ko: '서비스 CI 성공과 레지스트리 digest를 확인한 뒤 배포 변경 PR 자동 생성, 병합 직전 커밋 재확인. 롤백도 Git revert로 기록', en: 'Deploy PRs are opened only after CI success and the registry digest are verified, the commit is rechecked before merge, and rollbacks are recorded as Git reverts.' },
@@ -375,8 +352,7 @@ const PINLOG: ProjectDetail = {
         body: { ko: '시크릿은 암호화해 Git에 보관하고, 배포 자동화 토큰은 저장소별 최소 권한으로 분리', en: 'Secrets are encrypted in Git, and deploy automation tokens are scoped per repository with least privilege.' },
         tech: { ko: 'Sealed Secrets · 최소 권한 토큰 · Cloudflare Tunnel · Traefik', en: 'Sealed Secrets · least-privilege tokens · Cloudflare Tunnel · Traefik' },
       },
-    ],
-  },
+  ],
   fixes: [
     {
       title: { ko: '컨테이너 런타임이 CPU를 계속 점유하던 문제', en: 'Container runtime eating CPU' },
@@ -413,7 +389,7 @@ export const PROJECTS: Project[] = [
     detail: ALGOSU,
   },
   {
-    slug: 'finch', name: { ko: 'FINCH', en: 'FINCH' }, image: `${F}/banner-1120.webp`,
+    slug: 'finch', name: { ko: 'FINCH', en: 'FINCH' }, image: `${F}/banner-v2-1120.webp`,
     summary: { ko: '포트폴리오 기반 나만의 AI 투자 비서', en: 'A personal AI investing assistant built on your portfolio' },
     detail: FINCH,
   },

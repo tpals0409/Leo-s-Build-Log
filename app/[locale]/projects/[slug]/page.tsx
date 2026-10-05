@@ -48,7 +48,7 @@ export default async function ProjectPage({ params }: Props) {
   );
 }
 
-// 케이스 스터디: 소개 페이지와 같은 칸(왼쪽 제목 + 오른쪽 내용). 팀이 한 것(어떻게 풀었나)과 내 몫(내가 맡은 일·운영하며 고친 것)을 칸으로 나눈다.
+// 케이스 스터디: 소개 페이지와 같은 칸(왼쪽 제목 + 오른쪽 내용). 팀이 한 것(해결 방법)과 내 몫(담당 업무·개선 기록)을 칸으로 나눈다.
 // 처음 보는 사람이 앱 모습부터 보도록 화면을 배너 바로 아래(맨 위)에. 항목은 쉬운 말이 먼저, 기술 세부(tech)는 그 아래 작게.
 function CaseStudy({ d, locale }: { d: ProjectDetail; locale: Locale }) {
   const t = DICT[locale].projects;
@@ -69,8 +69,7 @@ function CaseStudy({ d, locale }: { d: ProjectDetail; locale: Locale }) {
         <Numbered items={d.answers} locale={locale} />
       </Section>
       <Section title={t.mine}>
-        <p className="mb-6 t-body">{d.mine.intro[locale]}</p>
-        <Numbered items={d.mine.items} locale={locale} />
+        <Numbered items={d.mine} locale={locale} />
       </Section>
       <Section title={t.fixes}>
         <Numbered items={d.fixes} locale={locale} />

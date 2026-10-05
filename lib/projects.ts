@@ -130,6 +130,95 @@ const FINCH: ProjectDetail = {
   ],
 };
 
+const A = '/projects/algosu';
+
+// 출처: tpals0409/AlgoSu README. 화면은 algo-su.com 데모(읽기 전용, 라이트 모드)에서 캡처 — 데모 안내 띠와 깨진 데모 아바타는 가림
+const ALGOSU: ProjectDetail = {
+  banner: `${A}/thumb-mac-2240.webp`,
+  device: 'desktop',
+  facts: [
+    { label: { ko: '기간', en: 'Period' }, value: { ko: '2026.02 – 현재 (운영 중)', en: 'Feb 2026 – present (live)' } },
+    { label: { ko: '팀', en: 'Team' }, value: { ko: '1인 개발', en: 'Solo' } },
+    { label: { ko: '역할', en: 'Role' }, value: { ko: '기획 · 설계 · 프론트엔드 · 백엔드 · 인프라 · 운영', en: 'Planning · design · frontend · backend · infra · operations' } },
+  ],
+  links: [
+    { label: { ko: '서비스', en: 'Live service' }, href: 'https://algo-su.com' },
+    { label: { ko: '데모 체험', en: 'Try the demo' }, href: 'https://algo-su.com/login' },
+    { label: { ko: 'GitHub', en: 'GitHub' }, href: 'https://github.com/tpals0409/AlgoSu' },
+  ],
+  problem: {
+    ko: '알고리즘 스터디의 문제 관리, 코드 제출, 풀이 기록, 코드 리뷰를 한곳에서 이어 주는 도구가 필요했음. 혼자 기획부터 운영까지 맡으면서, AI 에이전트가 만든 코드를 믿고 배포할 수 있는 개발 방식도 함께 풀어야 했음.',
+    en: 'An algorithm study group needed one place for problems, code submissions, solution history and code review. Building and running it alone also meant finding a way to ship AI-agent-written code with confidence.',
+  },
+  answers: [
+    {
+      title: { ko: '제출부터 AI 분석까지 한 흐름', en: 'One flow from submission to AI review' },
+      body: { ko: '코드를 제출하면 GitHub 저장과 Claude 코드 분석이 이어서 처리되고, 진행 상태를 실시간으로 확인', en: 'A submission is saved to GitHub and reviewed by Claude in sequence, with progress shown live.' },
+    },
+    {
+      title: { ko: '오래 걸리는 작업은 비동기로', en: 'Slow work runs asynchronously' },
+      body: { ko: 'GitHub 저장과 AI 분석을 큐로 분리하고, 제출 상태는 Saga로 관리해 지연·실패 시 재시도·복구', en: 'GitHub saves and AI analysis run off a queue, and a saga tracks each submission so delays and failures are retried and recovered.' },
+    },
+    {
+      title: { ko: '스터디룸에서 함께 리뷰', en: 'Reviewing together in the study room' },
+      body: { ko: '문제별로 멤버의 제출 코드와 AI 점수를 모아 보고, 스터디 노트를 공유', en: 'Each problem gathers members\' code and AI scores, with a shared study note.' },
+    },
+  ],
+  mine: {
+    intro: {
+      ko: '1인 개발. 기획·설계부터 프론트엔드·백엔드·인프라·운영까지 전담하고, 구현은 역할별 AI 에이전트에 나눠 맡김',
+      en: 'Solo project: planning, design, frontend, backend, infra and operations, with implementation split across role-based AI agents.',
+    },
+    items: [
+      {
+        title: { ko: '서비스 경계 설계', en: 'Service boundaries' },
+        body: { ko: 'Gateway·Identity·Problem·Submission 서비스와 GitHub·AI 워커로 책임을 나누고, 서비스별 DB로 데이터 소유권 분리', en: 'Gateway, Identity, Problem and Submission services plus GitHub and AI workers, each service owning its own database.' },
+        tech: { ko: 'Next.js · NestJS · TypeORM · FastAPI · PostgreSQL · RabbitMQ · Redis', en: 'Next.js · NestJS · TypeORM · FastAPI · PostgreSQL · RabbitMQ · Redis' },
+      },
+      {
+        title: { ko: '제출 Saga와 실시간 상태', en: 'Submission saga and live status' },
+        body: { ko: '제출 → GitHub 저장 → AI 분석의 상태 전이·타임아웃·재시도 설계, 진행 상태를 Redis와 SSE로 전달', en: 'State transitions, timeouts and retries for submit → GitHub save → AI analysis, with progress pushed over Redis and SSE.' },
+        tech: { ko: 'Saga · RabbitMQ · Redis 이벤트 · SSE · GitHub App · Claude API', en: 'Saga · RabbitMQ · Redis events · SSE · GitHub App · Claude API' },
+      },
+      {
+        title: { ko: 'AI 에이전트 역할 분담', en: 'Role-based AI agents' },
+        body: { ko: 'Gateway 보안, 제출 흐름, DB 스키마처럼 영역을 나눠 에이전트별 맥락을 좁히고, 설계 판단과 AI 구현을 구분해 기록', en: 'Work split by area (gateway security, submission flow, DB schema) to keep each agent\'s context narrow, with design decisions recorded apart from AI implementation.' },
+        tech: { ko: 'ADR · 개발 기록', en: 'ADRs · dev log' },
+      },
+      {
+        title: { ko: 'AI 생성 코드 검증과 배포', en: 'Verifying and shipping AI-written code' },
+        body: { ko: '린트·타입 검사·테스트·보안 검사를 CI에 넣고, 이미지를 GitOps로 k3s에 배포. 운영 상태는 지표로 확인', en: 'Lint, type checks, tests and security scans in CI, images shipped to k3s through GitOps, and operations watched through metrics.' },
+        tech: { ko: 'GitHub Actions · GHCR · Argo CD · k3s · Prometheus · Grafana', en: 'GitHub Actions · GHCR · Argo CD · k3s · Prometheus · Grafana' },
+      },
+    ],
+  },
+  fixes: [
+    {
+      title: { ko: '새 버전 롤아웃이 멈춘 문제', en: 'A stuck rollout' },
+      body: { ko: '헬스 체크 회귀와 환경변수 누락으로 새 버전이 뜨지 않았지만 기존 Pod가 응답해 드러나지 않던 문제. 헬스 체크와 설정을 고치고 SealedSecret을 다시 봉인해 복구', en: 'A health-check regression and a missing env var kept the new version from starting, hidden because old pods still answered. Fixed the check and config and resealed the SealedSecret.' },
+    },
+    {
+      title: { ko: 'Gateway가 Identity DB에 직접 접근하던 문제', en: 'Gateway reading the Identity DB directly' },
+      body: { ko: 'Identity API 호출로 옮겨 서비스 경계를 구현에 반영. 내부 HTTP 호출과 장애 의존성이 늘어나는 비용도 함께 검토', en: 'Moved to Identity API calls so the boundary holds in code, weighing the added internal HTTP calls and failure coupling.' },
+    },
+  ],
+  screens: [
+    { src: `${A}/dashboard-mac.webp`, label: { ko: '대시보드', en: 'Dashboard' }, size: [1920, 1148] },
+    { src: `${A}/problems-mac.webp`, label: { ko: '문제 목록', en: 'Problems' }, size: [1920, 1148] },
+    { src: `${A}/room-mac.webp`, label: { ko: '스터디룸', en: 'Study room' }, size: [1920, 1148] },
+    { src: `${A}/room-problem-mac.webp`, label: { ko: '멤버별 제출', en: 'Submissions by member' }, size: [1920, 1148] },
+    { src: `${A}/submission-mac.webp`, label: { ko: '코드와 AI 분석', en: 'Code and AI review' }, size: [1920, 1148] },
+    { src: `${A}/analytics-mac.webp`, label: { ko: '통계', en: 'Analytics' }, size: [1920, 1148] },
+  ],
+  stack: [
+    { label: { ko: '프론트엔드', en: 'Frontend' }, value: 'Next.js · React · TypeScript · Tailwind CSS · Monaco Editor' },
+    { label: { ko: '백엔드', en: 'Backend' }, value: 'NestJS · TypeORM · FastAPI' },
+    { label: { ko: '데이터·비동기', en: 'Data · async' }, value: 'PostgreSQL · Redis · RabbitMQ' },
+    { label: { ko: '외부 연동', en: 'Integrations' }, value: 'GitHub App · Claude API' },
+    { label: { ko: '배포·운영', en: 'Deploy · ops' }, value: 'GitHub Actions · GHCR · Argo CD · k3s · Prometheus · Grafana' },
+  ],
+};
+
 const P = '/projects/pinlog';
 
 // 화면·소개 출처: 팀 저장소(Team-PinLog)와 프론트엔드 담당 팀원의 케이스 스터디. 인프라(본인 몫)는 Team-PinLog/infra README
@@ -226,7 +315,11 @@ const PINLOG: ProjectDetail = {
 };
 
 export const PROJECTS: Project[] = [
-  { slug: 'algosu', name: { ko: '알고수', en: 'AlgoSu' }, image: null, summary: TBD },
+  {
+    slug: 'algosu', name: { ko: '알고수', en: 'AlgoSu' }, image: `${A}/thumb-mac-1120.webp`,
+    summary: { ko: '코드 제출부터 GitHub 저장, AI 코드 분석까지 이어지는 알고리즘 스터디 관리 서비스', en: 'An algorithm study tool that carries a submission through GitHub saving to AI code review' },
+    detail: ALGOSU,
+  },
   {
     slug: 'finch', name: { ko: 'FINCH', en: 'FINCH' }, image: `${F}/banner-1120.webp`,
     summary: { ko: '포트폴리오 기반 나만의 AI 투자 비서', en: 'A personal AI investing assistant built on your portfolio' },

@@ -16,7 +16,7 @@ blockquote p{margin:0}
 </head>
 <body>
 <p>When adding AI to incident notifications, I had a question to settle before worrying about good prose: <strong>which decisions should AI be allowed to make?</strong> Turning an alert into readable text is not the same as notifying an entire channel. Changing a sentence and changing a mention policy carry different weight.</p>
-<p>In PinLog, Sentinel, which receives and forwards alerts, uses Hermes, an AI agent tool, to process alert payloads (the raw data an alert carries). But the AI's output is not automatically the final message. Trusted code revalidates mentions, URLs, and formatting.</p>
+<p>I handled infrastructure and DevOps for PinLog, a team project for recording places. Sentinel, which receives and forwards alerts, uses Hermes, an AI agent tool, to process alert payloads (the raw data an alert carries). But the AI's output is not automatically the final message. Trusted code revalidates mentions, URLs, and formatting.</p>
 <leo-adr>
   <leo-problem><p>Adding AI to incident alerts risked handing generated output not only the explanation, but also who gets notified and which links and format go out. Operational policy would then depend on generated output.</p></leo-problem>
   <leo-decision><p>Hermes processes the alert payload, and trusted code revalidates mentions, URLs, and formatting. Notification and repeat policies by severity and state, and the place of the closing one-line summary, are fixed as policy.</p></leo-decision>
@@ -57,8 +57,8 @@ blockquote p{margin:0}
 </leo-compare>
 <p>Writing only “what happened” leaves out the current state. Writing only “is it healthy now?” loses the event behind the message. Including the required action connects the explanation to the reason for reading the alert. AI processing does not change the purpose of that final line.</p>
 <h2>Format Control Is Not Fact</h2>
-<p>Looking back, what mattered was not simply putting AI in the alert path. It was the responsibilities that stayed outside it. Separating payload processing from operational rules turned the broad question “do we trust AI?” into the more concrete question “which parts of its output must code check?”</p>
+
 <p>Still, <strong>format correctness and factual correctness are different</strong>. Mentions, URLs, and message structure can follow the rules while the explanation or required action does not match the real situation. This boundary should not be mistaken for a guarantee of accurate root-cause diagnosis.</p>
-<p>The principle I am taking forward is simple: let AI process information, but keep responsibility for calling people's attention and enforcing the final message rules in code. Adding AI to notifications was not only about delegating more decisions. It also meant <strong>deciding first which decisions not to delegate</strong>.</p>
+<p>After Sentinel analyzed and delivered an alert, I still decided whether to change the server. Validating a message did not also authorize an operational action.</p>
 </body>
 </html>

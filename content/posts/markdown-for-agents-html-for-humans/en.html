@@ -20,7 +20,7 @@ blockquote p{margin:0}
 <p>One saw it as a good direction: LLM output could go beyond plain text and become an interface people can read, understand, and work with directly.</p>
 <p>The other worried about token cost. HTML has more tags than Markdown, so the output gets longer, and cost and latency can rise with it.</p>
 <p>At first I also saw this debate as just a question of output format. Markdown or HTML. Conciseness or readability. Token efficiency or user experience.</p>
-<p>But when I thought about AlgoSu's decision records, I realized the same problem was already happening inside my own project.</p>
+<p>But when I thought about the decision records for AlgoSu, the algorithm study platform I run, I realized the same problem was already happening inside my own project.</p>
 <h2>ADRs I Wasn't Reading</h2>
 <p>AlgoSu keeps accumulating decision records (ADRs: Architecture Decision Records, documents that note what was decided and why).</p>
 <p>As I built features, changed structures, ran into failures, and fixed them, I recorded the important decisions as ADRs.</p>
@@ -31,7 +31,7 @@ blockquote p{margin:0}
 <p>But there was a problem. I had almost stopped reading those documents myself.</p>
 <p>The ADRs were piling up, and the reasons behind each decision were there. The agents could refer to them.</p>
 <p>Yet I, the person running the project, rarely opened the Markdown ADRs when I needed to retrace how the project had evolved.</p>
-<p>It wasn't that the documents didn't exist. They just weren't being read.</p>
+
 <h2>Written Is Not Read</h2>
 <p>Markdown is a good format. It's familiar to developers, easy to put in a repository, and fits well with code review. I've written most of my notes in Markdown too.</p>
 <p>But over time, the ADRs kept getting longer.</p>
@@ -62,7 +62,7 @@ blockquote p{margin:0}
 <p>That way the agents can read earlier decisions, constraints, rules that prevent regressions, and follow-up work, and carry on with the next task. Here, conciseness and token efficiency still matter.</p>
 <p>The HTML ADRs, on the other hand, are a review screen for people.</p>
 <p>They break a long ADR into cards, sections, emphasis, and visual hierarchy so it's easy to re-read. The key decisions, background, impact, and follow-up work are visible at a glance.</p>
-<p>In other words, I split one record into two views.</p>
+
 <h2>Rising Token Costs</h2>
 <p>Of course, this has a cost.</p>
 <p>The output is larger than when generating Markdown alone. HTML tags and structure have to be generated too, so it uses more tokens.</p>
@@ -80,17 +80,8 @@ blockquote p{margin:0}
 <p>If you save tokens but people lose the system's memory, that may not be a real optimization.</p>
 <p>I didn't add HTML ADRs to make pretty documents. I added them to give the project's memory a surface people can actually maintain from.</p>
 <h2>Documents as an Interface</h2>
-<p>This change made me rethink what a document is.</p>
-<p>A document isn't just storage. Especially in a system where people work alongside AI agents, a document is closer to an interface that carries the project's memory between people and agents.</p>
-<p>Agents read earlier context through documents; people reconstruct how the system evolved through them.</p>
-<p>If so, there's no need to force the same shape on both readers. Agents need efficient documents. People need readable ones.</p>
-<p>Markdown and HTML don't have to compete. They can be two forms for two different readers.</p>
+<p>The change was primarily to how I read the decision records, rather than what they contained. I kept the Markdown that agents consulted and had HTML generated alongside it so I could skim the background and scope of impact.</p>
 <h2>Conclusion</h2>
-<p>At first it looked like a question of whether Markdown or HTML is better.</p>
-<p>But looking at AlgoSu's ADRs again, the question that mattered more to me was a different one.</p>
-<blockquote><p>Who does this document exist for?</p></blockquote>
-<p>A document for agents should be concise and efficient. A document for people should be re-readable.</p>
-<p>So I didn't drop Markdown. I added HTML. Markdown stays as the agents' memory, and HTML serves as the review screen for people.</p>
 <p>Token costs go up. But if people can re-read the system's memory, I see that cost as an investment in maintainability.</p>
 <leo-callout type="tip"><p>When a document's purpose differs, its form should differ too.</p></leo-callout>
 </body>

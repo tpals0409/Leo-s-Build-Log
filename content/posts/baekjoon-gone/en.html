@@ -17,11 +17,11 @@ blockquote p{margin:0}
 <body>
 <h2>When "Just Use Baekjoon" Broke</h2>
 <p>If you've studied algorithms in Korea, you've almost certainly used Baekjoon Online Judge (BOJ), the country's go-to problem-solving site, think LeetCode for Korean developers. It had been around for more than a decade. So when I saw its shutdown notice, my first feeling wasn't shock. It was closer to awkwardness. "Baekjoon is shutting down?" I knew, intellectually, that any service can end. I just hadn't actually felt it.</p>
-<p>AlgoSu was built on Baekjoon. Problem data, difficulty badges, the submission flow, GitHub sync, AI feedback: Baekjoon was woven into all of it. After reading the notice, what I had to face wasn't a code problem. It was an assumption I'd been carrying without noticing.</p>
+<p>AlgoSu is the algorithm study platform I am building, originally designed around Baekjoon. Problem data, difficulty badges, the submission flow, GitHub sync, AI feedback: Baekjoon was woven into all of it. After reading the notice, what I had to face wasn't a code problem. It was an assumption I'd been carrying without noticing.</p>
 <leo-adr>
   <leo-problem><p>AlgoSu relied on an external platform (Baekjoon) for its problems, and a shutdown notice arrived. I knew about the dependency, but the assumption &quot;surely not Baekjoon&quot; was still there.</p></leo-problem>
   <leo-decision><p>Move the problem source to Programmers over three sprints (short work cycles), shipping a hand-picked set of problems as JSON files instead of scraping live, and keeping the existing Baekjoon data alongside.</p></leo-decision>
-  <leo-result><p>373 problems landed with zero DB migrations and zero regression for existing users. The sourcePlatform (source site) column added early turned out to be a survival condition.</p></leo-result>
+  <leo-result><p>373 problems were added without a DB migration while retaining existing Baekjoon records. The sourcePlatform (source site) column made that possible, but later QA also found screen logic that did not distinguish platforms.</p></leo-result>
 </leo-adr>
 <h2>A Dependency I Knew About</h2>
 <p>Don't get me wrong. I knew AlgoSu depended on Baekjoon. I'd known from the start, which is exactly why I'd put a few safety nets into the design early on. (Baekjoon problem data came through Solved.ac, a community service that adds difficulty ratings and tags to Baekjoon problems.)</p>
@@ -54,10 +54,10 @@ blockquote p{margin:0}
 <leo-metrics>
   <leo-metric value="373" label="Programmers problems imported" note="Lv.1–5 mapped 1:1 to BRONZE–DIAMOND (AlgoSu's difficulty tiers), zero design-token changes"></leo-metric>
   <leo-metric value="2,445" label="tests ALL PASS" note="Web accessibility WCAG AA 6/6 PASS"></leo-metric>
-  <leo-metric value="0" label="DB migrations" note="zero regression for existing Baekjoon users"></leo-metric>
+  <leo-metric value="0" label="DB migrations" note="existing Baekjoon problem records retained"></leo-metric>
 </leo-metrics>
 <p>The Programmers Gateway endpoints mirror the existing Baekjoon ones, so the abstraction layer stayed intact.</p>
-<p>More meaningful than the numbers was the shape of the change: we added a new platform without breaking the old one. An external shock, absorbed inside the internal structure.</p>
+<p>We could add a platform without deleting or reclassifying existing records. But data coexistence and platform-aware behavior across all screens were separate concerns; the latter needed further QA.</p>
 <h2>Lessons for Dependent Services</h2>
 <p>That's the technical story. What follows is the real conclusion of this migration.</p>
 <h3>Erase "Surely Not" from the Design</h3>
@@ -73,6 +73,6 @@ blockquote p{margin:0}
 <h2>Closing</h2>
 <p>I didn't learn much new technology in this migration. I wrote a collection crawler with Playwright, a browser-automation tool, to build the JSON bundle; designed the bundle structure; and narrowed inputs with an allowed-values check (<code>@IsIn</code>). All combinations of things I already knew.</p>
 <p>What I learned was an attitude. <strong>No platform lasts forever.</strong> If a service as established as Baekjoon can disappear, any external service we lean on today can be cut off tomorrow. All we can do is build that possibility into the design: drop the idea that "this one platform is the exception," and when deciding how deeply to depend on something, also sketch out how we'd survive without it. That's how services built on someone else's ground stay standing.</p>
-<p>Baekjoon is going. AlgoSu stays. I don't know which platform disappears next. But when it does, I hope the me of that day is a little less surprised.</p>
+<p>The remaining check was whether the source-platform value actually reached the screen call sites. Adding the column was not enough; I also had to check the paths that consumed it.</p>
 </body>
 </html>

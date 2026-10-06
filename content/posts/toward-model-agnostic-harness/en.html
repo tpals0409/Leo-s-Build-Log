@@ -15,11 +15,11 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<p>One thing up front: all twelve agents run on Anthropic's Claude models.</p>
-<p>Code review was no different. An agent for security and contracts and the lead agent for planning and decision records split the reviews between them, but both were from the same Claude model family. The same model misses the same things, so they couldn't catch each other's blind spots.</p>
+<p>The twelve agents developing AlgoSu, my algorithm study platform, all run on Anthropic's Claude models.</p>
+<p>Code review was no different. An agent for security and contracts and the lead agent for planning and decision records split the reviews between them, but both were from the same Claude model family. Critic, added later, found defects this review setup had missed.</p>
 <p>Around then, OpenAI released a tool that let you call its coding model, Codex, from inside Claude Code. That opened a way to bring in the eyes of a different model family.</p>
 <leo-adr>
-  <leo-problem><p>The harness (the rules, tools, and runtime the agents work in) was tied to one company's line of models (a single model family), and code review was handled entirely by that family too, so nothing could catch the blind spots they shared. It needed another perspective.</p></leo-problem>
+  <leo-problem><p>The harness (the rules, tools, and runtime the agents work in) was tied to one company's line of models (a single model family), and code review was handled entirely by that family too. Defects remained in code that had passed those reviews, so I decided to add another review path.</p></leo-problem>
   <leo-decision><p>Put Critic, a review agent running on Codex, in the seat right before merge. Not a replacement for the existing agents, but one added seat. One that doubts the consensus instead of agreeing with it.</p></leo-decision>
   <leo-result><p>Eighteen rounds of cross-review caught 8 critical issues (P1) and 9 recommended fixes (P2). But the Critic missed process violations, and a bigger bias surfaced: the harness itself was bound to one model family. The next goal is a harness where models swap like parts.</p></leo-result>
 </leo-adr>
@@ -29,7 +29,7 @@ blockquote p{margin:0}
 <p>So I decided to <strong>add</strong>. Keep the twelve as they were, and create one new seat for a different model family.</p>
 <h2>Why Right Before Merge</h2>
 <p>There was a reason the new seat went into the review stage.</p>
-<p>I wanted one last look at correctness, security, concurrency, and whether a change could be rolled back, just before merge. That was also where a different perspective was worth the most. When models from the same family review each other, they share the same blind spots from the same training data. If they agreed, the code passed.</p>
+<p>I wanted one last look at correctness, security, concurrency, and whether a change could be rolled back, just before merge. That was also where a different perspective was worth the most. At the time, code passed when reviewers from the same family agreed. I wanted to check what that agreement might still have missed.</p>
 <p>Bring in a different family right before merge, and you get a seat that questions that agreement. <strong>A seat that breaks consensus</strong>. That's where the new agent belonged.</p>
 <p>That's why I named it Critic. Not someone who agrees, but someone who doubts.</p>
 <h2>18 Rounds of Another View</h2>
@@ -42,9 +42,9 @@ blockquote p{margin:0}
   <leo-metric value="3" unit="rounds" note="1 critical / 1 recommended" label="Work batch D (PR #171)"></leo-metric>
 </leo-metrics>
 <p>In total, <strong>18 rounds</strong> found and fixed <strong>8 critical issues and 9 recommended fixes</strong> before merge. Only three of the PRs above have counts listed, so their sum (7 critical, 6 recommended) is lower than the total; the counts for the other two PRs (work batch A and the policy sync) weren't recorded separately.</p>
-<p>What interested me was the kind of defect. Most of the critical issues were in code that the same model family would have agreed on and passed. A module that missed side effects because all the attention went to the integration. A branch that leaned on a heuristic and still had a race condition. A filter that mixed up business errors and infrastructure errors.</p>
-<p>Each piece of code worked. It just <strong>had never been seriously challenged</strong>. Codex was where that challenge came in. Once a model that didn't share the same training distribution joined, the consensus started getting questioned.</p>
-<p>That's when I first felt the value of "model diversity." I didn't need a smarter model. I needed a model that <strong>had learned differently</strong>.</p>
+<p>What interested me was the kind of defect. The critical issues included defects the existing reviews had missed. A module that missed side effects because all the attention went to the integration. A branch that leaned on a heuristic and still had a race condition. A filter that mixed up business errors and infrastructure errors.</p>
+<p>Each piece of code worked. It just <strong>had never been seriously challenged</strong>. Codex was where that challenge came in. In this case, the additional review using another model reexamined the existing consensus.</p>
+<p>That's when I first felt the value of "model diversity." An <strong>additional review using another model</strong> helped. Adding Codex review after the existing reviews exposed defects that we then fixed.</p>
 <h2>The Critic's Limits</h2>
 <p>The joy didn't last.</p>
 <p>After sprint 135, while tidying up the notes, I realized something: <strong>the Critic had been there all along, and it still didn't stop the direct push to main</strong>.</p>

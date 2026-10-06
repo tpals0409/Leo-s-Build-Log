@@ -72,6 +72,7 @@ export default function ChatWidget({ locale }: { locale: Locale }) {
         <section
           role="dialog"
           aria-label={t.title}
+          data-chat-open
           onKeyDown={(e) => e.key === 'Escape' && close()}
           className="fixed inset-0 z-40 flex flex-col bg-surface sm:inset-auto sm:bottom-24 sm:right-5 sm:h-[min(600px,calc(100dvh-8rem))] sm:w-[380px] sm:rounded-card sm:border sm:border-line"
         >
@@ -86,7 +87,7 @@ export default function ChatWidget({ locale }: { locale: Locale }) {
             </button>
           </header>
 
-          <div ref={listRef} aria-live="polite" className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
+          <div ref={listRef} aria-live="polite" className="flex flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 py-4">
             <Bubble role="assistant">{t.greeting}</Bubble>
             {msgs.length === 0 && (
               <div className="flex flex-wrap gap-2">

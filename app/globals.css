@@ -178,3 +178,5 @@
 
 /* 화면 크게 보기(<dialog>, ScreenGallery)가 열려 있는 동안 뒤 페이지가 스크롤되지 않게 */
 html:has(dialog[open]) { overflow: hidden; }
+/* 챗봇이 좁은 화면에서 전체 화면일 때도 뒤 페이지가 스크롤되지 않게 (ChatWidget, sm 미만 — 넓은 화면의 창은 페이지를 그대로 둔다) */
+@media (width < 40rem) { html:has([data-chat-open]) { overflow: hidden; } }

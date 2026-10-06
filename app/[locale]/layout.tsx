@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import ChatWidget from '@/components/ChatWidget';
 import Header from '@/components/Header';
 import { LOCALES } from '@/lib/i18n';
 import { layoutLocale, pageMeta } from '@/lib/page';
@@ -32,6 +33,7 @@ export default async function LocaleLayout({ children, params }: Props & { child
       <body>
         <Header locale={locale} />
         <main>{children}</main>
+        <ChatWidget locale={locale} />
       </body>
     </html>
   );

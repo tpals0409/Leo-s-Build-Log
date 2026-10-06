@@ -23,7 +23,18 @@ Next.js 16 (App Router) + PostgreSQL + Tailwind v4, Podman으로 자체 호스�
   팀이 한 것과 내 몫을 칸으로 나눈다. 자료는 프로젝트 저장소 README에서 가져오되 배지·mermaid는 옮기지 않는다(강조색 하나·상자 금지). 이미지는 `public/projects/<slug>/`(webp, 움짤은 mp4).
   화면 캡처는 `ScreenGallery`(`device`: 휴대폰 세로 4열 | PC 가로 2열. PC 캡처는 16:9로 잘라 맥 창 테두리를 파일에 입히고(썸네일·배너는 FINCH처럼 디자인한 2:1 배너 이미지) `size`에 픽셀 크기) — 누르면 `<dialog>`로 크게, 불투명한 어두운 바탕, 위 닫기·아래 ‹ 이름 n/8 › 한 줄(컨트롤을 캡처 위에 겹치지 않음), 방향키·스와이프로도 넘김, 바깥·Esc로 닫음(여는 효과 없음).
 - **연락:** 소개 페이지에만. 푸터는 두지 않는다(2026-10-01 삭제). 메뉴 항목으로도 두지 않는다.
-- **챗봇(나에 대한 질의응답):** 예정. 위치는 만들 때 정한다. 미리 메뉴 자리를 만들지 않는다.
+- **챗봇(레오에 대해 물어보기, 2026-10-06):** `components/ChatWidget.tsx`. 모든 페이지 오른쪽 아래 주황 원형 버튼(말풍선 아이콘) → 넓은 화면은 오른쪽 아래 창(paper + `line` 테두리 + `rounded-card`, 그림자 없음), 좁은 화면은 전체 화면.
+  말풍선은 질문 `primary`·답 `fog`(`rounded-card`). 블로그 안내원이 레오(= 김세민)를 소개하는 3인칭(레오가 직접 말하는 1인칭 아님), 블로그(글·프로젝트·소개)에 있는 것만 근거로 답하고 출처 글 링크를 붙인다. 여닫는 효과 없음.
+  백엔드 `lib/chat.ts`(+ `app/api/chat/route.ts`): 글·프로젝트(`lib/projects.ts`)·소개(DICT.about + `lib/site.ts`)를 900자 조각으로 임베딩(text-embedding-3-small, pgvector `chat_chunks`) →
+  질문과 가까운 8조각을 gpt-6-luna(`OPENAI_CHAT_MODEL`, 추론 medium — low는 위키 사실을 자주 놓침, `OPENAI_REASONING`)에 주고 답을 흘린다. 출처는 모델이 첫 줄 `[[1,3]]`에 적은 자료만. IP별 분당 5회·하루 30회(메모리), 질문은 저장하지 않음.
+  레오에 대한 사실(블로그 밖 정보)은 **그래프 DB Neo4j**(`lib/chatGraph.ts`, 사용자 지정 2026-10-06): 원본은 git `content/profile/knowledge.json`(개인 LLM 위키에서 고른 공개용 주장, Claim -ABOUT-> Project),
+  Neo4j는 사본. 질문 임베딩과 가까운 주장 → 그 프로젝트의 다른 주장(이웃)까지 [레오에 대한 사실]로 넣는다(출처 링크 없음). 앱은 고정 질의만 보낸다. Neo4j가 없으면 블로그 글만으로 답함.
+  위키 내용이 블로그와 다르면 블로그(현재 사실)에 맞춰 고치고 `content/profile/README.md`에 적는다. 수용 테스트: `node scripts/chat-eval.mjs`.
+  색인은 앱이 뜰 때·글 등록/삭제 때 바뀐 문서만 다시 임베딩. 프로젝트·소개 문구를 바꾸면 배포(재시작) 때 반영. `OPENAI_API_KEY`나 pgvector가 없으면 503(화면: 준비 중).
+  답의 규칙·말투(사용자 지정, 2026-10-06, `lib/chat.ts`의 `SYSTEM`): 자료에 있는 것만, 없으면 "찾지 못했어요" + 이메일 안내 · 레오와 무관한 질문 거절 ·
+  평가 질문엔 판단 없이 사실 두세 가지 · 채용 조건(연봉·입사 시기·면접)은 이메일로 · 3인칭 "레오"(실명 물으면 김세민) · 해요체 2~5문장 평문 ·
+  과장·홍보어, 추임새·맺음 인사, 번역체·명사 나열 금지, 전문 용어는 처음에 괄호로 풀기.
+  요청·응답 형식은 `ChatWidget.tsx` 맨 위 주석.
 
 ### 어디에 무엇이 있나
 - 페이지: `app/[locale]/…` (홈, posts, posts/[slug], projects, projects/[slug], about, search). 관리자 `app/admin`은 언어 밖, 별도 root layout.

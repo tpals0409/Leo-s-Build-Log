@@ -10,6 +10,11 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      # 챗봇 (lib/chat.ts) — 없으면 챗봇만 '준비 중'. 레오에 대한 사실 그래프는 Neo4j(없으면 블로그 글만으로 답함)
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      NEO4J_URL: http://neo4j:7474
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:-}
     volumes: [uploads:/app/uploads]
     depends_on:
       db: { condition: service_healthy }
@@ -28,6 +33,15 @@ services:
       interval: 3s
       retries: 20
     restart: unless-stopped
+  neo4j:
+    # 챗봇용 레오 사실 그래프(content/profile). 앱이 HTTP API로 넣고 읽는다
+    image: docker.io/library/neo4j:5-community
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:?NEO4J_PASSWORD 필요(8자 이상)}
+    volumes: [neo4jdata:/data]
+    ports: ["127.0.0.1:7474:7474"]
+    restart: unless-stopped
 volumes:
   pgdata:
   uploads:
+  neo4jdata:

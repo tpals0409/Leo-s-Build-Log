@@ -10,6 +10,13 @@ export const DICT = {
   ko: {
     nav: { posts: '글', projects: '프로젝트', about: '소개' },
     category: { 'ai-agent': 'AI 에이전트', engineering: '엔지니어링', retrospective: '회고' },
+    chat: {
+      open: '레오에 대해 물어보기', close: '대화 닫기', title: '레오에 대해 물어보기', sub: '블로그 글과 프로젝트를 바탕으로 답해요',
+      greeting: '안녕하세요. 레오의 글과 프로젝트에 대해 궁금한 걸 물어보세요.',
+      suggestions: ['어떤 프로젝트를 했어?', 'AI 에이전트로 어떻게 일해?', '핀치에서 맡은 일은?'],
+      placeholder: '질문을 입력하세요', send: '보내기', thinking: '글을 찾아보는 중…', sources: '참고한 글',
+      rateLimited: '질문이 너무 많아요. 잠시 뒤에 다시 물어봐 주세요.', unavailable: '지금은 답할 수 없어요. 준비 중이에요.', failed: '답을 받지 못했어요. 다시 시도해 주세요.',
+    },
     search: { placeholder: '블로그 검색', title: (q: string) => `‘${q}’ 검색 결과`, empty: '결과가 없습니다.' },
     home: { featured: 'Featured', slide: (n: number) => `대표 글 ${n}`, prev: '이전 대표 글', next: '다음 대표 글', latest: '최신 글', projects: '프로젝트', all: '모두 보기', empty: '아직 글이 없습니다.' },
     posts: { title: '글', all: '전체', empty: '글이 없습니다.', prev: '이전 글', next: '다음 글', first: '가장 처음 글이에요', latest: '가장 최신 글이에요', nav: '이전 글과 다음 글', toc: '목차', view: '보기 방식', grid: '그리드로 보기', list: '목록으로 보기', pages: '페이지', prevPage: '이전 페이지', nextPage: '다음 페이지', page: (n: number) => `${n}페이지` },
@@ -40,6 +47,13 @@ export const DICT = {
   en: {
     nav: { posts: 'Posts', projects: 'Projects', about: 'About' },
     category: { 'ai-agent': 'AI Agents', engineering: 'Engineering', retrospective: 'Retrospective' },
+    chat: {
+      open: 'Ask about Leo', close: 'Close chat', title: 'Ask about Leo', sub: 'Answers come from the posts and projects on this blog',
+      greeting: "Hi. Ask anything about Leo's posts and projects.",
+      suggestions: ['What projects has he built?', 'How does he work with AI agents?', 'What did he do on FINCH?'],
+      placeholder: 'Ask a question', send: 'Send', thinking: 'Looking through the posts…', sources: 'Sources',
+      rateLimited: 'Too many questions. Please try again in a moment.', unavailable: "I can't answer yet. This is still being set up.", failed: "Couldn't get an answer. Please try again.",
+    },
     search: { placeholder: 'Search', title: (q: string) => `Results for “${q}”`, empty: 'No results.' },
     home: { featured: 'Featured', slide: (n: number) => `Featured post ${n}`, prev: 'Previous featured post', next: 'Next featured post', latest: 'Latest posts', projects: 'Projects', all: 'View all', empty: 'No posts yet.' },
     posts: { title: 'Posts', all: 'All', empty: 'No posts.', prev: 'Previous post', next: 'Next post', first: 'This is the first post', latest: 'This is the latest post', nav: 'Previous and next posts', toc: 'Table of contents', view: 'View', grid: 'Grid view', list: 'List view', pages: 'Pages', prevPage: 'Previous page', nextPage: 'Next page', page: (n: number) => `Page ${n}` },

@@ -22,7 +22,7 @@ export type PostCard = {
 export type Post = PostCard & { html: string };
 
 const g = globalThis as unknown as { sql?: postgres.Sql; ready?: Promise<unknown> };
-const sql = (g.sql ??= postgres(process.env.DATABASE_URL!, { onnotice: () => {} })); // schema.sql의 'already exists' 알림 끔
+export const sql = (g.sql ??= postgres(process.env.DATABASE_URL!, { onnotice: () => {} })); // schema.sql의 'already exists' 알림 끔
 // 마이그레이션 도구 없음: 첫 쿼리 전에 schema.sql 한 번 실행
 const ready = () => (g.ready ??= sql.unsafe(readFileSync(path.join(process.cwd(), 'db/schema.sql'), 'utf8')));
 
@@ -127,4 +127,12 @@ export async function deletePost(slug: string) {
   await ready();
   const r = await sql`delete from posts where slug = ${slug}`;
   return r.count > 0;
+}
+
+// 챗봇 색인용(lib/chat.ts): 발행된 글의 두 언어 본문
+export async function listPostTexts() {
+  await ready();
+  return sql<{ slug: string; locale: 'ko' | 'en'; title: string; summary: string; plain_text: string }[]>`
+    select p.slug, t.locale, t.title, t.summary, t.plain_text
+    from posts p join post_translations t on t.post_id = p.id where p.published`;
 }

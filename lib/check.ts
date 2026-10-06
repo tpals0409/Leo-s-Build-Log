@@ -20,6 +20,7 @@ import { CODE_DOC, SPECS } from './leo/specs.ts';
 import { postComponentsMarkdown } from './leo/docs.ts';
 import { readFileSync } from 'node:fs';
 import { loadContent } from './content.ts';
+import { splitMarker } from './chatMarker.ts';
 import { DIAGRAMS, diagramProblems, type Diagram } from './diagrams.ts';
 
 assert.equal(htmlToText('<html><head><style>p{color:red}</style></head><body><h1>제목</h1><p>본문 &amp; 끝</p><script>alert(1)</script></body></html>'), '제목 본문 & 끝');
@@ -240,6 +241,17 @@ assert.deepEqual(loadContent().errors, []);
   assert.ok(p.some((m) => m.includes('찌그러짐')), '짧은 마지막 선');
   assert.ok(p.some((m) => m.startsWith('M100,40') && m.includes('가려짐')), '노드 안에서 끝나는 화살표');
   for (const [name, d] of Object.entries(DIAGRAMS)) assert.deepEqual(diagramProblems(d), [], `lib/diagrams.ts ${name}`);
+}
+
+// 챗봇 답 첫 줄의 자료 번호 떼기 (스트림 조각 단위)
+{
+  assert.equal(splitMarker('[['), null, '판단 전');
+  assert.equal(splitMarker('[[1,3]'), null, '줄바꿈 전');
+  assert.deepEqual(splitMarker('[[1,3]]\n레오는'), { used: [1, 3], rest: '레오는' });
+  assert.deepEqual(splitMarker('[2]\nLeo'), { used: [2], rest: 'Leo' }, '괄호 하나');
+  assert.deepEqual(splitMarker('[[]]\n블로그에서는'), { used: [], rest: '블로그에서는' });
+  assert.deepEqual(splitMarker('레'), { used: [], rest: '레' }, '표시 없이 바로 답');
+  assert.deepEqual(splitMarker('[[1]] 레오는', true), { used: [1], rest: '레오는' }, '끝까지 줄바꿈 없음');
 }
 
 console.log('ok');

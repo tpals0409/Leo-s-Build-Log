@@ -294,3 +294,9 @@ This section records user-directed changes for this repository, per "Changes" ab
 - Motion: opacity only, `--duration-hover` with `--ease-standard`; none under reduced motion.
 - Touch devices show the clipped title; the full title is on the post page.
 
+### Chat widget (2026-10-06)
+
+- A 56px circular `primary` button with a chat-bubble icon (`on-primary`) sits fixed at the bottom-right of every page; `press` and `primary-hover`.
+- Wide screens open a 380px window above it: `paper` background, 1px `line` border, card radius (10px, an exception to the image-only rule like the tooltip), no shadow. Narrow screens open it full screen.
+- Messages are bubbles with the card radius: the visitor's question in `primary` with `on-primary` text, the answer in `fog` with `fg` text, in the Body Small role. Suggested questions use the small outline button.
+- No open/close motion.

@@ -23,6 +23,7 @@ export async function register() {
     await get('/ko'); // 첫 요청이 DB 스키마를 만든다 — 나머지는 그 뒤에
     await Promise.all([get('/en'), get('/ko/posts'), get('/ko/about'), get('/sitemap.xml'), shiki]);
     g.leoWarm = true;
+    (await import('./lib/chat')).refreshIndex(); // 챗봇 색인: 바뀐 문서만 다시 임베딩 (준비 완료와 무관)
   })().catch(() => { g.leoWarm = true; });
   setTimeout(() => { g.leoWarm = true; }, 60_000).unref();
 }

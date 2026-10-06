@@ -7,3 +7,5 @@ uploads
 .git
 backups
 content
+# 챗봇 사실 그래프 원본은 실행 때 읽는다 (lib/chatGraph.ts)
+!content/profile

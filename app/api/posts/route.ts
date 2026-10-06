@@ -1,4 +1,5 @@
 import { isAdmin } from '@/lib/auth';
+import { refreshIndex } from '@/lib/chat';
 import { listAll, upsertPost } from '@/lib/db';
 import { parsePostInput } from '@/lib/postInput';
 
@@ -15,5 +16,6 @@ export async function POST(req: Request) {
   const parsed = parsePostInput(await req.json().catch(() => null));
   if (!parsed.ok) return Response.json({ errors: parsed.errors }, { status: 400 });
   const row = await upsertPost(parsed.value);
+  refreshIndex(); // 챗봇 색인: 바뀐 글만 다시 임베딩 (뒤에서)
   return Response.json({ slug: row.slug, urls: [`/ko/posts/${row.slug}`, `/en/posts/${row.slug}`] });
 }

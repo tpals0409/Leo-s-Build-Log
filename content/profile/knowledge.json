@@ -1,0 +1,954 @@
+{
+ "schema_version": "1.0",
+ "scope": "curated public professional knowledge; no personal identifiers",
+ "nodes": [
+  {
+   "id": "author",
+   "type": "Author",
+   "name": "블로그 작성자"
+  },
+  {
+   "id": "algosu",
+   "type": "Project",
+   "name": "AlgoSu — 알고리즘 스터디 플랫폼"
+  },
+  {
+   "id": "graph_rag",
+   "type": "Project",
+   "name": "Graph RAG Second Brain — 근거 기반 지식 관리"
+  },
+  {
+   "id": "pinlog",
+   "type": "Project",
+   "name": "PinLog — 장소 기록 서비스"
+  },
+  {
+   "id": "janus",
+   "type": "Project",
+   "name": "Janus — 로컬 LLM 기반 코딩 에이전트 IDE"
+  },
+  {
+   "id": "finch",
+   "type": "Project",
+   "name": "FINCH — 모의투자·AI 투자 비서"
+  },
+  {
+   "id": "claim_000089",
+   "type": "Claim",
+   "text": "알고리즘 스터디 플랫폼 AlgoSu에서는 사람이 아키텍처 방향을 정하고 AI 에이전트가 구현을 수행하는 방식으로 개발했다.",
+   "kind": "development_method",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-06-11",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음."
+  },
+  {
+   "id": "ev_000127",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "ev_000128",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "claim_000090",
+   "type": "Claim",
+   "text": "여러 마이크로서비스를 혼자 개발할 때 생기는 맥락 전환과 기준 불일치를 해결할 문제로 삼았다.",
+   "kind": "problem",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-06-11",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음."
+  },
+  {
+   "id": "ev_000129",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "ev_000130",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "claim_000177",
+   "type": "Claim",
+   "text": "LLM Wiki 개념에서 출발해 프로젝트 경험과 의사결정을 근거를 따라 검색할 수 있는 지식 구조로 정리했다.",
+   "kind": "motivation",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-06-12",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음."
+  },
+  {
+   "id": "ev_000286",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "claim_000178",
+   "type": "Claim",
+   "text": "정보를 계속 쌓기보다 요약과 노출 제한으로 판단에 필요한 맥락을 관리하는 것을 설계 기준으로 삼았다.",
+   "kind": "decision",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-06-12",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음."
+  },
+  {
+   "id": "ev_000287",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "ev_000288",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "claim_000179",
+   "type": "Claim",
+   "text": "경험 원문, 위키 요약, 주장과 근거 그래프, 검색 인덱스, 에이전트 운영 규칙을 분리했다.",
+   "kind": "architecture",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-06-12",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음."
+  },
+  {
+   "id": "ev_000289",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "claim_000215",
+   "type": "Claim",
+   "text": "Obsidian Markdown, JSONL 그래프, SQLite 임베딩 인덱스, fastembed와 Python 도구를 조합한 커스텀 Graph-backed RAG를 구현했다.",
+   "kind": "implementation",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-07-13",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음."
+  },
+  {
+   "id": "ev_000333",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "ev_000380",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "ev_000381",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "ev_000382",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "claim_000220",
+   "type": "Claim",
+   "text": "PinLog는 장소를 저장한 이유와 경험을 기록하고, 자연어로 장소를 다시 찾으며, 익명 컬렉션으로 장소를 발견하는 서비스다.",
+   "kind": "purpose",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-08-07",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음."
+  },
+  {
+   "id": "ev_000338",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "ev_000353",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "claim_000221",
+   "type": "Claim",
+   "text": "작성자는 PinLog 팀에서 인프라·DevOps를 맡아 단일 서버 배포 환경과 프런트엔드·백엔드·AI 서비스의 CI/CD 및 운영 체계를 구축했다.",
+   "kind": "personal_role",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-08-07",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음."
+  },
+  {
+   "id": "ev_000339",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "ev_000365",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "claim_000222",
+   "type": "Claim",
+   "text": "분할 서버 기반 MSA 계획을 단일 VM 제약에 맞춰 k3s 중심의 경량 배포 구조로 바꿨다.",
+   "kind": "decision",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-08-07",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음."
+  },
+  {
+   "id": "ev_000340",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "ev_000354",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "claim_000226",
+   "type": "Claim",
+   "text": "범용 Helm 차트와 Argo CD ApplicationSet으로 서비스 디렉터리와 설정을 추가하면 배포 단위가 생성되도록 구성했다.",
+   "kind": "implementation",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-08-07",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음."
+  },
+  {
+   "id": "ev_000344",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "ev_000357",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "claim_000228",
+   "type": "Claim",
+   "text": "Sentinel은 모니터링 알림과 제한된 로그를 LLM이 분석해 전달하고, 서버 변경은 사람이 판단하도록 설계했다.",
+   "kind": "decision",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-08-07",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음."
+  },
+  {
+   "id": "ev_000346",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "ev_000359",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "claim_000230",
+   "type": "Claim",
+   "text": "반복 작업은 자동화하되 장애 수정과 운영 변경의 책임 있는 판단은 사람이 맡도록 설계했다.",
+   "kind": "development_method",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-08-07",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음."
+  },
+  {
+   "id": "ev_000348",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "claim_000234",
+   "type": "Claim",
+   "text": "서비스 서버와 GPU 서버가 분리된 환경에서 요청 저장, 워커 선점, 결과 업로드, 상태 조회로 이어지는 비동기 작업 흐름을 구현했다.",
+   "kind": "implementation",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-08-07",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음."
+  },
+  {
+   "id": "ev_000351",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "ev_000362",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "claim_000235",
+   "type": "Claim",
+   "text": "작업 선점을 원자적으로 처리해 중복 실행을 막고, 오래 멈춘 작업은 재시도하되 최대 시도 횟수를 넘으면 실패 처리했다.",
+   "kind": "implementation",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-08-07",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음."
+  },
+  {
+   "id": "ev_000352",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "ev_000363",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "ev_000364",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "claim_000252",
+   "type": "Claim",
+   "text": "Janus는 로컬 LLM 기반 코딩 에이전트 IDE다. 사용자가 고른 저장소의 현재 브랜치에서 에이전트를 실행하고, 변경 내용·검증·리뷰·Git 반영을 같은 작업에 연결한다. 초기에는 작업별 Git worktree로 격리했지만, 결과를 개발 환경에서 바로 확인하려고 격리를 뺐다.",
+   "kind": "purpose",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-08-26",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음.",
+   "edited_note": "2026-10-06 블로그 글(janus-dropping-worktree-isolation)에 맞춰 수정. 원본 claim_000253(worktree 격리 경계)은 현재와 달라 뺌"
+  },
+  {
+   "id": "ev_000392",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "ev_000393",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "claim_000254",
+   "type": "Claim",
+   "text": "오케스트레이터는 작업과 최소 맥락을 전달하며, 워커는 역할·도구·실행 예산 안에서 독립적인 에이전트 루프로 코드를 수정한다.",
+   "kind": "architecture",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-08-26",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음."
+  },
+  {
+   "id": "ev_000395",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "ev_000396",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "ev_000397",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "claim_000255",
+   "type": "Claim",
+   "text": "워커의 도구 권한을 부모 도구의 부분집합으로 제한하고 조사·계획·검증 역할은 읽기 전용으로 운영한다.",
+   "kind": "implementation",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-08-26",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음."
+  },
+  {
+   "id": "claim_000256",
+   "type": "Claim",
+   "text": "역할별 맥락 격리와 권한 축소를 통해 작은 로컬 모델의 작업 성공률을 높이는 것이 멀티워커 설계의 가설이다. 성과가 입증됐다는 뜻은 아니다.",
+   "kind": "hypothesis",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-08-26",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음."
+  },
+  {
+   "id": "ev_000398",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "ev_000399",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "ev_000400",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "ev_000401",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "claim_000258",
+   "type": "Claim",
+   "text": "파일 트리, Monaco 편집기, 터미널, 미리보기, diff와 검증 결과를 같은 작업 문맥에서 확인하도록 구성했다.",
+   "kind": "implementation",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-08-26",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음."
+  },
+  {
+   "id": "ev_000403",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "ev_000404",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "claim_000269",
+   "type": "Claim",
+   "text": "작성자는 FINCH의 AI 파트를 단독 담당해 모든 AI 기능을 설계·구현했다. 백엔드·프런트엔드·인프라 전체를 구현했다는 뜻은 아니다.",
+   "kind": "personal_role",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-09-07",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음."
+  },
+  {
+   "id": "ev_000415",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "ev_000420",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "claim_000271",
+   "type": "Claim",
+   "text": "FINCH는 모의투자·AI 투자 비서 프로젝트로, 브리핑·포트폴리오 진단·수익률 기여도·주문 전 점검·종목 분석·투자 비서 채팅·공시 RAG·개인 투자 논지 Wiki 기능을 구현했다.",
+   "kind": "purpose",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-09-07",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음."
+  },
+  {
+   "id": "ev_000422",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "claim_000272",
+   "type": "Claim",
+   "text": "금융 수치와 위험 판정은 결정론적 엔진이 계산하고 LLM은 결과를 설명하도록 분리했다. 숫자 자리표시자 치환과 출력 검증으로 수치 변형을 통제한다.",
+   "kind": "decision",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-09-07",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음."
+  },
+  {
+   "id": "ev_000423",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  },
+  {
+   "id": "claim_000276",
+   "type": "Claim",
+   "text": "구조화된 오류, LLM 대체 경로, 캐시, 호출 제한, 사용자별 토큰 예산과 예약·정산으로 안정성과 비용을 통제한다.",
+   "kind": "implementation",
+   "review_status": "reviewed",
+   "visibility": "public",
+   "source_recorded_at": "2026-09-07",
+   "provenance_type": "curated_paraphrase_of_private_graph",
+   "public_source_url": "",
+   "citation_note": "내부 근거를 검토한 공개용 요약. 공개 원문 링크는 아직 연결하지 않음."
+  },
+  {
+   "id": "ev_000426",
+   "type": "EvidenceReference",
+   "availability": "private_not_exported",
+   "note": "원문·인용문·파일 경로는 개인정보 보호를 위해 제외. 이 식별자만으로 독립 검증할 수 없음."
+  }
+ ],
+ "relationships": [
+  {
+   "source": "claim_000089",
+   "type": "ABOUT",
+   "target": "algosu"
+  },
+  {
+   "source": "claim_000089",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000127"
+  },
+  {
+   "source": "claim_000089",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000128"
+  },
+  {
+   "source": "claim_000089",
+   "type": "ABOUT",
+   "target": "author"
+  },
+  {
+   "source": "claim_000090",
+   "type": "ABOUT",
+   "target": "algosu"
+  },
+  {
+   "source": "claim_000090",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000129"
+  },
+  {
+   "source": "claim_000090",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000130"
+  },
+  {
+   "source": "claim_000177",
+   "type": "ABOUT",
+   "target": "graph_rag"
+  },
+  {
+   "source": "claim_000177",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000286"
+  },
+  {
+   "source": "claim_000178",
+   "type": "ABOUT",
+   "target": "graph_rag"
+  },
+  {
+   "source": "claim_000178",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000287"
+  },
+  {
+   "source": "claim_000178",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000288"
+  },
+  {
+   "source": "claim_000179",
+   "type": "ABOUT",
+   "target": "graph_rag"
+  },
+  {
+   "source": "claim_000179",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000289"
+  },
+  {
+   "source": "claim_000215",
+   "type": "ABOUT",
+   "target": "graph_rag"
+  },
+  {
+   "source": "claim_000215",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000333"
+  },
+  {
+   "source": "claim_000215",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000380"
+  },
+  {
+   "source": "claim_000215",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000381"
+  },
+  {
+   "source": "claim_000215",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000382"
+  },
+  {
+   "source": "claim_000220",
+   "type": "ABOUT",
+   "target": "pinlog"
+  },
+  {
+   "source": "claim_000220",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000338"
+  },
+  {
+   "source": "claim_000220",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000353"
+  },
+  {
+   "source": "claim_000221",
+   "type": "ABOUT",
+   "target": "pinlog"
+  },
+  {
+   "source": "claim_000221",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000339"
+  },
+  {
+   "source": "claim_000221",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000365"
+  },
+  {
+   "source": "claim_000221",
+   "type": "ABOUT",
+   "target": "author"
+  },
+  {
+   "source": "claim_000222",
+   "type": "ABOUT",
+   "target": "pinlog"
+  },
+  {
+   "source": "claim_000222",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000340"
+  },
+  {
+   "source": "claim_000222",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000354"
+  },
+  {
+   "source": "claim_000226",
+   "type": "ABOUT",
+   "target": "pinlog"
+  },
+  {
+   "source": "claim_000226",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000344"
+  },
+  {
+   "source": "claim_000226",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000357"
+  },
+  {
+   "source": "claim_000228",
+   "type": "ABOUT",
+   "target": "pinlog"
+  },
+  {
+   "source": "claim_000228",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000346"
+  },
+  {
+   "source": "claim_000228",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000359"
+  },
+  {
+   "source": "claim_000230",
+   "type": "ABOUT",
+   "target": "pinlog"
+  },
+  {
+   "source": "claim_000230",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000348"
+  },
+  {
+   "source": "claim_000230",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000359"
+  },
+  {
+   "source": "claim_000230",
+   "type": "ABOUT",
+   "target": "author"
+  },
+  {
+   "source": "claim_000234",
+   "type": "ABOUT",
+   "target": "pinlog"
+  },
+  {
+   "source": "claim_000234",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000351"
+  },
+  {
+   "source": "claim_000234",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000362"
+  },
+  {
+   "source": "claim_000235",
+   "type": "ABOUT",
+   "target": "pinlog"
+  },
+  {
+   "source": "claim_000235",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000352"
+  },
+  {
+   "source": "claim_000235",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000363"
+  },
+  {
+   "source": "claim_000235",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000364"
+  },
+  {
+   "source": "claim_000252",
+   "type": "ABOUT",
+   "target": "janus"
+  },
+  {
+   "source": "claim_000252",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000392"
+  },
+  {
+   "source": "claim_000252",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000393"
+  },
+  {
+   "source": "claim_000254",
+   "type": "ABOUT",
+   "target": "janus"
+  },
+  {
+   "source": "claim_000254",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000395"
+  },
+  {
+   "source": "claim_000254",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000396"
+  },
+  {
+   "source": "claim_000254",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000397"
+  },
+  {
+   "source": "claim_000255",
+   "type": "ABOUT",
+   "target": "janus"
+  },
+  {
+   "source": "claim_000255",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000395"
+  },
+  {
+   "source": "claim_000255",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000397"
+  },
+  {
+   "source": "claim_000256",
+   "type": "ABOUT",
+   "target": "janus"
+  },
+  {
+   "source": "claim_000256",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000398"
+  },
+  {
+   "source": "claim_000256",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000399"
+  },
+  {
+   "source": "claim_000256",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000400"
+  },
+  {
+   "source": "claim_000256",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000401"
+  },
+  {
+   "source": "claim_000258",
+   "type": "ABOUT",
+   "target": "janus"
+  },
+  {
+   "source": "claim_000258",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000403"
+  },
+  {
+   "source": "claim_000258",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000404"
+  },
+  {
+   "source": "claim_000269",
+   "type": "ABOUT",
+   "target": "finch"
+  },
+  {
+   "source": "claim_000269",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000415"
+  },
+  {
+   "source": "claim_000269",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000420"
+  },
+  {
+   "source": "claim_000269",
+   "type": "ABOUT",
+   "target": "author"
+  },
+  {
+   "source": "claim_000271",
+   "type": "ABOUT",
+   "target": "finch"
+  },
+  {
+   "source": "claim_000271",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000422"
+  },
+  {
+   "source": "claim_000272",
+   "type": "ABOUT",
+   "target": "finch"
+  },
+  {
+   "source": "claim_000272",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000422"
+  },
+  {
+   "source": "claim_000272",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000423"
+  },
+  {
+   "source": "claim_000276",
+   "type": "ABOUT",
+   "target": "finch"
+  },
+  {
+   "source": "claim_000276",
+   "type": "SUPPORTED_BY",
+   "target": "ev_000426"
+  }
+ ]
+}

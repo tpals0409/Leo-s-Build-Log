@@ -11,10 +11,10 @@
   "thumbnail": "thumbnail.webp",
   "ko": {
     "title": "벡터 검색이 놓친 공시를 단어 검색으로 찾기",
-    "summary": "문서가 4.5배로 늘자 벡터 검색만으로는 Recall@5가 0.375까지 떨어졌습니다. 한국어 바이그램 단어 검색과 RRF, 제목·출처·최신성 가중치로 고친 과정을 같은 평가셋 숫자로 따라갑니다."
+    "summary": "문서가 4.5배로 늘자 벡터 검색만으로는 Recall@5가 0.375까지 떨어졌습니다. 한국어 바이그램 단어 검색과 RRF, 제목·출처·최신성 가중치로 고친 과정과 단계별 평가 결과, 비교 범위의 한계를 정리했습니다."
   },
   "en": {
     "title": "Finding What Vector Search Missed with Keyword Search",
-    "summary": "When the documents grew 4.5 times, vector search alone dropped to 0.375 Recall@5. Korean bigram keyword search, RRF and title, source and freshness weights, followed on the same evaluation set."
+    "summary": "When the documents grew 4.5 times, vector search alone dropped to 0.375 Recall@5. This post covers Korean bigram keyword search, RRF, and title, source and freshness weights, alongside stage-by-stage results and their comparison limits."
   }
 }

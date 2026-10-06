@@ -16,7 +16,7 @@ blockquote p{margin:0}
 </head>
 <body>
 <p>When working with Kubernetes storage, it is easy to stop at “we attached a PVC, so the data persists.” But persists after what? A container restarting, a PVC being deleted, and a server losing its disk are different events. That distinction was what mattered when I examined PinLog’s storage configuration.</p>
-<p>PinLog ran its k3s control plane and workloads together on a single AWS node. k3s is a lightweight Kubernetes distribution.</p>
+<p>PinLog is a team project for recording places, where I handled infrastructure and DevOps. At the time, it ran its k3s control plane and workloads together on a single AWS node. k3s is a lightweight Kubernetes distribution.</p>
 <leo-adr>
   <leo-problem><p>“We attached a PVC, so the data persists” did not distinguish a Pod restart, PVC deletion, and node loss. On its single node, PinLog kept the PostgreSQL data and backup PVCs on the same local storage.</p></leo-problem>
   <leo-decision><p>I read the storage setup against those three events separately. I looked at each PV&#x27;s actual reclaim policy rather than the StorageClass name, and treated deletion policy and recovery procedure as separate questions.</p></leo-decision>
@@ -61,7 +61,7 @@ blockquote p{margin:0}
 <p>Assessing backups must therefore go beyond the existence of storage space. What data is produced, when is it produced, is there a copy outside the original host, and can that copy be used to reconstruct the service? Those are separate questions. Providing backup space on the same node is not the same step as establishing an off-host recovery path.</p>
 <h2>Deletion Policy vs. Recovery</h2>
 <p>Retain matters because it prevents PVC deletion from directly triggering data cleanup. It also leaves someone responsible for the retained volume: who manages it, when it is reused, and when it is removed. A retention-friendly policy does not eliminate operational work.</p>
-<p>The conclusion was not “we have persistent volumes, so we are safe.” A Pod restart requires the existing PVC and surviving disk. PVC deletion brings the PV’s reclaim policy into play. Losing the entire host requires data outside it and a recovery procedure. These conditions are too different to collapse into a single promise of persistence.</p>
-<p>The first question to ask of storage is <strong>“How much can disappear while still leaving a way to start again?”</strong> A PVC separates execution from the lifetime of data; Retain changes reclamation after deletion. Recovery beyond the host is the next boundary, and it needs its own design and verification.</p>
+
+<p>This review established the limits of the storage location and deletion policy. The next task was to create an off-host copy and verify a procedure for reconstructing the service from it.</p>
 </body>
 </html>

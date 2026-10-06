@@ -14,7 +14,7 @@ blockquote{margin:1.5em 0;padding-left:var(--space-cluster);border-left:2px soli
 blockquote p{margin:0}
 </style>
 </head>
-<body><p>FINCH is an AI investment assistant that explains returns, risk and stock analysis based on what you hold and what you've traded. I led the AI part and built the AI server, and one rule was set from the start: the LLM never writes numbers itself.</p>
+<body><p>FINCH is a paper-trading service with an AI investment assistant that explains returns, risk and stock analysis based on holdings and trades. I led the AI part and built the AI server, and one rule was set from the start: the LLM never writes numbers itself.</p>
 <p>Give an LLM some figures and ask for an explanation, and it will round 18.3% to "about 18%" or +0.87%p to "+0.9%p", or make up a number that isn't there. In investment information, one wrong number makes the whole explanation untrustworthy.</p>
 
 <h2>The placeholder structure</h2>
@@ -57,6 +57,6 @@ blockquote p{margin:0}
 <p>The fix came with 4 new tests, and I confirmed all 4 fail when the fix is reverted.</p>
 
 <h2>Summary</h2>
-<p>The placeholder structure stopped the LLM from making up numbers. The cost is that every number has to travel from the engine through placeholders, and if that path breaks anywhere, you get "I don't know" instead of a wrong answer. In all three holes, the model wasn't breaking the rule; the response format, a check or a data path didn't match it.</p>
+<p>The placeholder structure checks numbers written directly by the model and substitutes values from the engine. But the model still violated instructions by duplicating units, while a broken registration path produced "I don't know" even when the data was available. Simplifying the response format, checking invalid output and verifying the data path each required a separate fix.</p>
 </body>
 </html>

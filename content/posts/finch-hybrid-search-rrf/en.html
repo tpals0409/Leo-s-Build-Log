@@ -14,8 +14,8 @@ blockquote{margin:1.5em 0;padding-left:var(--space-cluster);border-left:2px soli
 blockquote p{margin:0}
 </style>
 </head>
-<body><p>FINCH's AI explanations come with sources. If it says a company cancelled treasury shares, the filing is attached as a footnote. Sources come from searching filings and news we've already collected, and if search brings back the wrong document, the explanation goes wrong with it.</p>
-<p>This post covers how search started as vector search alone, dropped off when the document set grew, and became hybrid search. Every change was judged on the same evaluation set.</p>
+<body><p>In FINCH, the paper-trading service where I handled the AI part, AI explanations come with sources. If it says a company cancelled treasury shares, the filing is attached as a footnote. Sources come from searching filings and news we've already collected, and if search brings back the wrong document, the explanation goes wrong with it.</p>
+<p>This post covers how search started as vector search alone, dropped off when the document set grew, and became hybrid search. At each stage, I checked the evaluation results and the documents search missed. The evaluation scope changed: the initial results used 8 questions and the final result used 7.</p>
 
 <h2>The evaluation set came first</h2>
 <p>Before touching search, I built an evaluation set. It only has questions whose answers actually exist in our documents, and each answer is given as part of a document title ("주식소각결정" for share cancellation, "유상증자결정" for a rights issue, and so on). The metric is Recall@5, the share of questions with the right document in the top 5, with a baseline of 0.75.</p>
@@ -24,7 +24,7 @@ blockquote p{margin:0}
 <h2>Vector search alone: 0.875</h2>
 <p>At first, search used only embedding similarity (an embedding turns text into a vector of numbers that sit closer together the closer the meanings are). Over 2,280 chunks (pieces of documents), Recall@5 was 0.875, 7 of 8.</p>
 <p>The miss was the share-cancellation question. The cancellation filing used the phrase "주식 소각 결정" (decision to cancel shares) several times, but its similarity to the question was only 0.4366, below 8 half-year reports from different companies (0.46–0.51). I first assumed one document was taking over the top results and implemented a cap on chunks per document. With caps of 1, 2 and unlimited, all three gave 0.875. It didn't help, so I reverted it and kept only the measurement in the evaluation file.</p>
-<p>The real cause was that vector search is weak when the words overlap exactly. I noted then that hybrid search was needed.</p>
+<p>For this question, vector similarity alone failed to capture the direct word match in the title. I noted then that hybrid search was needed.</p>
 
 <h2>4.5 times the documents: 0.375</h2>
 <p>Six days later the collection grew to 216 filings and 10,195 chunks. A single KB Financial half-year report accounted for 6,110 of them, more than half. Measured the same way, Recall@5 fell to 0.375, 3 of 8. Chunks from that big report filled the top results.</p>
@@ -36,10 +36,10 @@ blockquote p{margin:0}
   <leo-step title="Merging with RRF"><p>RRF looks only at rank, not score. A document at rank r in a list gets 1/(60 + r), and the points are summed. Vector similarity and keyword scores are on different scales and can't be added directly; using only rank avoids that. Each path contributes 60 candidates before merging.</p></leo-step>
   <leo-step title="Reserved slots for keyword hits"><p>Plain RRF buried documents whose titles matched exactly, because top vector chunks also matched a few words and picked up extra points. So 2 of the top 5 slots (top_k × 0.4) go to the top keyword results first.</p></leo-step>
 </leo-steps>
-<p>With this, Recall@5 went from 0.375 to 0.667.</p>
+<p>The Recall@5 recorded after this change was 0.667.</p>
 
 <h2>A bug that zeroed every rank</h2>
-<p>Then it turned out the keyword ranking score (ts_rank_cd) was 0 for everything. The bigram string had been cast straight to tsvector, which dropped word positions, and the ranking function, which relies on positions, returned 0 for every document. Switching to <code>to_tsvector('simple', …)</code> brought the same evaluation to 0.833.</p>
+<p>Then it turned out the keyword ranking score (ts_rank_cd) was 0 for everything. The bigram string had been cast straight to tsvector, which dropped word positions, and the ranking function, which relies on positions, returned 0 for every document. Switching to <code>to_tsvector('simple', …)</code> produced a Recall@5 of 0.833.</p>
 
 <h2>Title weight, source and freshness</h2>
 <p>Three days later I worked through the remaining misses. Filings put their type right in the title, so matching titles mattered.</p>
@@ -50,6 +50,7 @@ blockquote p{margin:0}
 </ul>
 <pre><code class="language-py" data-file="app/rag/search.py">return 0.5 + 0.5 * math.exp(-math.log(2) * age_days / half_life)</code></pre>
 <p>At this stage Recall@5 reached 1.000, 7 of 7. The no-answer question still returns something, and that stays on the watch list.</p>
+<p>These are Recall@5 results from successive stages. The first is 3/8 and the last is 7/7. With different question counts, the difference between them is not a gain measured on the same questions.</p>
 <leo-metrics>
   <leo-metric value="0.375" label="Vector only (10,195 chunks)"></leo-metric>
   <leo-metric value="0.667" label="+ keyword search, RRF"></leo-metric>
@@ -61,6 +62,6 @@ blockquote p{margin:0}
 <p>The first production batch hit a problem in collection, not search. Seven newly added stocks were filled with a year of filings, but not a single annual report came in. Periodic filings were appended to the end of the list, and the caller took only the first 20. Now periodic filings go to the front. Search can't find a document that was never collected.</p>
 
 <h2>Summary</h2>
-<p>Building the evaluation set first meant every change could be checked with a number. The chunk cap that did nothing was reverted, and the fact that vector search alone wasn't enough at scale was confirmed by a 0.375, not a hunch. The limits: the set has only 7 or 8 questions, and when the documents are re-collected the answers change too, so the set has to be updated with them.</p>
+<p>The evaluation set helped track which questions failed to retrieve the right document. The chunk cap that did nothing was reverted, and the fact that vector search alone wasn't enough at scale was confirmed by a 0.375, not a hunch. The limits: the set has only 7 or 8 questions, and when the documents are re-collected the answers change too, so the set has to be updated with them.</p>
 </body>
 </html>

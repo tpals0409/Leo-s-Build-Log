@@ -15,7 +15,7 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<p>My job on PinLog was deploying each team&#x27;s services to Kubernetes, connecting their dependencies, observing their health, and handling recovery.</p>
+<p>PinLog is a team project for recording places. As the infrastructure owner, I worked out the conditions and connections needed to deploy each part’s services to Kubernetes. Observability and recovery were also within my responsibility, but the database transition and restore verification discussed here were not complete.</p>
 <p>Before development started, the team agreed in writing on structure, conventions, and who was responsible for what. This article is about how that agreement took shape in deployment.</p>
 <p>An image lets you start a container. Its address alone does not tell you which port to connect to, what counts as healthy, or which configuration and external services it needs. A team deployment required that information as well.</p>
 <leo-adr>
@@ -24,7 +24,6 @@ blockquote p{margin:0}
   <leo-result><p>The role boundary was confirmed on July 29, 2026. Passing checks and reaching production were also kept apart: a change that had only passed its checks, like the July 27 pgvector transition, was not called deployed.</p></leo-result>
 </leo-adr>
 <h2>What "Deployable" Required</h2>
-<p>We agreed that the service owner would hand over a runnable image together with its runtime contract. Infrastructure would deploy and connect it according to that contract.</p>
 <table><thead><tr><th>Handoff information</th><th>What infrastructure needed to establish</th></tr></thead><tbody><tr><td>Image commit SHA and digest</td><td>Which build artifact are we deploying?</td></tr><tr><td>Container port</td><td>Where should the Service send traffic?</td></tr><tr><td>Health, liveness, and readiness paths</td><td>Which endpoints report status?</td></tr><tr><td>Environment variables and credential keys</td><td>What configuration must be delivered securely?</td></tr><tr><td>External dependencies, including the DB</td><td>Which services and network paths are required?</td></tr></tbody></table>
 <p>For example, the backend contract specified internal port 8080, the <code>/api/core</code> context path, and <code>/api/core/actuator/health</code>. These were not values for infrastructure to guess. The application owner defined them; infrastructure connected the service accordingly.</p>
 <p>Credentials followed the same principle. We distinguished the required key schema from the secret values themselves. Production secrets would be injected through Secrets, not stored in the image or Git.</p>
@@ -45,12 +44,11 @@ blockquote p{margin:0}
 <p>pgvector is a PostgreSQL extension that adds vector columns. The backend&#x27;s Flyway migration (Flyway applies database schema changes in order) created the <code>vector</code> extension, while the AI migrations used vector columns. The production PostgreSQL image therefore needed the extension binaries. This was where an application requirement had to be matched by its operating environment.</p>
 <p>At that point, the infrastructure PR had passed its checks but remained open. Production PostgreSQL still used its existing image, and the <code>vector</code> extension was not installed. The backend image-publishing workflow changes existed only in a local commit, with no remote PR yet.</p>
 <table><thead><tr><th>Item checked on July 27</th><th>Status on July 27</th></tr></thead><tbody><tr><td>Checks on the pgvector infrastructure PR</td><td>Passed</td></tr><tr><td>PR merge</td><td>Not completed</td></tr><tr><td>Production DB image change and restart</td><td>Not performed</td></tr><tr><td>Creation of the <code>vector</code> extension</td><td>Not performed</td></tr><tr><td>Backend image-publishing workflow changes</td><td>Local commit only</td></tr></tbody></table>
-<p>So I don't call this change "deployed" yet. The deployment contract has been reviewed and the changes checked, but rolling it out to production is still pending.</p>
+<p>As checked on July 27, this change was not "deployed." The deployment contract had been reviewed and the changes checked, but the production rollout was still pending.</p>
 <p>The database transition also had recovery conditions. Before and after creating the extension, returning to the previous image meant different things. Once the extension existed, we would not simply revert to the old image without the required shared library. Restarting a single-replica database also required separate maintenance approval.</p>
 <p>Nor did the existence of a backup file mean recovery was proven. The database backup archive passed its format check, but the database was still an initial database with no user tables. So I didn't count it as a restore test.</p>
 <h2>What Infrastructure Owns</h2>
 <p>Looking back, what I needed as the infrastructure owner was not authority to fix every piece of code. I needed to understand the conditions under which the artifact I received would run, and meet those conditions in the operating environment.</p>
-<p>The application owner supplied a runnable image and a contract. Infrastructure deployed it, connected it, observed it, and handled recovery. An incomplete handoff meant stopping at that boundary and checking again.</p>
-<p>This was how the structure, conventions, and responsibilities the team agreed on before development took shape in deployment. Receiving an image was the beginning. We also had to define what came with it, how far my responsibility extended, and which states we could not yet call complete.</p>
+<p>For the pgvector transition, a PR merge, database image change and extension creation remained after the checks passed. Communicating those distinct states was part of infrastructure ownership too.</p>
 </body>
 </html>

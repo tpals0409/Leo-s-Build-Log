@@ -15,7 +15,7 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<p>As the infrastructure owner for PinLog, I worked with information that carried different time horizons. The branch that Argo CD, our deployment tool, deploys from is configuration. Whether a Pod (the unit Kubernetes runs) was Ready is a state observed at one particular moment.</p>
+<p>As the infrastructure owner for PinLog, a team project for recording places, I worked with information that carried different time horizons. The branch that Argo CD, our deployment tool, deploys from is configuration. Whether a Pod (the unit Kubernetes runs) was Ready is a state observed at one particular moment.</p>
 <p>Pico, our operational AI, needed both kinds of knowledge. But they could not be trusted in the same way. Reading yesterday's healthy status as today's can lead to a wrong operational decision, even when the record itself is accurate.</p>
 <leo-adr>
   <leo-problem><p>Pico's operational knowledge mixed structures verified in configuration with states observed at particular moments. Reading a record of past health as the current state could lead to a wrong operational decision.</p></leo-problem>
@@ -40,8 +40,6 @@ blockquote p{margin:0}
 <p>Take the question, “Is monitoring healthy now?” A past Ready observation is evidence about the moment it was recorded. Using it as-is to answer a question about now skips a necessary check.</p>
 <leo-steps><leo-step title="Identify the time horizon"><p>Distinguish a question about historical structure from one about current state.</p></leo-step><leo-step title="Use memory to identify what to inspect"><p>Use recorded structure and evidence to narrow down the systems and fields to query.</p></leo-step><leo-step title="Verify current decisions at the source"><p>Inspect the actual host, Kubernetes, GitHub, or other source system. If inspection is unavailable, disclose that only historical evidence is available.</p></leo-step></leo-steps>
 <p>These three steps are the rule I set for using memory. Not every question automatically triggered a live check. Operational knowledge was better used to guide current checks than to replace them.</p>
-<h2>Memory Is Not the Server</h2>
-<p>Looking back at the record, what mattered was the role of each piece of information, not how much was stored. Raw preserved evidence, history recorded how knowledge changed, and query data supported retrieval. Answers about the current state still had to come from the actual system.</p>
-<p>Giving an AI memory helps it recover past context. But that memory does not replace the server as it is now. <strong>Use memory to find what to inspect, then verify the facts the current decision needs.</strong> That is the principle I want to keep from Pico's operational knowledge.</p>
+
 </body>
 </html>

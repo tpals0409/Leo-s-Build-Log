@@ -16,7 +16,7 @@ blockquote p{margin:0}
 </head>
 <body>
 <h2>"세션이 너무 짧아요"</h2>
-<p>사용자 피드백이 하나 들어왔습니다.</p>
+<p>제가 만드는 알고리즘 스터디 플랫폼 알고수에 사용자 피드백이 하나 들어왔습니다.</p>
 <blockquote><p>"다른 거 하다가 돌아오면 또 로그인해야 하는 게 귀찮아요."</p></blockquote>
 <p>기획한 로그인 토큰(JWT)의 수명은 <strong>2시간</strong>이었습니다. 그리고 <strong>sliding session</strong>, 즉 사용자가 활동하는 동안에는 토큰을 자동으로 새로 발급해 만료 시점을 계속 뒤로 미는 방식이 의도된 동작이었습니다. 2시간이면 충분한데, 왜 자꾸 끊길까요?</p>
 <p>파고들어 보니 운영 서버의 환경변수에는 기획값 2시간이 아니라 초기값 <strong>7일</strong>이 그대로 남아 있었습니다. 토큰 수명이 오히려 길었는데도 세션은 1시간 만에 끊겼습니다.</p>
@@ -24,7 +24,7 @@ blockquote p{margin:0}
 <leo-adr>
   <leo-problem><p>기획한 JWT 수명(TTL)은 2시간이고 운영 환경변수에는 초기값 7일이 남아 있었는데, 정작 1시간 만에 로그아웃됐다. 4개 레이어(서버 환경변수·쿠키·sliding 갱신·프론트 타이머)가 각자의 시계를 갖고 있었다.</p></leo-problem>
   <leo-decision><p>흩어진 4개의 시계를 하나의 기준(서버 환경변수)으로 통일했다. 상수만 바꾸지 않고, SessionPolicyModule이라는 모듈로 구조를 바꿨다.</p></leo-decision>
-  <leo-result><p>세션 수명을 정하는 곳이 4곳에서 1곳으로 줄었다. 환경변수 하나를 바꾸면 쿠키·갱신·프론트까지 자동으로 따라오고, 테스트 24건을 더했다.</p></leo-result>
+  <leo-result><p>세션 수명을 정하는 곳이 4곳에서 1곳으로 줄었다. 쿠키는 토큰 만료 시각을 따르고, 갱신과 프론트 타이머는 서버 정책을 사용하도록 바꿨다. 실패 시 기본값은 별도로 남겼고 테스트 24건을 더했다.</p></leo-result>
 </leo-adr>
 <h2>4개의 시계, 4개의 진실</h2>
 <p>문제를 정리하면 이렇습니다.</p>
@@ -63,7 +63,7 @@ const SESSION_TIMEOUT_MS = 65 * 60 * 1000; // 65분</code></pre>
 <h2>해결: 하나의 시계로 통일</h2>
 <p>처음에는 하드코딩된 값을 하나씩 올바른 값으로 바꾸려 했습니다. 그런데 총괄 에이전트가 이렇게 피드백했습니다.</p>
 <blockquote><p>"세션을 하드코딩하지 말고 모듈화해."</p></blockquote>
-<p>맞는 말이었습니다. 숫자만 바꾸면, 다음에 정책이 바뀔 때 또 4곳을 찾아다녀야 합니다. <strong>근본 치료</strong>가 필요했습니다.</p>
+<p>저도 이 제안을 받아들였습니다. 숫자만 바꾸면 다음에 정책이 바뀔 때 또 4곳을 찾아다녀야 했기 때문입니다.</p>
 <h3>SessionPolicyModule: 단일 원천</h3>
 <p>서버 환경변수 하나만 바꾸면 서버와 클라이언트가 모두 자동으로 따라오는 구조를 설계했습니다.</p>
 <leo-diagram title="수정 후: 서버 env가 유일한 원천" caption="서버 env 하나에서 서버와 프론트가 모두 값을 받는다">
@@ -108,7 +108,7 @@ constructor(
 
 // 하드코딩 상수 대신 정책 서비스에서 주입
 const thresholdMs = this.sessionPolicy.getRefreshThresholdMs();</code></pre>
-<p>이제 2시간 수명의 <strong>절반(1시간)</strong>이 지나면 요청마다 토큰을 갱신합니다. 활동하는 사용자는 사실상 끊기지 않습니다.</p>
+<p>이제 2시간 수명의 토큰이 만료까지 <strong>1시간 이하</strong>로 남았을 때 요청이 들어오면 갱신합니다. 새 토큰을 발급하면 남은 수명이 다시 2시간이 되므로 이후 모든 요청에서 갱신하는 것은 아닙니다.</p>
 <p>"요청마다 항상 갱신"은 기각했습니다. 매번 JWT를 다시 서명하는 CPU 비용과, 모든 응답에 Set-Cookie 헤더를 붙이는 비용 때문입니다. 50% 임계값이 성능과 사용자 경험 사이의 타협점입니다.</p>
 <h3>Layer 4 해결: 서버 정책을 가져오기</h3>
 <p>아래 기본값은 서버에서 정책을 받아 오지 못했을 때만 쓰는 값입니다.</p>
@@ -124,7 +124,7 @@ export async function fetchSessionPolicy(): Promise&lt;ClientSessionPolicy&gt; {
   const res = await fetch('/api/auth/session-policy');
   // 실패 시 DEFAULT_SESSION_POLICY fallback
 }</code></pre>
-<p>프론트엔드는 앱이 시작될 때 <code>GET /auth/session-policy</code>를 한 번 호출합니다. 하드코딩이 사라졌습니다. 서버 환경변수가 바뀌면, 프론트엔드는 다음 시작 때 새 정책을 자동으로 받아옵니다.</p>
+<p>프론트엔드는 앱이 시작될 때 <code>GET /auth/session-policy</code>를 한 번 호출합니다. 정상적으로 정책을 받아온 경로에서는 별도 상수 대신 서버 값을 씁니다. 호출 실패에 대비한 기본값은 코드에 남겨 뒀습니다. 서버 환경변수가 바뀌면, 프론트엔드는 다음 시작 때 새 정책을 자동으로 받아옵니다.</p>
 <p>기본값의 세션 타임아웃 65분은 토큰 수명 1시간에 여유 버퍼 5분을 더한 값입니다(1h + 5m). 호출이 실패할 때 쓰는 이 기본값(DEFAULT)은 서버 기본값(2h)보다 <strong>일부러 짧게</strong> 잡았습니다. 서버보다 먼저 만료 처리해서, 갑작스러운 인증 실패(401)를 막는 안전장치입니다.</p>
 <h2>Before / After</h2>
 <table><thead><tr><th>항목</th><th>수정 후</th><th>변화</th></tr></thead><tbody><tr><td>JWT TTL</td><td>2h</td><td>7d → 2h</td></tr><tr><td>Cookie maxAge</td><td>동적</td><td>1h 고정 → JWT exp 연동</td></tr><tr><td>Sliding 임계값</td><td>1h</td><td>5분 → 1시간 (TTL 50%)</td></tr><tr><td>프론트 타이머</td><td>정책 fetch</td><td>65분 고정 → 서버 정책 연동</td></tr></tbody></table>
@@ -138,7 +138,7 @@ export async function fetchSessionPolicy(): Promise&lt;ClientSessionPolicy&gt; {
 <h2>상수 교체가 아닌 구조 전환</h2>
 <p>이 버그의 처음 계획은 "하드코딩된 숫자 4개를 올바른 숫자로 바꾸자"였습니다. 그걸로도 당장은 고쳐졌을 겁니다.</p>
 <p>하지만 다음에 세션 정책이 바뀌면? 또 4곳을 찾아다녀야 합니다. 그리고 누군가는 한 곳을 빼먹을 겁니다. <strong>상수 교체는 버그 수정이고, 구조 전환은 버그 예방입니다.</strong></p>
-<p><code>SessionPolicyModule</code>을 도입하며 바뀐 파일은 19개, 추가한 테스트는 24건이었습니다. 적지 않은 작업이었지만, 이제 세션 정책을 바꾸려면 <strong>Deployment yaml의 env 한 줄</strong>만 고치면 됩니다. 서버도, 클라이언트도, 쿠키도 자동으로 따라옵니다.</p>
+<p><code>SessionPolicyModule</code>을 도입하며 바뀐 파일은 19개, 추가한 테스트는 24건이었습니다. 적지 않은 작업이었지만, 이제 세션 정책을 바꾸려면 <strong>Deployment yaml의 env 한 줄</strong>만 고치면 됩니다. 변경을 배포하면 서버가 새 정책을 사용하고, 클라이언트는 다음 앱 시작 때 정책을 가져옵니다. 쿠키 수명은 발급된 토큰의 만료 시각을 따릅니다.</p>
 <p>환경변수로 정하는 정책 값 근처에 "우연히 같은 의미"를 가진 상수를 두지 마세요. 의미가 같으면 반드시 같은 원천을 참조해야 합니다. <strong>환경변수 하나를 바꿨을 때 연관 상태가 모두 따라오지 않는다면, 그 지점이 다음 버그의 씨앗입니다.</strong></p>
 </body>
 </html>

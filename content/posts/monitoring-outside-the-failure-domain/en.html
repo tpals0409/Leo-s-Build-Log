@@ -16,7 +16,7 @@ blockquote p{margin:0}
 </head>
 <body>
 <p>Once monitoring is installed on a server and alerts are connected, it can feel as though the system is ready to watch for failures. But change one question and a gap appears: <strong>if the server itself stops, rather than just the application, who sends the alert?</strong></p>
-<p>PinLog ran its k3s control plane and application workloads together on a single AWS node. k3s is a lightweight Kubernetes distribution, and the control plane is the set of components that manages the cluster.</p>
+<p>I handled infrastructure and DevOps for PinLog, a team project for recording places. The service ran its k3s control plane and application workloads together on a single AWS node. k3s is a lightweight Kubernetes distribution, and the control plane is the set of components that manages the cluster.</p>
 <p>Prometheus, which collects metrics, and Alertmanager, which handles alerts, ran on that node too. Both the system collecting service state and the system reporting it depended on the survival of the very server they watched.</p>
 <leo-adr>
   <leo-problem><p>Prometheus, Alertmanager, and Sentinel, the alert receiver on the host, all ran on the same single AWS node they were watching. If the whole node stopped, the alert path could stop with it.</p></leo-problem>
@@ -51,11 +51,11 @@ blockquote p{margin:0}
 <p>Adding more monitoring processes to the same node is not an adequate alternative for this problem. More processes remain exposed to the same complete node failure. Conversely, keeping only external checks would leave less information to explain internal state. The reason to retain both paths is not to accumulate duplicate tools, but to preserve different scopes of observation.</p>
 <h2>Failed Link, Not a Dead Node</h2>
 <p>An external monitor reporting failure does not by itself establish that the node has died. A complete node failure can cause a connection failure, but DNS problems, the network path, TLS configuration, or application response problems can also make an external check fail. <strong>The check reports an observed condition; the cause still needs investigation.</strong></p>
-<p>The first question when reading that signal should therefore be closer to “What failed, from which vantage point?” than “Is the server dead?” From there, checking whether internal metrics are available and whether the host can be reached can help narrow the scope. The external signal starts the investigation; it does not finish the diagnosis.</p>
+<p>The first question when reading that signal should therefore be closer to “What failed, from which vantage point?” than “Is the server dead?” From there, checking whether internal metrics are available and whether the host can be reached can help narrow the scope.</p>
 <p>Being outside the node also does not mean independence from every possible failure. The external execution environment, network, and notification destination remain dependencies. In particular, both paths terminate at Mattermost. A check executing and a person receiving its alert are distinct things.</p>
 <h2>Boundaries Before Tools</h2>
-<p>The change I find important in this design is not the number of monitoring tools. It is the separation between a path that explains internal state and a path that can attempt an observation from outside when that interior stops. External monitoring does not recover the service or turn a single node into a highly available system. Expanding what we can learn and keeping the service running are separate tasks.</p>
+<p>This change added a path for checking reachability from outside the node. Service recovery and a move to high availability were outside its scope.</p>
 <p>When reviewing monitoring architecture, I want to start by grouping the components that share a failure, rather than simply listing component names. Follow the route through collectors, rule evaluators, receivers, and the notification destination, asking at each step: “Could this still operate if this node were gone?”</p>
-<p>When a server dies, the watcher inside it dies too. That is why <strong>checking where the watcher stands matters as much as looking more closely at what it watches.</strong></p>
+
 </body>
 </html>

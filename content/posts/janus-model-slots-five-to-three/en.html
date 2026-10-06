@@ -15,7 +15,7 @@ blockquote p{margin:0}
 </style>
 </head>
 <body>
-<p>Janus limits how many generation requests can go to the local model server at once. These are called generation slots, and sub-agents (workers), chat and verification share them. When the slots are full, no new worker is created, and the reason is recorded.</p>
+<p>Janus, the local-LLM coding IDE I built, limits how many generation requests can go to the local model server at once. These are called generation slots, and sub-agents (workers), chat and verification share them. When the slots are full, no new worker is created, and the reason is recorded.</p>
 <p>The default started at 5 and is now 3. This post covers why it changed and what has to happen before it goes up again.</p>
 
 <h2>Why it started at 5</h2>
@@ -24,11 +24,11 @@ blockquote p{margin:0}
 <h2>Why it went down to 3</h2>
 <p>The machine is an Apple Silicon Mac with 48GB of memory, running Qwen3.8 27B reduced (quantized) to 4-bit. Three things were checked.</p>
 <leo-steps>
-  <leo-step title="KV cache is per request"><p>The KV cache stores computations for earlier tokens. Each request gets its own, and with a 49K-token worker budget, one request can take 5 to 12GB in the worst case. Five of those at once run out of memory and start swapping.</p></leo-step>
-  <leo-step title="One GPU limits the gain"><p>On Apple Silicon, a single GPU (Metal) does all generation. Running several requests at once mainly helps by letting one generate while another waits on a tool, and that gain stops growing at 2 or 3.</p></leo-step>
-  <leo-step title="More concurrency, less MTP benefit"><p>MTP (multi-token prediction) predicts several tokens ahead and confirms them in one step. It only speeds things up when the predictions hold, and the hit rate drops as more requests run at once.</p></leo-step>
+  <leo-step title="KV cache is per request"><p>The KV cache stores computations for earlier tokens. Each request gets its own, and I used an estimate of 5 to 12GB per request at a 49K-token worker budget to assess memory headroom. Five requests of that size, plus the model and other processes, increase the risk of swapping.</p></leo-step>
+  <leo-step title="Requests share one GPU"><p>On Apple Silicon, a single GPU (Metal) does all generation. One request can generate while another waits on a tool, but throughput does not necessarily grow in proportion to the number of generation slots.</p></leo-step>
+  <leo-step title="MTP also needs checking"><p>MTP (multi-token prediction) predicts several tokens ahead and confirms them in one step. The speedup depends on those predictions holding. When raising the slot count, I would also check whether the MTP benefit and overall throughput hold up.</p></leo-step>
 </leo-steps>
-<p>Actual usage said the same. Over that cycle, concurrent generation peaked at 3, and the p95 wait for a slot (the longest wait once the slowest 5% are set aside) was 0.012ms. Five was never needed.</p>
+<p>The direct reason for choosing a lower default came from usage records. Over that cycle, concurrent generation peaked at 3, and the p95 wait for a slot (the longest wait once the slowest 5% are set aside) was 0.012ms. I saw no need for five during that observation window. A measured peak of three does not establish the optimum for every workload.</p>
 <leo-metrics>
   <leo-metric value="5 → 3" label="Default generation slots"></leo-metric>
   <leo-metric value="3" label="Measured peak concurrency"></leo-metric>
@@ -45,6 +45,6 @@ blockquote p{margin:0}
 <p>The first time this ran on the real machine there were only 2 recorded waits, so the verdict was held as "insufficient samples." It followed the rule of not raising slots before the evidence is there.</p>
 
 <h2>Summary</h2>
-<p>With a local model, staying stable within memory came before running many requests at once. The default was set to 3 from both reasoning and measurement, and raising it waits until measured wait times show a need.</p>
+<p>With a local model, staying stable within memory came before running many requests at once. The memory estimate and wait records from that window led to a default of 3, and raising it waits until measured wait times show a need.</p>
 </body>
 </html>

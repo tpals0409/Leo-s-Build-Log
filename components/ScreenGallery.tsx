@@ -73,7 +73,9 @@ export default function ScreenGallery({ screens, locale, device = 'phone' }: { s
 const PHONE = { small: 'aspect-[352/692] w-full', big: 'aspect-[352/692] h-full w-auto max-w-full' };
 const CHROME = 'calc(100dvh - 10rem)'; // 크게 볼 때 닫기·아래 줄·여백을 뺀 높이
 // 휴대폰 움직이는 화면: 원본 GIF의 테두리는 해상도가 낮아 모서리가 깨지므로, 화면 안쪽만 잘라 정지 캡처(704×1384)의 테두리·그림자를
-// 흰 바탕째 입혀 인코딩했다(*-v2.mp4) → 정지 캡처와 같은 모양이라 잘라 낼 필요가 없다.
+// 흰 바탕째 입혀 인코딩했다(*-v2.mp4). 흰 페이지 위(목록)에선 정지 캡처와 똑같이 보이고, 크게 보기(어두운 막)에선 흰 바탕이 드러나므로
+// 휴대폰 바깥 모양대로 잘라 낸다 — 704×1384 기준 테두리 바깥 왼·오른쪽 40·위 16·아래 54px, 모서리 반지름 75px(1px 안쪽으로).
+const PHONE_FRAME = 'inset(1.23% 5.82% 3.97% 5.82% round 10.65% / 5.42%)';
 // mp4엔 투명도가 없어 맥 창의 둥근 모서리 바깥이 채워져 보인다 → 테두리 모양대로 잘라 낸다. 모서리 반지름 = 폭 × 0.0115 (테두리를 만든 스크립트와 같은 값)
 const macFrame = ([w, h]: [number, number]) => { const r = Math.round(w * 0.0115); return `inset(0 round ${(r / w) * 100}% / ${(r / h) * 100}%)`; };
 
@@ -81,7 +83,7 @@ function Media({ s, device, big }: { s: Screen; device: Device; big?: boolean })
   if (device === 'phone') {
     const c = big ? PHONE.big : PHONE.small;
     return s.video
-      ? <LoopVideo key={s.src} src={s.video} poster={s.src} label={s.label} className={c} />
+      ? <LoopVideo key={s.src} src={s.video} poster={s.src} label={s.label} className={c} style={big ? { clipPath: PHONE_FRAME } : undefined} />
       : <img src={s.src} alt={s.label} width={352} height={692} loading={big ? 'eager' : 'lazy'} decoding="async" className={c} />;
   }
   const [w, h] = s.size ?? [960, 574];

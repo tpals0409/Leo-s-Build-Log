@@ -19,7 +19,7 @@ blockquote p{margin:0}
 <p>Project names and technology lists could not fully explain an experience. I also needed the reasoning behind decisions, the scope of my role, and the records that back those explanations up. So I began building a personal knowledge store that connects this material and lets me retrieve it again for later questions.</p>
 <p>The tool I introduced to run that store was <strong>Hermes Agent</strong>, an AI agent tool that lets a language model read files and get work done by running tools. My personal agent <strong>Luna</strong>, which works with this store, is also built on Hermes. I did not train a separate model. I built an environment in which an existing model consults my materials and working rules.</p>
 <leo-adr>
-  <leo-problem><p>The personal knowledge store, with its original experience records, wiki pages, and relationship graph, was operated through several CLI calls: Claude Code commands, a tmux setup, and a Codex review path. With execution scattered across several tools, roles and workflows were hard to manage in one place.</p></leo-problem>
+  <leo-problem><p>Execution and review for the personal knowledge store—original experience records, wiki pages, and a relationship graph—were scattered across several CLI tools, making roles and workflows hard to manage in one place.</p></leo-problem>
   <leo-decision><p>I kept the knowledge, its conventions, and the role-specific permissions as they were, and moved only the execution path to Hermes. Roles were separated by responsibility and permission, and subagent delegation was reserved for work that can be split off.</p></leo-decision>
   <leo-result><p>After the switch, graph validation found no integrity errors, but a warning about a low-confidence relationship remained. When delegation failed on a quota limit, the work fell back to the direct execution path.</p></leo-result>
 </leo-adr>
@@ -50,7 +50,7 @@ blockquote p{margin:0}
 <h2>What I Verified on Adoption</h2>
 <p>I did not stop after changing the execution documents. I checked role documents and procedures for descriptions that still assumed the previous tools, and ran graph validation and retrieval smoke tests.</p>
 <p>The final inspection at the time found no graph integrity errors. A warning about a low-confidence relationship remained, though. Passing structural validation does not make every piece of knowledge a confirmed fact. Checking that files and references are sound and judging what an experience means needed separate reviews.</p>
-<p>Introducing Hermes was less about finishing a personal assistant than about setting up an environment that could work with my records. I preserved the existing knowledge, moved its execution path, connected roles and verification procedures, and kept the decisions that were mine to make.</p>
+<p>Introducing Hermes was less about finishing a personal assistant than about setting up an environment that could work with my records. There were now procedures for requesting retrieval and validation, with a direct execution path available when quota limits blocked delegation.</p>
 <p>The interest that began with an LLM Wiki thus moved from how to organize material to how an agent should handle my material. That was also where Luna started.</p>
 </body>
 </html>

@@ -16,7 +16,7 @@ blockquote p{margin:0}
 </head>
 <body>
 <h2>"The Session Is Too Short"</h2>
-<p>A piece of user feedback came in:</p>
+<p>A piece of user feedback came in for AlgoSu, the algorithm study platform I am building:</p>
 <blockquote><p>"It's annoying to have to log in again every time I switch to something else and come back."</p></blockquote>
 <p>The login token (JWT) was designed to live for <strong>2 hours</strong>. On top of that, the intended behavior was a <strong>sliding session</strong>: while the user is active, the server keeps issuing a fresh token, pushing the expiry further out. Two hours should be plenty, so why did sessions keep dropping?</p>
 <p>Digging in, it turned out the production server's env var still held the initial value of <strong>7 days</strong>, not the designed 2 hours. The token lifetime was, if anything, too long, and sessions still dropped after an hour.</p>
@@ -24,7 +24,7 @@ blockquote p{margin:0}
 <leo-adr>
   <leo-problem><p>The JWT lifetime (TTL) was designed as 2 hours, and production still held the initial value of 7 days, yet users were logged out after 1. Four layers (server env var, cookie, sliding refresh, frontend timer) each kept their own clock.</p></leo-problem>
   <leo-decision><p>Unify the four scattered clocks into one source (the server env vars). This was a structural change via a SessionPolicyModule, not just swapping constants.</p></leo-decision>
-  <leo-result><p>The places that define session lifetime went from four to one. Changing one env var now carries through to the cookie, the refresh, and the frontend; 24 tests were added.</p></leo-result>
+  <leo-result><p>The places that define session lifetime went from four to one. Cookies now follow token expiry, while refresh and frontend timers use server policy. Separate fallback defaults remain, and 24 tests were added.</p></leo-result>
 </leo-adr>
 <h2>Four Clocks, Four Truths</h2>
 <p>Here's what we found:</p>
@@ -63,7 +63,7 @@ const SESSION_TIMEOUT_MS = 65 * 60 * 1000; // 65 minutes</code></pre>
 <h2>The Fix: One Clock</h2>
 <p>The first plan was simply to replace each hardcoded value with the right one. But the lead agent pushed back:</p>
 <blockquote><p>"Don't hardcode session values; modularize them."</p></blockquote>
-<p>Fair point. Swapping numbers would mean hunting down all four places again the next time the policy changed. We needed a <strong>root-cause fix</strong>.</p>
+<p>I accepted the suggestion because swapping numbers would mean hunting down all four places again the next time the policy changed.</p>
 <h3>SessionPolicyModule: A Single Source of Truth</h3>
 <p>We designed it so that changing one server environment variable automatically carries through to both server and client.</p>
 <leo-diagram title="After: Server env as the only source" caption="Server and frontend both take their values from a single server env">
@@ -108,7 +108,7 @@ constructor(
 
 // Injected from policy service instead of hardcoded constant
 const thresholdMs = this.sessionPolicy.getRefreshThresholdMs();</code></pre>
-<p>Now, once <strong>half (1 hour)</strong> of the 2-hour lifetime has passed, every request refreshes the token. Active users effectively never get cut off.</p>
+<p>Now a request triggers refresh when the 2-hour token has <strong>1 hour or less</strong> remaining. Issuing a new token restores its remaining lifetime to 2 hours, so not every subsequent request refreshes it.</p>
 <p>"Refresh on every request" was rejected: re-signing the JWT every time costs CPU, and every response would carry a Set-Cookie header. The 50% threshold is the compromise between performance and user experience.</p>
 <h3>Layer 4 Fix: Fetch the Policy from the Server</h3>
 <p>The defaults below are used only when the policy can't be fetched from the server.</p>
@@ -124,7 +124,7 @@ export async function fetchSessionPolicy(): Promise&lt;ClientSessionPolicy&gt; {
   const res = await fetch('/api/auth/session-policy');
   // Falls back to DEFAULT_SESSION_POLICY on failure
 }</code></pre>
-<p>The frontend calls <code>GET /auth/session-policy</code> once when the app starts. No more hardcoded values. When the server env changes, the frontend picks up the new policy on its next start.</p>
+<p>The frontend calls <code>GET /auth/session-policy</code> once when the app starts. When the policy fetch succeeds, it uses server values instead of separate constants. The fallback defaults remain in code. When the server env changes, the frontend picks up the new policy on its next start.</p>
 <p>The default session timeout of 65 minutes is the 1-hour token lifetime plus a 5-minute buffer (1h + 5m). This DEFAULT fallback is <strong>deliberately shorter</strong> than the server default (2h). If the fetch fails, the client expires the session early rather than hitting a surprise authentication failure (401). It is a safety net.</p>
 <h2>Before / After</h2>
 <table><thead><tr><th>Item</th><th>After</th><th>Change</th></tr></thead><tbody><tr><td>JWT TTL</td><td>2h</td><td>7d → 2h</td></tr><tr><td>Cookie maxAge</td><td>Dynamic</td><td>Fixed 1h → synced with JWT exp</td></tr><tr><td>Sliding threshold</td><td>1h</td><td>5 min → 1 hour (50% of TTL)</td></tr><tr><td>Frontend timer</td><td>Policy fetch</td><td>Fixed 65 min → synced with server policy</td></tr></tbody></table>
@@ -138,7 +138,7 @@ export async function fetchSessionPolicy(): Promise&lt;ClientSessionPolicy&gt; {
 <h2>Structure, Not Constants</h2>
 <p>The first plan for this bug was "replace the 4 hardcoded numbers with the right numbers." That would have worked for now.</p>
 <p>But the next time the session policy changes? You'd hunt down all four places again, and someone would miss one. <strong>Replacing constants fixes a bug; changing the structure prevents the next one.</strong></p>
-<p>Introducing <code>SessionPolicyModule</code> touched 19 files and added 24 tests. Not a small job, but now changing the session policy means editing <strong>one env line in the Deployment yaml</strong>. Server, client, and cookies all follow.</p>
+<p>Introducing <code>SessionPolicyModule</code> touched 19 files and added 24 tests. Not a small job, but now changing the session policy means editing <strong>one env line in the Deployment yaml</strong>. After deployment, the server uses the new policy; the client fetches it at the next app start. Cookie lifetime follows the expiry of the issued token.</p>
 <p>Don't keep a constant that "happens to mean the same thing" next to a policy value controlled by an env var. If they mean the same thing, they must read from the same source. <strong>If changing one env var doesn't bring all related state along, that spot is the seed of your next bug.</strong></p>
 </body>
 </html>

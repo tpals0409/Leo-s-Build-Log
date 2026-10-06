@@ -11,6 +11,9 @@ import Button from './ui/Button';
 //   200 → application/x-ndjson, 한 줄에 하나:  {"type":"text","text":"…"} (이어 붙임)  ·  {"type":"sources","items":[{"title":"…","href":"/ko/posts/…"}]}
 //   429 → 요청 제한("잠시 뒤에"), 503 → 준비 중, 그 밖 → 실패. 블로그와 무관한 질문의 거절은 답 글(text)로 온다.
 type Source = { title: string; href: string };
+// 방문 통계(Umami, components/Analytics.tsx)에 챗봇 사용 횟수만 남긴다 — 질문 내용은 보내지 않는다
+const track = (event: 'chat-open' | 'chat-question' | 'chat-rate-limited' | 'chat-error') =>
+  (window as { umami?: { track: (e: string) => void } }).umami?.track(event);
 type Msg = { role: 'user' | 'assistant'; content: string; sources?: Source[]; error?: boolean };
 
 export default function ChatWidget({ locale }: { locale: Locale }) {
@@ -36,6 +39,7 @@ export default function ChatWidget({ locale }: { locale: Locale }) {
     setMsgs([...msgs, { role: 'user', content: q }, { role: 'assistant', content: '' }]);
     setInput('');
     setBusy(true);
+    track('chat-question');
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -43,6 +47,7 @@ export default function ChatWidget({ locale }: { locale: Locale }) {
         body: JSON.stringify({ locale, messages: history.map(({ role, content }) => ({ role, content })) }),
       });
       if (!res.ok || !res.body) {
+        track(res.status === 429 ? 'chat-rate-limited' : 'chat-error');
         const text = res.status === 429 ? t.rateLimited : res.status === 503 || res.status === 404 ? t.unavailable : t.failed;
         return patchLast(() => ({ role: 'assistant', content: text, error: true }));
       }
@@ -60,6 +65,7 @@ export default function ChatWidget({ locale }: { locale: Locale }) {
         }
       }
     } catch {
+      track('chat-error');
       patchLast(() => ({ role: 'assistant', content: t.failed, error: true }));
     } finally {
       setBusy(false);
@@ -127,7 +133,7 @@ export default function ChatWidget({ locale }: { locale: Locale }) {
       <button
         ref={toggleRef}
         type="button"
-        onClick={() => (open ? close() : setOpen(true))}
+        onClick={() => (open ? close() : (setOpen(true), track('chat-open')))}
         aria-label={open ? t.close : t.open}
         aria-expanded={open}
         className={`press primary-hover fixed bottom-5 right-5 z-40 size-14 place-items-center rounded-pill bg-primary text-on-primary ${open ? 'hidden sm:grid' : 'grid'}`}

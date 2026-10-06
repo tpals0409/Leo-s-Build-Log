@@ -23,6 +23,8 @@ Next.js 16 (App Router) + PostgreSQL + Tailwind v4, Podman으로 자체 호스�
   팀이 한 것과 내 몫을 칸으로 나눈다. 자료는 프로젝트 저장소 README에서 가져오되 배지·mermaid는 옮기지 않는다(강조색 하나·상자 금지). 이미지는 `public/projects/<slug>/`(webp, 움짤은 mp4).
   화면 캡처는 `ScreenGallery`(`device`: 휴대폰 세로 4열 | PC 가로 2열. PC 캡처는 16:9로 잘라 맥 창 테두리를 파일에 입히고(썸네일·배너는 FINCH처럼 디자인한 2:1 배너 이미지) `size`에 픽셀 크기) — 누르면 `<dialog>`로 크게, 불투명한 어두운 바탕, 위 닫기·아래 ‹ 이름 n/8 › 한 줄(컨트롤을 캡처 위에 겹치지 않음), 방향키·스와이프로도 넘김, 바깥·Esc로 닫음(여는 효과 없음).
 - **연락:** 소개 페이지에만. 푸터는 두지 않는다(2026-10-01 삭제). 메뉴 항목으로도 두지 않는다.
+- **방문 통계(2026-10-06):** 자체 호스팅 Umami(쿠키 없음, 동의 배너 불필요). `components/Analytics.tsx`가 env(`UMAMI_SCRIPT_URL`·`UMAMI_WEBSITE_ID`)가 있을 때만 스크립트를 넣고 운영 도메인에서만 센다.
+  보는 것: 페이지별 조회수·방문자 추이 + 챗봇 사용 횟수(이벤트 `chat-open|question|rate-limited|error`, 질문 내용은 보내지 않음). Umami 서버는 서버 쪽.
 - **챗봇(레오에 대해 물어보기, 2026-10-06):** `components/ChatWidget.tsx`. 모든 페이지 오른쪽 아래 주황 원형 버튼(말풍선 아이콘) → 넓은 화면은 오른쪽 아래 창(paper + `line` 테두리 + `rounded-card`, 그림자 없음), 좁은 화면은 전체 화면.
   말풍선은 질문 `primary`·답 `fog`(`rounded-card`). 블로그 안내원이 레오(= 김세민)를 소개하는 3인칭(레오가 직접 말하는 1인칭 아님), 블로그(글·프로젝트·소개)에 있는 것만 근거로 답하고 출처 글 링크를 붙인다. 여닫는 효과 없음.
   백엔드 `lib/chat.ts`(+ `app/api/chat/route.ts`): 글·프로젝트(`lib/projects.ts`)·소개(DICT.about + `lib/site.ts`)를 900자 조각으로 임베딩(text-embedding-3-small, pgvector `chat_chunks`) →

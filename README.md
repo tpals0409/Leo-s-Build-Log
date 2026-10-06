@@ -75,11 +75,12 @@ main에 푸시되면 CI가 검사를 통과한 뒤 `ghcr.io/tpals0409/leo-s-buil
   liveness는 startupProbe 뒤에 돌게 하거나 60초 넘게 버티게 둔다
 - **배포 교체**: replicas 1이라 `strategy: RollingUpdate`(`maxSurge: 1`, `maxUnavailable: 0`) — 새 컨테이너가 준비된 뒤 옛 것을 내린다.
   업로드 PVC가 ReadWriteOnce여도 같은 노드면 둘이 함께 붙는다(`Recreate`면 교체 동안 사이트가 멈춘다)
-- **env**: `DATABASE_URL`, `ADMIN_TOKEN`, `SITE_URL`(https 도메인), `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ADMIN_EMAIL`, `OPENAI_API_KEY`(챗봇, 선택: `OPENAI_CHAT_MODEL` 기본 gpt-6-luna), `NEO4J_URL`·`NEO4J_USER`·`NEO4J_PASSWORD`(챗봇의 레오 사실 그래프, 선택 — 없으면 블로그 글만으로 답함). `ADMIN_TOKEN`·`GOOGLE_CLIENT_SECRET`·`OPENAI_API_KEY`·DB 비밀번호는 SealedSecret 등으로
+- **env**: `DATABASE_URL`, `ADMIN_TOKEN`, `SITE_URL`(https 도메인), `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ADMIN_EMAIL`, `OPENAI_API_KEY`(챗봇, 선택: `OPENAI_CHAT_MODEL` 기본 gpt-6-luna), `NEO4J_URL`·`NEO4J_USER`·`NEO4J_PASSWORD`(챗봇의 레오 사실 그래프, 선택 — 없으면 블로그 글만으로 답함). `UMAMI_SCRIPT_URL`·`UMAMI_WEBSITE_ID`(방문 통계, 선택 — 없으면 통계 스크립트 없음). `ADMIN_TOKEN`·`GOOGLE_CLIENT_SECRET`·`OPENAI_API_KEY`·DB 비밀번호는 SealedSecret 등으로
 - **업로드**: `/app/uploads`에 PVC. 썸네일 사본(`?w=480|800|1200`)은 처음 요청 때 만들어 같은 PVC의 `w<폭>/`에 둔다(지워도 다시 만듦). 컨테이너는 `node`(uid 1000)로 돌므로 `securityContext.fsGroup: 1000`
   — ReadWriteOnce PVC면 **replicas 1** (여러 개 띄우려면 RWX 또는 오브젝트 스토리지로 바꿔야 함)
 - **Postgres**: 별도로. 챗봇은 pgvector 확장이 필요하다(`pgvector/pgvector` 이미지 — 없으면 챗봇만 "준비 중", 사이트는 그대로). 스키마는 앱이 첫 쿼리 때 만든다(챗봇 색인 `chat_chunks`는 앱이 뜰 때 바뀐 문서만 임베딩)
 - **Neo4j**(챗봇 사실 그래프): 5.x(벡터 색인 필요, 5.13+). 앱이 HTTP API(7474)로 `content/profile/knowledge.json`을 넣고(내용이 바뀌었을 때만) 고정 질의로 읽는다 — 쓰기 권한 있는 계정. 외부에 열지 말 것. 데이터는 언제든 원본에서 다시 만들어지므로 백업은 선택
+- **Umami**(방문 통계): 자체 호스팅, 기존 Postgres에 별도 DB. 블로그는 스크립트 주소·website id만 env로 받는다. 광고 차단기에 덜 막히게 블로그와 같은 도메인 아래 경로로 내는 것을 권장
 - **Ingress**: TLS는 Ingress(Traefik)에서. `X-Forwarded-Proto`가 넘어와야 관리자 쿠키에 `Secure`가 붙는다 (Traefik 기본값으로 넘김)
 - **백업**: `scripts/backup.sh`는 compose 전용이다. k3s에선 `pg_dump` CronJob + 업로드 PVC 백업을 따로 둔다
 - private 패키지면 `imagePullSecrets` (예: `ghcr-pull-secret`)

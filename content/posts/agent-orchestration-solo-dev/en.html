@@ -25,14 +25,14 @@ blockquote p{margin:0}
 <body>
 <h2>A Platform I Wanted to Build</h2>
 <p>Running an algorithm study group, the same frustrations kept coming back. Assigning problems, checking submissions, requesting code reviews. Every week, the same tasks, done by hand.</p>
-<p>As the group grew, the management overhead grew exponentially. The thought came naturally: "It'd be great if there were a platform that automated all this."</p>
+<p>As the group grew, the management work grew too. The thought came naturally: "It'd be great if there were a platform that automated all this."</p>
 <p>Around then, I came across the idea of AI agent orchestration: give several AI agents different roles and have them work together as one system. The more I read, the more I wondered what would happen if I applied it to building a real service.</p>
-<p>So I decided to try it. I would build the study platform alone, as a set of small services (an MSA, or microservice architecture), and run AI agents as my teammates.</p>
+<p>So I decided to build AlgoSu, an algorithm study platform. I would build the study platform alone, as a set of small services (an MSA, or microservice architecture), and run AI agents as my teammates.</p>
 
 <leo-adr>
   <leo-problem><p>Building alone is fast, but juggling 6 services left me without enough hands to keep both productivity and consistency.</p></leo-problem>
   <leo-decision><p>I grew the team from 8 agents to 12 and specialized their roles. Shared rules went into one file every agent reads first (<code>persona-base.md</code>); each agent kept only the knowledge of its own area.</p></leo-decision>
-  <leo-result><p>It paid off in preventing a DB incident, catching leftover insecure code, and cutting the time it took to find past decisions (one from three months earlier in five seconds). Work ordering, and the balance between control and autonomy, are still being refined.</p></leo-result>
+  <leo-result><p>It paid off in preventing a DB incident, catching leftover insecure code, and revisiting past decisions. Work ordering, and the balance between control and autonomy, are still being refined.</p></leo-result>
 </leo-adr>
 
 <h2>Limits of Building Alone</h2>
@@ -43,7 +43,7 @@ blockquote p{margin:0}
 <p>When I come back to the Saga the next day, the reasons behind yesterday's decisions have faded. Time spent re-reading code piles up, and real progress slows down.</p>
 <h3>The Absence of Consistency</h3>
 <p>When you work alone, your standards wobble. "Just hardcode it this once." "I'll write the tests later." With no one to stop you, it's easy to give in.</p>
-<p>Commit conventions, file structure, error handling: they drift a little every day. With 6 services, the inconsistencies multiply by six.</p>
+<p>Commit conventions, file structure, error handling: they drift a little every day. With 6 services, there were more places to check for those inconsistencies.</p>
 <p>Both problems pointed at the same thing. <strong>One person's head can't hold the whole system's context and standards at once.</strong></p>
 
 <h2>First Try: 8 Agents</h2>
@@ -91,14 +91,14 @@ blockquote p{margin:0}
 <blockquote><p>Expand-Contract pattern enforced. Column deletion/rename must use a 3-phase deployment.<br>Always assume a situation where old and new versions coexist during Rolling Updates.</p></blockquote>
 <p>During a rolling update, servers are replaced one at a time, so old and new code run side by side. The rule says: don't rename in place. Widen first (Expand), and narrow later (Contract).</p>
 <p>So instead of a simple rename, I did it in three phases: (1) add a new column, (2) copy the data and switch the application code, (3) drop the old column. It felt tedious, but it finished with zero downtime in production. On my own, I would have thought "a rename will be fine" and moved on.</p>
-<leo-callout type="tip" title="The moment an agent prevented an incident"><p>Librarian's Expand-Contract rule turned a simple rename into a 3-phase deployment. Tedious, but zero downtime in production. Without the agent, I never would have followed this process.</p></leo-callout>
+<leo-callout type="tip" title="The moment an agent prevented an incident"><p>Librarian's Expand-Contract rule turned a simple rename into a 3-phase deployment. Tedious, but zero downtime in production. The rule changed my original plan to rename the column directly.</p></leo-callout>
 <h3>The Security Leftovers Gatekeeper Caught</h3>
 <p>While refactoring the authentication logic, some code was still storing tokens in the browser's localStorage. Even after switching to httpOnly cookies (which JavaScript can't read), traces of the old approach were hiding all over the codebase. The rules of Gatekeeper, the auth and security agent, caught them.</p>
 <blockquote><p>SSE authentication: <code>EventSource(url, { withCredentials: true })</code>. localStorage tokens cannot be used in an httpOnly Cookie environment.<br>Sensitive data strictly prohibited: raw JWT, X-Internal-Key, OAuth tokens.</p></blockquote>
 <p>(X-Internal-Key is an internal auth key used only between services.) Because of this rule, the code that still read tokens from localStorage was flagged as a violation.</p>
-<p>A person might think "I already fixed that, it's probably fine" and move on. An agent checks everything, every time.</p>
+<p>In this case, checking again against the shared security rules exposed the leftover code.</p>
 <h3>Context That Doesn't Disappear</h3>
-<p>Over 67 sprints, I asked "why did we decide this?" more times than I can count. Every decision was recorded in <code>MEMORY.md</code> and the sprint decision records that Scribe maintains. So I could find a decision from three months ago in five seconds.</p>
+<p>Over 67 sprints, I asked "why did we decide this?" more times than I can count. Every decision was recorded in <code>MEMORY.md</code> and the sprint decision records that Scribe maintains. I could find a decision from three months ago in five seconds.</p>
 <p>The scariest thing about building alone isn't a feature that doesn't work. It's <strong>forgetting why you built it that way</strong>. When the context is gone, you repeat old mistakes or reconsider alternatives you already ruled out. The agent setup solved this structurally.</p>
 <h3>Trial and Error in Workflow Design</h3>
 <p>Even with agents, getting the <strong>calling order</strong> wrong made them useless. Early on, I called whichever agent I needed on the spot. As the order got tangled, one agent's output kept breaking another agent's assumptions.</p>
@@ -125,6 +125,6 @@ blockquote p{margin:0}
 <h2>What Doing It Changed</h2>
 <p>Reading about AI agent orchestration and actually doing it are completely different experiences. On paper, it boils down to "divide the roles and write the rules." In reality, the setup took shape through dozens of incidents: tangled workflows, lost context, rules drifting apart.</p>
 <p>If I hadn't tried, I'd have stayed at the shallow idea that "AI writes code for you." Because I did, I learned things. What to hand to agents and what to do myself. Where to draw the line between control and autonomy. How to combine one person's judgment with twelve agents' execution.</p>
-<p>In the end, what mattered was starting.</p>
+
 </body>
 </html>
